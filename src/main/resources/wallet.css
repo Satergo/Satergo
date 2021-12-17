@@ -1,0 +1,6 @@
+#sidebar, #settings {
+}
+
+#sidebar .toggle-button:selected, #settings:selected {
+	-fx-background-color: DIMGRAY;
+}

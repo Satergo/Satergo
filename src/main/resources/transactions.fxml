@@ -1,0 +1,10 @@
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.geometry.Insets?>
+<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.TransactionsCtrl">
+	<padding>
+		<Insets topRightBottomLeft="20"/>
+	</padding>
+
+
+</GridPane>

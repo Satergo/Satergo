@@ -1,0 +1,44 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" stylesheets="wallet.css" styleClass="background" fx:controller="com.satergo.controller.WalletCtrl" fx:id="root">
+	<fx:define>
+		<ToggleGroup fx:id="group"/>
+	</fx:define>
+	<left>
+		<BorderPane fx:id="sidebar">
+			<padding>
+				<Insets topRightBottomLeft="10"/>
+			</padding>
+			<top>
+				<VBox spacing="4">
+
+					<Label fx:id="headTitle" text="Ergo"/>
+					<HBox><Label text="%balanceC"/><Label text=" "/><Label fx:id="balance" text="0"/><Label text=" ERG"/></HBox>
+					<HBox fx:id="priceBox"><Label text="%valueC"/><Label text=" "/><Label fx:id="priceValue" text="0"/><Label text=" "/><Label fx:id="priceCurrency" text="???"/></HBox>
+					<ToggleButton fx:id="myTokens" text="%myTokens" toggleGroup="$group"/>
+
+					<Region prefHeight="10"/>
+
+					<ToggleButton fx:id="account" text="%account" toggleGroup="$group" maxWidth="Infinity"/>
+					<ToggleButton fx:id="send" text="%send" toggleGroup="$group" maxWidth="Infinity"/>
+					<ToggleButton fx:id="receive" text="%receive" toggleGroup="$group" maxWidth="Infinity"/>
+					<ToggleButton fx:id="transactions" text="%transactions" toggleGroup="$group" maxWidth="Infinity" disable="true"/>
+					<ToggleButton fx:id="about" text="%about" toggleGroup="$group" maxWidth="Infinity"/>
+					<ToggleButton fx:id="node" text="%node" toggleGroup="$group" maxWidth="Infinity"/>
+				</VBox>
+			</top>
+		</BorderPane>
+	</left>
+	<bottom>
+		<HBox spacing="20">
+			<padding><Insets topRightBottomLeft="6"/></padding>
+			<ToggleButton fx:id="settings" toggleGroup="$group" maxWidth="Infinity" contentDisplay="GRAPHIC_ONLY"><tooltip><Tooltip text="%settings"/></tooltip></ToggleButton>
+			<VBox spacing="2" pickOnBounds="false">
+				<Label text="%networkStatus"/>
+				<ProgressBar fx:id="networkStatus" progress="1"/>
+				<Label fx:id="blocksLeft"/>
+			</VBox>
+		</HBox>
+	</bottom>
+</BorderPane>

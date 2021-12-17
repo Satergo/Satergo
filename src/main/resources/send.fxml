@@ -1,0 +1,35 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" styleClass="background" fx:controller="com.satergo.controller.SendCtrl">
+	<padding>
+		<Insets topRightBottomLeft="20"/>
+	</padding>
+
+	<Label fx:id="paymentRequestIndicator" text="%youHaveOpenedAPaymentRequest" visible="false" managed="false">
+		<VBox.margin><Insets bottom="10"/></VBox.margin>
+	</Label>
+
+	<Label text="%address"/>
+	<TextField fx:id="address"/>
+
+	<Region prefHeight="4"/>
+
+	<Label text="%amount"/>
+	<TextField fx:id="amount"/>
+
+	<Region prefHeight="4"/>
+
+	<Label text="%fee"/>
+	<TextField fx:id="fee" promptText="%defaultMinimum"/>
+
+	<Region prefHeight="4"/>
+
+	<Button fx:id="send" text="%send"/>
+
+	<HBox fx:id="txIdContainer" visible="false" managed="false" spacing="2">
+		<VBox.margin><Insets top="4"/></VBox.margin>
+
+		<Label text="%transactionIdC"/> <Hyperlink fx:id="txLink"/> <Button fx:id="copyTxId" text="%copy"/>
+	</HBox>
+</VBox>

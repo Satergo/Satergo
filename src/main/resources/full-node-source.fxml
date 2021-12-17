@@ -1,0 +1,17 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.FullNodeSourceCtrl" styleClass="background" stylesheets="welcome.css" spacing="10">
+	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
+	<Label text="%fullNodeSource" styleClass="welcome-text"/>
+
+	<HBox styleClass="welcome-option" onMouseClicked="#downloadAndSetup">
+		<padding><Insets topRightBottomLeft="20"/></padding>
+		<Label text="%downloadAndSetup" styleClass="option-title"/>
+	</HBox>
+	<HBox styleClass="welcome-option" onMouseClicked="#useExisting">
+		<padding><Insets topRightBottomLeft="20"/></padding>
+		<Label text="%useExistingFromDirectory" styleClass="option-title"/>
+	</HBox>
+</VBox>

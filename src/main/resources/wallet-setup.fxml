@@ -1,0 +1,31 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.Image?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" stylesheets="welcome.css" styleClass="background" fx:controller="com.satergo.controller.WalletSetupCtrl">
+	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
+	<Label styleClass="welcome-text" text="%welcome"/>
+	<AnchorPane styleClass="welcome-option" onMouseClicked="#createWallet">
+		<ImageView AnchorPane.leftAnchor="7" AnchorPane.topAnchor="7">
+			<Image url="@/m-images/create-wallet.png"/>
+		</ImageView>
+		<Label text="%createNewWallet" styleClass="option-title" AnchorPane.leftAnchor="70" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="20"/>
+	</AnchorPane>
+	<AnchorPane styleClass="welcome-option" onMouseClicked="#openWalletFile">
+		<ImageView AnchorPane.leftAnchor="7" AnchorPane.topAnchor="5">
+			<Image url="@/m-images/open-wallet-from-file.png"/>
+		</ImageView>
+		<Label text="%openWalletFile" styleClass="option-title" AnchorPane.leftAnchor="70" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="20"/>
+	</AnchorPane>
+	<AnchorPane styleClass="welcome-option" onMouseClicked="#restoreFromSeed">
+		<ImageView AnchorPane.leftAnchor="7" AnchorPane.topAnchor="0">
+			<Image url="@/m-images/restore-wallet.png"/>
+		</ImageView>
+		<Label text="%restoreWalletUsingSeed" styleClass="option-title" AnchorPane.leftAnchor="70" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="20"/>
+	</AnchorPane>
+	<Button text="%returnToBlockchainSetup" onAction="#returnToBlockchainSetup"/>
+
+	<Region VBox.vgrow="ALWAYS"/>
+	<Label fx:id="_version" alignment="BASELINE_RIGHT" maxWidth="Infinity"/>
+</VBox>

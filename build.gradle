@@ -1,0 +1,136 @@
+plugins {
+	id 'java'
+	id 'application'
+	id 'org.beryx.runtime' version '1.12.7'
+}
+
+group 'com.satergo'
+version '0.0.1-beta5'
+
+application {
+	mainClass = "com.satergo.Launcher"
+	applicationName = project.name
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		url 'https://jitpack.io'
+		content {
+			includeGroup 'com.github.ergoplatform'
+		}
+	}
+	maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+	// this is required for org.jetbrains.pty4j:purejavacomm:0.12.5, but it is expected that they'll add it to maven before Feb 1st, 2022
+	jcenter() {
+		content {
+			includeGroup 'org.jetbrains.pty4j'
+		}
+	}
+}
+
+String platform
+if (project.hasProperty("platform") && project.findProperty("platform") != "auto") {
+	// for releasing
+	platform = project.findProperty("platform")
+} else {
+	// for running
+	def currentOs = org.gradle.internal.os.OperatingSystem.current()
+	if (currentOs.isLinux()) platform = "linux"
+	else if (currentOs.isMacOsX()) platform = "mac"
+	else if (currentOs.isWindows()) platform = "win"
+	else throw new IllegalArgumentException("unknown operating system")
+
+	def arch = System.getProperty("os.arch")
+	if (arch != "amd64") platform += "-" + arch
+}
+
+def javaFxVersion = '17'
+def javaFxModules = [ 'base', 'controls', 'fxml', 'swing', 'graphics' ]
+
+dependencies {
+	implementation ('org.jfxtras:jmetro:11.6.15') {
+		exclude group: 'org.openjfx'
+	}
+
+	implementation 'com.github.ergoplatform:ergo-appkit:bbe3e9e7ab'
+	implementation 'org.slf4j:slf4j-simple:1.7.32'
+	implementation 'com.grack:nanojson:1.7' // used for numerous HTTP APIs and ProgramData saving
+	implementation 'org.jetbrains.pty4j:pty4j:0.12.5' // for running node
+	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
+	implementation 'com.google.zxing:core:3.4.1' // used for qr codes
+	implementation 'net.java.dev.jna:jna:5.10.0'
+	implementation 'net.java.dev.jna:jna-platform:5.10.0'
+	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
+}
+
+runtime {
+	options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+	additive = true // makes addModules add modules instead of replacing
+	addModules("jdk.crypto.ec") // needed for HTTPS
+	addModules("java.naming") // needed for SLF4J which is used by ergo node
+	imageZip = file("runtimes/${project.name}-v${project.version}.zip") // the plugin automatically adds platform to the end
+	launcher {
+		jvmArgs = [ '-Dsatergo.launcher={{BIN_DIR}}/Satergo' + (platform == "win" ? ".bat" : "") ]
+		noConsole = false
+	}
+	if (platform == "linux") {
+		targetPlatform("linux-x64") {
+			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-x64_bin.tar.gz")
+		}
+	}
+	if (platform == "linux-aarch64") {
+		targetPlatform("linux-aarch64") {
+			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-aarch64_bin.tar.gz")
+		}
+	}
+	if (platform == "linux-arm32") {
+		targetPlatform("linux-arm32") {
+			jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.1%2B12/OpenJDK17U-jdk_arm_linux_hotspot_17.0.1_12.tar.gz")
+		}
+	}
+	if (platform == "win") {
+		targetPlatform("windows-x64") {
+			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_windows-x64_bin.zip")
+		}
+	}
+	if (platform == "mac") {
+		targetPlatform("mac-x64") {
+			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_macos-x64_bin.tar.gz")
+		}
+	}
+	if (platform == "mac-aarch64") {
+		targetPlatform("mac-aarch64") {
+			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_macos-aarch64_bin.tar.gz")
+		}
+	}
+}
+
+// Make builds reproducible
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+tasks.withType(AbstractArchiveTask) {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
+
+// Add convenient run files and remove redundant ones
+tasks.findByName("runtime").doLast {
+	String imageDirName = project.name + "-" + runtime.targetPlatforms.get().keySet().iterator().next()
+	String imageDirPath = "${buildDir}/image/${imageDirName}"
+	file("${imageDirPath}/release").delete()
+	file("${imageDirPath}/legal").deleteDir()
+	if (platform == "win") {
+		file("${imageDirPath}/bin/" + project.name).delete()
+		def runFile = file("${imageDirPath}/run.bat")
+		runFile.write("@start %~dp0\\bin\\" + project.name + ".bat")
+	} else {
+		file("${imageDirPath}/bin/" + project.name + ".bat").delete()
+		def runFile = file("${imageDirPath}/run." + (platform.startsWith("mac") ? "command" : "sh"))
+		runFile.write("#!/bin/sh\n" +
+				"eval \"\\\"\$(dirname \$0)/bin/" + project.name + "\\\" \$*\"")
+		runFile.setExecutable(true)
+	}
+}

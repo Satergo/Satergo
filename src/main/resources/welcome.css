@@ -1,0 +1,13 @@
+.welcome-text {
+	-fx-font-size: 3.6em;
+	-fx-font-weight: BOLD;
+}
+
+.welcome-option {
+	-fx-cursor: hand;
+	-fx-border-color: DIMGRAY;
+}
+
+.option-title {
+	-fx-font-size: 2.6em;
+}

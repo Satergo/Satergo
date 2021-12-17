@@ -1,0 +1,31 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<HBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" alignment="BASELINE_CENTER" styleClass="background" stylesheets="welcome.css" fx:controller="com.satergo.controller.CreateWalletCtrl">
+	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
+	<GridPane fx:id="root" vgap="6" alignment="BASELINE_CENTER">
+		<Label styleClass="welcome-text" text="%createNewWallet" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+			<GridPane.margin><Insets bottom="60"/></GridPane.margin>
+		</Label>
+
+		<Label GridPane.columnIndex="0" GridPane.rowIndex="1" text="%walletName" GridPane.hgrow="ALWAYS"/>
+		<TextField fx:id="walletName" promptText="%enterWalletName" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="300"/>
+
+		<Label GridPane.columnIndex="0" GridPane.rowIndex="2" text="%password" GridPane.hgrow="ALWAYS"/>
+		<PasswordField fx:id="password" promptText="%enterWalletPassword" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="300"/>
+
+		<Hyperlink fx:id="addMnemonicPassword" text="%addMnemonicPasswordOptional" onAction="#addMnemonicPassword" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3"/>
+
+		<Label fx:id="mnemonicPasswordLabel" GridPane.columnIndex="0" GridPane.rowIndex="3" text="%mnemonicPassword" visible="false" GridPane.hgrow="ALWAYS"/>
+		<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword" GridPane.columnIndex="1" GridPane.rowIndex="3" visible="false" prefWidth="300"/>
+
+		<Button onAction="#initializeWallet" text="%initializeWallet" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>
+
+		<Label fx:id="mnemonicPhraseLabel" text="%mnemonicPhraseC" visible="false" managed="false" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.hgrow="ALWAYS"/>
+		<Button fx:id="copyMnemonicPhrase" onAction="#copyMnemonicPhrase" text="%copy" visible="false" managed="false" GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.halignment="RIGHT"/>
+
+		<TextArea fx:id="mnemonicPhraseArea" visible="false" managed="false" editable="false" wrapText="true" GridPane.columnIndex="0" GridPane.rowIndex="7" GridPane.columnSpan="2"/>
+
+		<Button fx:id="continueWallet" onAction="#continueWallet" text="%continue" GridPane.columnIndex="1" GridPane.rowIndex="8" GridPane.halignment="RIGHT"/>
+	</GridPane>
+</HBox>

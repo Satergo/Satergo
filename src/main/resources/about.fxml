@@ -1,0 +1,15 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" styleClass="background" fx:controller="com.satergo.controller.AboutCtrl">
+	<padding><Insets topRightBottomLeft="20"/></padding>
+
+	<Label fx:id="version"/>
+
+	<Label text="%madeByAberg"/>
+
+	<Label fx:id="translatedBy"/>
+
+	<Button onAction="#donate" text="%donateToAuthor"/>
+</VBox>

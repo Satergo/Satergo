@@ -1,0 +1,9 @@
+.gradle/
+.idea/
+build/
+runtimes/
+
+# running
+node/
+program-data.json
+*.erg

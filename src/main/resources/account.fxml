@@ -1,0 +1,28 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.AccountCtrl" spacing="4">
+	<padding><Insets topRightBottomLeft="20"/></padding>
+	<GridPane vgap="4">
+<!--		<Label text="%addressBook" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/>-->
+<!--		<Button fx:id="addressBook" text="%open" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.halignment="RIGHT"/>-->
+
+		<Label text="%totalBalance" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
+		<Label fx:id="totalBalance" text="0.0 ERG" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.halignment="RIGHT"/>
+
+		<Label text="%mnemonicPhrase" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS"/>
+		<Button onAction="#retrieveMnemonicPhrase" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>
+
+		<Label text="%mnemonicPassword" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.hgrow="ALWAYS"/>
+		<Button onAction="#retrieveMnemonicPassword" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.halignment="RIGHT"/>
+
+		<Label text="%walletName" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.hgrow="ALWAYS"/>
+		<Button onAction="#changeWalletName" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>
+
+		<Label text="%walletPassword" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.hgrow="ALWAYS"/>
+		<Button onAction="#changeWalletPassword" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.halignment="RIGHT"/>
+	</GridPane>
+	<Label text="%yourAddresses"><VBox.margin><Insets top="10"/></VBox.margin></Label>
+	<VBox fx:id="addresses" spacing="2"/>
+	<HBox spacing="8" alignment="CENTER_RIGHT"><Button onAction="#addAddress" text="%addAddress"/><Button onAction="#logout" text="%logout" alignment="CENTER_RIGHT"/></HBox>
+</VBox>

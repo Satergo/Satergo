@@ -1,0 +1,24 @@
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.SettingsCtrl" vgap="4">
+	<padding><Insets topRightBottomLeft="20"/></padding>
+
+	<Label text="%showPrice" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/>
+	<CheckBox fx:id="showPrice" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.halignment="RIGHT"/>
+
+	<Label text="%priceSource" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
+	<ComboBox fx:id="priceSource" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.halignment="RIGHT"/>
+
+	<Label text="%priceCurrency" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS"/>
+	<ComboBox fx:id="priceCurrency" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>
+
+	<Label text="%lightTheme" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.hgrow="ALWAYS"/>
+	<CheckBox fx:id="lightTheme" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.halignment="RIGHT"/>
+
+	<Label text="%language" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.hgrow="ALWAYS"/>
+	<ComboBox fx:id="language" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>
+
+</GridPane>

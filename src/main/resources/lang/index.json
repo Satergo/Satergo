@@ -1,0 +1,8 @@
+{
+	"eng": { "name": "English", "credit": "Aberg" },
+	"spa": { "name": "Español", "credit": "@Secharles" },
+	"ita": { "name": "Italiano", "credit": "ErGonario" },
+	"deu": { "name": "Deutsch", "credit": "@Gstoiti" },
+	"rus": { "name": "Русский", "credit": "Art Melks" },
+	"fra": { "name": "Français", "credit": "@pilotfish" }
+}

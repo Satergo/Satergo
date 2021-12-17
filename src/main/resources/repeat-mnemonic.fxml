@@ -1,0 +1,18 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.Group?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="12" styleClass="background" fx:controller="com.satergo.controller.RepeatMnemonicCtrl">
+	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
+	<Label styleClass="welcome-text" text="%repeatMnemonic"/>
+
+	<Label fx:id="mnemonicProgress"/>
+
+	<Group fx:id="verifyHolder"/>
+
+	<Label text="%mnemonicPassword"/>
+
+	<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword"/>
+
+	<Button onAction="#createWallet" text="%createWallet"/>
+</VBox>
