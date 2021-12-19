@@ -10,7 +10,7 @@ More can easily be added.
 
 ## Translating
 To translate the program, open the directory src/main/resources/lang and duplicate Lang.properties.
-Change the file name to Lang_ and the 3-letter code of your language (ISO-639-2/T) (for example Lang_ita.properties) and translate everything in the file.
+Change the file name to Lang_ and the 3-letter code of your language (ISO-639-3) (for example Lang_ita.properties) and translate everything in the file.
 
 Then, in the same folder, open the index.json file, add a comma to the last entry and make a new line inside the list like:
 ```json
