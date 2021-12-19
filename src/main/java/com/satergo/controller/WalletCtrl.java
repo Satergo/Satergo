@@ -50,6 +50,15 @@ public class WalletCtrl implements Initializable {
 		this("account");
 	}
 
+	private Balance lastBalance;
+
+	/**
+	 * Updates every minute
+	 */
+	public Balance getLastBalance() {
+		return lastBalance;
+	}
+
 	@FXML private BorderPane root;
 	@FXML private BorderPane sidebar;
 	@FXML private Label headTitle;
@@ -73,6 +82,7 @@ public class WalletCtrl implements Initializable {
 	}
 
 	private void updateBalance(Balance totalBalance) {
+		this.lastBalance = totalBalance;
 		String formatted = format.format(ErgoInterface.toFullErg(totalBalance.confirmed()));
 		if (formatted.equals("0") && totalBalance.confirmed() != 0)
 			this.balance.setText("~0");
@@ -87,7 +97,7 @@ public class WalletCtrl implements Initializable {
 		DecimalFormat priceFormat = new DecimalFormat("0");
 		priceFormat.setMaximumFractionDigits(Main.programData().priceCurrency.get().displayDecimals);
 		priceCurrency.setText(Main.programData().priceCurrency.get().uc());
-		priceValue.setText(priceFormat.format(ErgoInterface.toFullErg(Main.get().getWallet().balance().confirmed()).multiply(oneErgValue)));
+		priceValue.setText(priceFormat.format(ErgoInterface.toFullErg(lastBalance.confirmed()).multiply(oneErgValue)));
 	}
 
 	@Override
@@ -147,10 +157,6 @@ public class WalletCtrl implements Initializable {
 						.then(Load.image("/images/settings-dark-theme.png"))
 						.otherwise(Load.image("/images/settings-light-theme.png"))));
 		settings.setGraphic(settingsImage);
-
-		root.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-			((Node) e.getTarget()).setStyle("-fx-background-color: green;");
-		});
 
 		((ToggleButton) root.lookup("#" + initialTab)).setSelected(true);
 
