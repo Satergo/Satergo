@@ -145,8 +145,8 @@ public class Main extends Application {
 	public void stop() {
 		if (node != null && node.isRunning())
 			node.stop();
-		if (WalletCtrl.current != null) {
-			WalletCtrl.current.cancelTimer();
+		if (walletPage != null) {
+			walletPage.cancelTimer();
 		}
 		try {
 			Launcher.getIPC().stopListening();
@@ -213,6 +213,10 @@ public class Main extends Application {
 	public void setWallet(Wallet wallet) {
 		this.wallet = wallet;
 		programData.lastWallet.set(wallet == null ? null : wallet.path);
+	}
+
+	public WalletCtrl getWalletPage() {
+		return walletPage;
 	}
 
 	public void handleErgoURI(ErgoURIString ergoURI) {

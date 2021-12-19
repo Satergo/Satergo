@@ -4,6 +4,7 @@ import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergouri.ErgoURIString;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -32,6 +33,11 @@ public class SendCtrl implements Initializable, WalletTab {
 			amount.setText(ergoURI.amount.toPlainString());
 		} else amount.setText("");
 		fee.setText("");
+	}
+
+	@FXML
+	public void showSendTokens(ActionEvent e) {
+
 	}
 
 	@Override

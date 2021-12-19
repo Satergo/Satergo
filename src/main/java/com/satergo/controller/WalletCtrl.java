@@ -50,9 +50,6 @@ public class WalletCtrl implements Initializable {
 		this("account");
 	}
 
-	// this sucks
-	public static WalletCtrl current;
-
 	@FXML private BorderPane root;
 	@FXML private BorderPane sidebar;
 	@FXML private Label headTitle;
@@ -97,7 +94,6 @@ public class WalletCtrl implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		format.setMaximumFractionDigits(4);
 		format.setRoundingMode(RoundingMode.FLOOR);
-		current = this;
 		myTokens.textProperty().bind(Bindings.when(myTokens.disabledProperty()).then(Main.lang("noTokens")).otherwise(Main.lang("myTokens")));
 		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
 			if (!Main.node.isRunning()) // a refresh due to language change will not stop the node (see SettingsCtrl), so check if it is running
