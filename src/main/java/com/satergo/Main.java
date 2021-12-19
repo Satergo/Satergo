@@ -4,6 +4,7 @@ import com.satergo.controller.WalletCtrl;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergouri.ErgoURIString;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.scene.Group;
 import javafx.scene.Parent;
@@ -17,6 +18,7 @@ import javafx.util.Pair;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
@@ -24,7 +26,8 @@ import java.util.Locale;
 
 public class Main extends Application {
 
-	public static final String VERSION = "0.0.1-beta4";
+	public static final String VERSION = "0.0.1";
+	public static final int VERSION_CODE = 1;
 
 	public static EmbeddedFullNode node;
 	// from command line
@@ -68,6 +71,7 @@ public class Main extends Application {
 		}
 
 		translations.setLocale(Locale.forLanguageTag(programData.language.get()));
+		Locale.setDefault(Locale.forLanguageTag(programData.language.get()));
 
 		Load.resourceBundle = translations.getBundle();
 		primaryStage.setTitle(lang("programName"));
@@ -122,6 +126,13 @@ public class Main extends Application {
 		primaryStage.getIcons().add(new Image(Utils.resourcePath("/images/logo.jpg")));
 		primaryStage.show();
 
+		new Thread(() -> {
+			UpdateChecker.VersionInfo latest = UpdateChecker.fetchLatestInfo();
+			if (UpdateChecker.isNewer(latest.versionCode())) {
+				Platform.runLater(() -> UpdateChecker.showUpdatePopup(latest));
+			}
+		}).start();
+
 		primaryStage.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
 			if (e.getCode() == KeyCode.ESCAPE)
 				previousPage();
@@ -137,6 +148,10 @@ public class Main extends Application {
 		if (WalletCtrl.current != null) {
 			WalletCtrl.current.cancelTimer();
 		}
+		try {
+			Launcher.getIPC().stopListening();
+			Files.deleteIfExists(Launcher.getIPC().path);
+		} catch (IOException ignored) {}
 	}
 
 	public EmbeddedFullNode nodeFromInfo() {
@@ -181,6 +196,7 @@ public class Main extends Application {
 		programData.language.set(entry.code());
 		translations.setLocale(entry.locale());
 		Load.resourceBundle = translations.getBundle();
+		Locale.setDefault(entry.locale());
 	}
 
 	public Stage stage() { return stage; }

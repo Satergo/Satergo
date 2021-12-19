@@ -8,9 +8,7 @@ import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonWriter;
-import javafx.beans.property.ReadOnlyProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ObservableValue;
 import org.ergoplatform.appkit.NetworkType;
 
@@ -39,6 +37,8 @@ public class ProgramData {
 			nodeNetworkType = new SimpleEnumProperty<>(NetworkType.class, null, "nodeNetworkType", NetworkType.MAINNET);
 	public final SimpleBooleanProperty
 			nodeLogAutoScroll = new SimpleBooleanProperty(null, "nodeLogAutoScroll", true);
+	public final SimpleLongProperty
+			skippedUpdate = new SimpleLongProperty(null, "skippedUpdate", -1);
 
 	// settings
 	public final SimpleStringProperty
@@ -53,7 +53,7 @@ public class ProgramData {
 			lightTheme = new SimpleBooleanProperty(null, "lightTheme", false);
 
 	private final List<ObservableValue<?>> allSettings = List.of(
-			blockchainNodeKind, nodeAddress, lastWallet, embeddedNodeInfo, nodeNetworkType, nodeLogAutoScroll,
+			blockchainNodeKind, nodeAddress, lastWallet, embeddedNodeInfo, nodeNetworkType, nodeLogAutoScroll, skippedUpdate,
 			language, showPrice, priceSource, priceCurrency, lightTheme);
 
 	public ProgramData(Path path) {
@@ -84,17 +84,17 @@ public class ProgramData {
 			JsonObject jo = JsonParser.object().from(Files.readString(path));
 			ProgramData programData = new ProgramData(path);
 			programData.allSettings.forEach(setting -> {
-				String name = ((ReadOnlyProperty<?>) setting).getName();
-				Object v = jo.get(name);
+				String k = ((ReadOnlyProperty<?>) setting).getName();
 				try {
 					if (setting instanceof SimpleEnumProperty s)
-						s.set(v == null ? null : Enum.valueOf(s.enumClass, (String) v));
-					else if (setting instanceof SimpleStringProperty s) s.set((String) v);
-					else if (setting instanceof SimpleBooleanProperty s) s.set((boolean) v);
-					else if (setting instanceof SimplePathProperty s) s.set(v == null ? null : Path.of((String) v));
+						s.set(jo.isNull(k) ? null : Enum.valueOf(s.enumClass, jo.getString(k)));
+					else if (setting instanceof SimpleStringProperty s) s.set(jo.getString(k));
+					else if (setting instanceof SimpleBooleanProperty s) s.set(jo.getBoolean(k));
+					else if (setting instanceof SimplePathProperty s) s.set(jo.isNull(k) ? null : Path.of(jo.getString(k)));
+					else if (setting instanceof SimpleLongProperty s) s.set(jo.getLong(k));
 					else throw new IllegalArgumentException("type mismatch");
 				} catch (Exception e) {
-					System.err.println("ProgramData field \"" + name + "\" is corrupted. (value=" + v + ")");
+					System.err.println("ProgramData field \"" + k + "\" is corrupted. (value=" + jo.get(k) + ")");
 				}
 			});
 			return programData;
