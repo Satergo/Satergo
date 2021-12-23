@@ -75,9 +75,11 @@ public class ErgoInterface {
 	 * @param amountToSend amount to send in nanoERGs
 	 * @param feeAmount Fee, minimum {@link Parameters#MinFee}
 	 * @param tokensToSend tokens to send
+	 * @throws InputBoxesSelectionException if not enough ERG or not enough tokens were found
 	 * @return the transaction ID
 	 */
-	public static String transact(ErgoClient ergoClient, Function<BlockchainContext, ErgoProver> ergoProverFunction, Address recipient, long amountToSend, long feeAmount, ErgoToken... tokensToSend) {
+	public static String transact(ErgoClient ergoClient, Function<BlockchainContext, ErgoProver> ergoProverFunction,
+								  Address recipient, long amountToSend, long feeAmount, ErgoToken... tokensToSend) throws InputBoxesSelectionException {
 		if (feeAmount < Parameters.MinFee) {
 			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
 		}

@@ -19,6 +19,8 @@ import org.ergoplatform.appkit.*;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -101,7 +103,6 @@ public class SendCtrl implements Initializable, WalletTab {
 		if (address.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
 		else if (amount.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
 		else {
-			// todo check if the user can afford this transaction (erg & tokens)
 			// todo can the address be checked any further than network?
 			Address recipient = Address.create(address.getText());
 			if (recipient.isMainnet() && Main.programData().nodeNetworkType.get() != NetworkType.MAINNET) {
@@ -125,6 +126,7 @@ public class SendCtrl implements Initializable, WalletTab {
 			}
 			long amountNanoErg = ErgoInterface.toNanoErg(amountFullErg);
 			ErgoToken[] tokensToSend = new ErgoToken[tokenList.getChildren().size()];
+			HashMap<ErgoId, String> tokenNames = new HashMap<>(tokenList.getChildren().size());
 			for (int i = 0; i < tokenList.getChildren().size(); i++) {
 				TokenLine tokenLine = (TokenLine) tokenList.getChildren().get(i);
 				if (!tokenLine.hasAmount()) {
@@ -136,6 +138,7 @@ public class SendCtrl implements Initializable, WalletTab {
 					return;
 				}
 				tokensToSend[i] = new ErgoToken(tokenLine.tokenInfo.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenInfo.decimals()));
+				tokenNames.put(tokenLine.tokenInfo.id(), tokenLine.tokenInfo.name());
 			}
 			BigDecimal feeFullErg = null;
 			if (!fee.getText().isBlank()) {
@@ -155,8 +158,19 @@ public class SendCtrl implements Initializable, WalletTab {
 				Utils.alert(Alert.AlertType.ERROR, Main.lang("feeTooLow").formatted(ErgoInterface.toFullErg(Parameters.MinFee)));
 				return;
 			}
-			String transactionIdQuoted = Main.get().getWallet().transact(recipient, amountNanoErg, feeNanoErg, tokensToSend);
-			String transactionId = transactionIdQuoted.substring(1, transactionIdQuoted.length() - 1);
+			String transactionId;
+			try {
+				String transactionIdQuoted = Main.get().getWallet().transact(recipient, amountNanoErg, feeNanoErg, tokensToSend);
+				transactionId = transactionIdQuoted.substring(1, transactionIdQuoted.length() - 1);
+			} catch (InputBoxesSelectionException.NotEnoughErgsException ex) {
+				DecimalFormat exactNoLeading = new DecimalFormat("0");
+				exactNoLeading.setMaximumFractionDigits(9);
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(exactNoLeading.format(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
+				return;
+			} catch (InputBoxesSelectionException.NotEnoughTokensException ex) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughOf_s").formatted(ex.tokenBalances.keySet().stream().map(ErgoId::create).map(tokenNames::get).map(name -> '"' + name + '"').collect(Collectors.joining(", "))));
+				return;
+			}
 			txLink.setText(transactionId);
 			String explorerUrl = "https://" + (Main.programData().nodeNetworkType.get() == NetworkType.MAINNET ? "explorer" : "testnet") + ".ergoplatform.com/en/transactions";
 			txLink.setOnAction(te -> Main.get().getHostServices().showDocument(explorerUrl + "/" + transactionId));

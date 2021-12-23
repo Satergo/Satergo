@@ -55,7 +55,7 @@ dependencies {
 		exclude group: 'org.openjfx'
 	}
 
-	implementation 'com.github.ergoplatform:ergo-appkit:bbe3e9e7ab'
+	implementation 'com.github.ergoplatform:ergo-appkit:d07973367c'
 	implementation 'org.slf4j:slf4j-simple:1.7.32'
 	implementation 'com.grack:nanojson:1.7' // used for numerous HTTP APIs and ProgramData saving
 	implementation 'org.jetbrains.pty4j:pty4j:0.12.5' // for running node
