@@ -25,7 +25,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@FXML private Label logLevelNote;
 	@FXML private CheckBox autoScroll;
 	private double lastScrollTop;
-	
+
 	private void transferLog() {
 		new Thread(() -> {
 			try {
@@ -87,5 +87,10 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		});
 		progress.progressProperty().bind(Main.node.nodeSyncProgress);
 		blocksNodeNetwork.textProperty().bind(Bindings.concat(Main.node.nodeBlockHeight, "/", Main.node.networkBlockHeight));
+	}
+
+	public void logVersionUpdate(String latestVersion) {
+		lastScrollTop = log.getScrollTop();
+		log.setText(log.getText() + "\n-------- " + Main.lang("nodeWasUpdatedToVersion_s_log").formatted(latestVersion) + " --------\n\n");
 	}
 }

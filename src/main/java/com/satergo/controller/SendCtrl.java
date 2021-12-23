@@ -103,7 +103,6 @@ public class SendCtrl implements Initializable, WalletTab {
 		if (address.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
 		else if (amount.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
 		else {
-			// todo can the address be checked any further than network?
 			Address recipient = Address.create(address.getText());
 			if (recipient.isMainnet() && Main.programData().nodeNetworkType.get() != NetworkType.MAINNET) {
 				Utils.alert(Alert.AlertType.ERROR, Main.lang("recipientIsAMainnetAddress"));

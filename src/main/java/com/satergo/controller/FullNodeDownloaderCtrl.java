@@ -103,7 +103,7 @@ public class FullNodeDownloaderCtrl implements Initializable {
 		networkType.getItems().addAll(NetworkType.values());
 		networkType.setValue(NetworkType.MAINNET);
 		networkType.valueProperty().bindBidirectional(Main.programData().nodeNetworkType);
-		version = Utils.fetchLatestNode();
+		version = Utils.fetchLatestNodeVersion();
 		nodeVersion.setText(version.version());
 		if (new File("node").exists()) {
 			nodeDirectory = null;

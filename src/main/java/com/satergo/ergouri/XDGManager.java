@@ -23,7 +23,7 @@ class XDGManager implements ErgoURIManager {
 			Path.of("/usr/share/applications/gnome-mimeapps.list"),
 			Path.of("/usr/share/applications/mimeapps.list")
 	};
-	private static final String FILE_NAME = "ergo-url.desktop";
+	private static final String FILE_NAME = "ergo-uri.desktop";
 
 	private final Path mimeappsList;
 

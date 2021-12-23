@@ -1,5 +1,8 @@
 package com.satergo;
 
+import com.grack.nanojson.JsonObject;
+import com.grack.nanojson.JsonParser;
+import com.grack.nanojson.JsonParserException;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.PasswordInputDialog;
 import javafx.scene.control.Alert;
@@ -8,11 +11,13 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URL;
@@ -55,7 +60,7 @@ public class Utils {
 		alert.show();
 	}
 
-	public static void alert(Alert.AlertType type, String contentText) {
+	public static Alert alert(Alert.AlertType type, String contentText) {
 		Alert alert = new Alert(type);
 		alert.initOwner(Main.get().stage());
 		alert.setTitle(Main.lang("programName"));
@@ -63,6 +68,7 @@ public class Utils {
 		alert.setHeaderText(null);
 		alert.setContentText(contentText);
 		alert.show();
+		return alert;
 	}
 
 	public static void alertException(String title, String headerText, String exceptionText) {
@@ -98,7 +104,7 @@ public class Utils {
 		}
 	}
 
-	public static NodeVersion fetchLatestNode() {
+	public static NodeVersion fetchLatestNodeVersion() {
 		HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
 		HttpRequest request = httpRequestBuilder().uri(URI.create("https://github.com/ergoplatform/ergo/releases/latest"))
 				.method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
@@ -108,6 +114,17 @@ public class Utils {
 			String version = link.substring(link.lastIndexOf('/') + 2);
 			return new NodeVersion(version, URI.create("https://github.com/ergoplatform/ergo/releases/download/v" + version + "/ergo-" + version + ".jar"));
 		} catch (IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static JsonObject fetchLatestNodeData() {
+		HttpClient httpClient = HttpClient.newHttpClient();
+		HttpRequest request = httpRequestBuilder().uri(URI.create("https://api.github.com/repos/ergoplatform/ergo/releases")).build();
+		try {
+			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+			return JsonParser.array().from(response.body()).getObject(0);
+		} catch (IOException | InterruptedException | JsonParserException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -187,5 +204,29 @@ public class Utils {
 
 	public static int getNumberOfDecimalPlaces(BigDecimal bigDecimal) {
 		return Math.max(0, bigDecimal.stripTrailingZeros().scale());
+	}
+
+	public static int toInt(byte[] bytes, int offset) {
+		int ret = 0;
+		for (int i = 0; i < 4 && i + offset < bytes.length; i++) {
+			ret <<= 8;
+			ret |= (int) bytes[i] & 0xFF;
+		}
+		return ret;
+	}
+
+	public static int versionToInt(String version) {
+		String[] versionParts = version.split("\\.");
+		byte[] versionDigits = new byte[versionParts.length];
+		for (int i = 0; i < versionParts.length; i++)
+			versionDigits[i] = Byte.parseByte(versionParts[i]);
+		return toInt(pad(versionDigits, 4), 0);
+	}
+
+	public static byte[] pad(byte[] array, int length) {
+		if (length < array.length) throw new IllegalArgumentException();
+		byte[] padded = new byte[length];
+		System.arraycopy(array, 0, padded, 0, padded.length);
+		return padded;
 	}
 }

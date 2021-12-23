@@ -93,6 +93,15 @@ public class Main extends Application {
 		updateOverrides.run();
 		jMetro.styleProperty().addListener((observable, oldValue, newValue) -> updateOverrides.run());
 
+		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+			StringWriter stringWriter = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(stringWriter);
+			throwable.printStackTrace(printWriter);
+			String stackTrace = stringWriter.toString();
+			System.err.println(stackTrace);
+			Utils.alertException("Unexpected error", "An unexpected error occurred", stackTrace);
+		});
+
 		Parent root;
 		if (programData.blockchainNodeKind.get() == null ||
 				(programData.blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE && !Files.isRegularFile(programData.embeddedNodeInfo.get()))) {
@@ -145,15 +154,6 @@ public class Main extends Application {
 		});
 
 		programData.lightTheme.addListener((observable, oldValue, newValue) -> jMetro.setStyle(newValue ? Style.LIGHT : Style.DARK));
-
-		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-			StringWriter stringWriter = new StringWriter();
-			PrintWriter printWriter = new PrintWriter(stringWriter);
-			throwable.printStackTrace(printWriter);
-			String stackTrace = stringWriter.toString();
-			System.err.println(stackTrace);
-			Utils.alertException("Unexpected error", "An unexpected error occurred", stackTrace);
-		});
 	}
 
 	@Override

@@ -61,8 +61,8 @@ dependencies {
 	implementation 'org.jetbrains.pty4j:pty4j:0.12.5' // for running node
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
 	implementation 'com.google.zxing:core:3.4.1' // used for qr codes
-	implementation 'net.java.dev.jna:jna:5.10.0'
-	implementation 'net.java.dev.jna:jna-platform:5.10.0'
+	implementation 'net.java.dev.jna:jna:5.10.0' // used for running the registration of ergo uri with admin privileges on Windows
+	implementation 'net.java.dev.jna:jna-platform:5.10.0' // used for running the registration of ergo uri with admin privileges on Windows
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 }
 

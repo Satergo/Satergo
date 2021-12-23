@@ -83,7 +83,6 @@ public class ErgoInterface {
 		if (feeAmount < Parameters.MinFee) {
 			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
 		}
-
 		return ergoClient.execute(ctx -> {
 			ErgoProver senderProver = ergoProverFunction.apply(ctx);
 			Address sender = senderProver.getEip3Addresses().get(0);
@@ -110,11 +109,9 @@ public class ErgoInterface {
 		});
 	}
 
-
 	public static String generateMnemonicPhrase(String languageId) {
 		return Mnemonic.generate(languageId, Mnemonic.DEFAULT_STRENGTH, Mnemonic.getEntropy(Mnemonic.DEFAULT_STRENGTH));
 	}
-
 
 	/**
 	 * @param index 0 is the master address

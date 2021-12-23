@@ -1,22 +1,40 @@
 package com.satergo.ergo;
 
+import com.grack.nanojson.JsonObject;
+import com.satergo.Main;
 import com.satergo.Utils;
 import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
+import com.satergo.controller.NodeOverviewCtrl;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import org.ergoplatform.appkit.NetworkType;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EmbeddedFullNode {
 
@@ -60,8 +78,9 @@ public class EmbeddedFullNode {
 	public final SimpleDoubleProperty nodeSyncProgress = new SimpleDoubleProperty(0);
 	public final SimpleIntegerProperty nodeBlocksLeft = new SimpleIntegerProperty(1);
 
-	private Timer pollerTimer;
-	private TimerTask pollerTask;
+	private Timer checkingTimer;
+	private TimerTask pollerTask, versionUpdateCheckTask;
+	private int lastVersionUpdateAlert = 0;
 
 	public int port() {
 		return networkType == NetworkType.MAINNET ? 9053 : 9052;
@@ -71,23 +90,29 @@ public class EmbeddedFullNode {
 		return "http://127.0.0.1:" + port();
 	}
 
-//	private static String readVersion(File file) throws IOException {
-//		JarFile jar = new JarFile(file);
-//		// doesn't use application.conf (4.0.10) because once that was outdated but mainnet.conf (4.0.13) was not
-//		String mainnetConf = new String(new DataInputStream(jar.getInputStream(jar.getEntry("mainnet.conf"))).readAllBytes(), StandardCharsets.UTF_8);
-//		Pattern pattern = Pattern.compile("nodeName\\s+=\\s+\"ergo-mainnet-([\\d.]+)\"");
-//		Matcher m = pattern.matcher(mainnetConf);
-//		if (!m.find()) throw new IllegalArgumentException();
-//		return m.group(1);
-//	}
+	private static String readVersion(File file) throws IOException {
+		JarFile jar = new JarFile(file);
+		// doesn't use application.conf (4.0.10) because once that was outdated but mainnet.conf (4.0.13) was not
+		String mainnetConf = new String(new DataInputStream(jar.getInputStream(jar.getEntry("mainnet.conf"))).readAllBytes(), StandardCharsets.UTF_8);
+		Pattern pattern = Pattern.compile("nodeName\\s+=\\s+\"ergo-mainnet-([\\d.]+)\"");
+		Matcher m = pattern.matcher(mainnetConf);
+		if (!m.find()) throw new IllegalArgumentException();
+		return m.group(1);
+	}
 
-//	public String readVersion() {
-//		try {
-//			return readVersion(nodeJar);
-//		} catch (IOException e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
+	public String readVersion() {
+		// Unfortunately many ergo node releases don't update the version in the relevant files, so we have to use the filename...
+		Matcher matcher = Pattern.compile(".*?(\\d\\.+\\d+\\.\\d+(?:\\.\\d+)?).*?").matcher(nodeJar.getName());
+		// Fallback to the probably wrong version in the conf file
+		if (!matcher.matches()) {
+			try {
+				return readVersion(nodeJar);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return matcher.group(1);
+	}
 
 	public void firstTimeSetup() {
 		try {
@@ -105,11 +130,11 @@ public class EmbeddedFullNode {
 		return binDirectory.resolve("java");
 	}
 
-	private void startHeightPolling() {
-		if (pollerTimer != null) {
-			pollerTimer.cancel();
+	private void startTimers() {
+		if (checkingTimer != null) {
+			checkingTimer.cancel();
 		}
-		pollerTimer = new Timer();
+		checkingTimer = new Timer();
 		pollerTask = new TimerTask() {
 			@Override
 			public void run() {
@@ -124,7 +149,81 @@ public class EmbeddedFullNode {
 				} catch (Exception ignored) {} // todo
 			}
 		};
-		pollerTimer.scheduleAtFixedRate(pollerTask, 10000, 20000);
+		checkingTimer.scheduleAtFixedRate(pollerTask, 10000, 20000);
+		try {
+			String versionRaw = readVersion();
+			String versionNormalized = versionRaw.split("\\.").length == 3 ? versionRaw + ".0" : versionRaw;
+			int versionInt = Utils.versionToInt(versionNormalized);
+			versionUpdateCheckTask = new TimerTask() {
+				@Override
+				public void run() {
+					JsonObject latestNodeData = Utils.fetchLatestNodeData();
+					String latestVersion = latestNodeData.getString("tag_name").substring(1);
+					int latestVersionInt = Utils.versionToInt(latestVersion);
+
+					if (lastVersionUpdateAlert != latestVersionInt && versionInt < latestVersionInt) {
+						Platform.runLater(() -> {
+							Alert alert = new Alert(Alert.AlertType.NONE);
+							alert.initOwner(Main.get().stage());
+							alert.setTitle(Main.lang("programName"));
+							alert.setHeaderText(Main.lang("aNewErgoNodeVersionHasBeenFound"));
+							alert.setContentText(Main.lang("nodeUpdateDescription").formatted(
+									latestVersion,
+									LocalDateTime.parse(latestNodeData.getString("published_at"), DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+									latestNodeData.getString("body")));
+							ButtonType update = new ButtonType(Main.lang("update"), ButtonBar.ButtonData.YES);
+							ButtonType notNow = new ButtonType(Main.lang("notNow"), ButtonBar.ButtonData.CANCEL_CLOSE);
+							alert.getButtonTypes().addAll(update, notNow);
+							lastVersionUpdateAlert = latestVersionInt;
+							alert.showAndWait().ifPresent(t -> {
+								if (t == update) {
+									Alert updatingAlert = Utils.alert(Alert.AlertType.NONE, Main.lang("updatingErgoNode..."));
+									new Thread(() -> {
+										downloadUpdate(nodeDirectory.toPath(), latestVersion, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
+										try {
+											Files.delete(nodeJar.toPath());
+										} catch (IOException e) {
+											throw new RuntimeException(e);
+										}
+										Platform.runLater(() -> {
+											updatingAlert.getDialogPane().getButtonTypes().add(ButtonType.OK); // a window cannot be closed unless it has a button
+											updatingAlert.close();
+											try {
+												((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).logVersionUpdate(latestVersion);
+											} catch (Exception ignored) {} // could happen if user somehow logs out while it is updating, so wallet page becomes null
+											stop();
+											waitForExit();
+											Main.node = Main.get().nodeFromInfo();
+											Main.node.start();
+											Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
+										});
+									}).start();
+								}
+							});
+						});
+					}
+				}
+			};
+			checkingTimer.scheduleAtFixedRate(versionUpdateCheckTask, Duration.ofSeconds(5).toMillis(), Duration.ofHours(4).toMillis());
+		} catch (NumberFormatException ignored) {}
+	}
+
+	/**
+	 * downloads the jar and updates the node info file
+	 */
+	private static void downloadUpdate(Path dir, String version, URI uri) {
+		HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
+		HttpRequest request = Utils.httpRequestBuilder().uri(uri).build();
+		String jarName = "ergo-" + version + ".jar";
+		Path jar = dir.resolve(jarName);
+		try {
+			httpClient.send(request, HttpResponse.BodyHandlers.ofFile(jar));
+			EmbeddedNodeInfo newInfo = EmbeddedNodeInfo.fromJson(Files.readString(dir.resolve(EmbeddedNodeInfo.FILE_NAME)))
+					.withJarFileName(jarName);
+			Files.writeString(dir.resolve(EmbeddedNodeInfo.FILE_NAME), newInfo.toJson());
+		} catch (IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public void start() {
@@ -140,7 +239,7 @@ public class EmbeddedFullNode {
 			command[6] = confFile.getName();
 			System.out.println("running node with command: " + Arrays.toString(command));
 			process = new PtyProcessBuilder().setCommand(command).setDirectory(nodeDirectory.getAbsolutePath()).start();
-			startHeightPolling();
+			startTimers();
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
@@ -157,7 +256,8 @@ public class EmbeddedFullNode {
 	public void stop() {
 		process.destroy();
 		pollerTask.cancel();
-		pollerTimer.cancel();
+		versionUpdateCheckTask.cancel();
+		checkingTimer.cancel();
 	}
 	
 	public void waitForExit() {

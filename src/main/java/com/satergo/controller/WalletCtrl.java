@@ -63,6 +63,11 @@ public class WalletCtrl implements Initializable {
 
 	private final HashMap<String, Pair<Pane, WalletTab>> tabs = new HashMap<>();
 
+	@SuppressWarnings("unchecked")
+	public <T extends WalletTab>T getTab(String id) {
+		return (T) tabs.get(id);
+	}
+
 	private final DecimalFormat format = new DecimalFormat("0");
 
 	public void openSendWithErgoURI(ErgoURIString ergoURI) {

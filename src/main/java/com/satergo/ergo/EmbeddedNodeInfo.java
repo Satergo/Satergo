@@ -14,6 +14,10 @@ public record EmbeddedNodeInfo(NetworkType networkType, String jarFileName, Embe
 		return new EmbeddedNodeInfo(this.networkType, this.jarFileName, logLevel, this.confFileName);
 	}
 
+	public EmbeddedNodeInfo withJarFileName(String jarFileName) {
+		return new EmbeddedNodeInfo(this.networkType, jarFileName, this.logLevel, this.confFileName);
+	}
+
 	public String toJson() {
 		return JsonWriter.string().object()
 				.value("networkType", networkType.toString())
