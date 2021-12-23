@@ -41,11 +41,11 @@ class WindowsManager implements ErgoURIManager {
 		Files.writeString(regFilePath, """
 				Windows Registry Editor Version 5.00
 				
-				-[HKEY_CLASSES_ROOT\\ergo\\shell\\open\\command]
-				-[HKEY_CLASSES_ROOT\\ergo\\shell\\open]
-				-[HKEY_CLASSES_ROOT\\ergo\\shell]
-				-[HKEY_CLASSES_ROOT\\ergo\\DefaultIcon]
-				-[HKEY_CLASSES_ROOT\\ergo]
+				[-HKEY_CLASSES_ROOT\\ergo\\shell\\open\\command]
+				[-HKEY_CLASSES_ROOT\\ergo\\shell\\open]
+				[-HKEY_CLASSES_ROOT\\ergo\\shell]
+				[-HKEY_CLASSES_ROOT\\ergo\\DefaultIcon]
+				[-HKEY_CLASSES_ROOT\\ergo]
 				""");
 		Shell32.INSTANCE.ShellExecute(null, "runas", "reg", "IMPORT satergo_ergo_uri_unregister.reg", System.getProperty("java.io.tmpdir"), 0);
 	}
