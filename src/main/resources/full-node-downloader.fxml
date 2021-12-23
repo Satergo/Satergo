@@ -10,7 +10,7 @@
 	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
 	<Label text="%fullNodeSetup" styleClass="welcome-text"/>
 
-	<HBox alignment="CENTER_LEFT" spacing="10"><Button text="%selectCustomFolder" fx:id="selectCustomFolder"/><Label fx:id="customFolderLocation" text="%current_nodeInCurrentWorkingDirectory"/></HBox>
+	<HBox alignment="CENTER_LEFT" spacing="10"><Button text="%selectCustomFolder" onAction="#selectCustomFolder"/><Label fx:id="customFolderLocation" text="%current_nodeInCurrentWorkingDirectory"/></HBox>
 
 	<HBox alignment="CENTER_LEFT"><Label text="%versionToBeDownloadedC"/><Label text=" v"/><Label fx:id="nodeVersion"/><Region prefWidth="20"/><ProgressBar fx:id="progressBar" progress="0" prefWidth="100"/></HBox>
 
