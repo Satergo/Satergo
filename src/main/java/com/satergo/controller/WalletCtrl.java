@@ -83,7 +83,10 @@ public class WalletCtrl implements Initializable {
 		}
 	}
 
+	private BigDecimal oneErgValue;
+
 	private void updatePriceValue(BigDecimal oneErgValue) {
+		this.oneErgValue = oneErgValue;
 		DecimalFormat priceFormat = new DecimalFormat("0");
 		priceFormat.setMaximumFractionDigits(Main.programData().priceCurrency.get().displayDecimals);
 		priceCurrency.setText(Main.programData().priceCurrency.get().uc());
@@ -162,13 +165,12 @@ public class WalletCtrl implements Initializable {
 				Platform.runLater(() -> WalletCtrl.this.updatePriceValue(oneErgValue));
 			}
 		};
-		TIMER.scheduleAtFixedRate(priceTimerTask, 60000, 60000);
+		TIMER.scheduleAtFixedRate(priceTimerTask, 50000, 60000);
 		balanceTimerTask = new TimerTask() {
 			@Override
 			public void run() {
 				// run in other thread
 				Balance totalBalance = Main.get().getWallet().balance();
-				BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
 				Platform.runLater(() -> {
 					updateBalance(totalBalance);
 					updatePriceValue(oneErgValue);
