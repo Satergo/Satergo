@@ -46,7 +46,7 @@ public class UpdateChecker {
 		alert.getButtonTypes().addAll(update, skip, notNow);
 		alert.setHeaderText(Main.lang("aNewUpdateHasBeenFound"));
 		alert.setContentText(Main.lang("updateDescription").formatted(
-				versionInfo.versionCode,
+				versionInfo.version,
 				versionInfo.dateReleased.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
 				versionInfo.changelog));
 		alert.showAndWait().ifPresent(t -> {
