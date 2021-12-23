@@ -20,7 +20,7 @@ Then, in the same folder, open the index.json file, add a comma to the last entr
 ## Build setup
 If you don't want to download the prebuilt runtimes, you can build the wallet for yourself.
 
-Java 17+ is required. You can easily download it at [adoptium.net](https://adoptium.net) or from for example Oracle.
+Java is not needed for running the prebuilt runtimes, because it is included in the runtime. But for building or running from sources, Java 17+ is required. The easiest way to download and install it is from [adoptium.net](https://adoptium.net).
 
 To run the wallet from the sources, run the command `./gradlew run`.
 
