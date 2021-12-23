@@ -54,7 +54,7 @@ class XDGManager implements ErgoURIManager {
 		if (Files.deleteIfExists(APPLICATIONS_PATH.resolve(FILE_NAME))) {
 			// unregister it
 			ArrayList<String> lines = Files.lines(mimeappsList).collect(Collectors.toCollection(ArrayList::new));
-			lines.remove("x-scheme-handler/erg=" + FILE_NAME);
+			lines.remove("x-scheme-handler/ergo=" + FILE_NAME);
 			Files.write(mimeappsList, lines);
 		}
 	}
