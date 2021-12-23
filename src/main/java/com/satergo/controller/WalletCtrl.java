@@ -175,6 +175,6 @@ public class WalletCtrl implements Initializable {
 				});
 			}
 		};
-		TIMER.scheduleAtFixedRate(balanceTimerTask, 20000, 20000);
+		TIMER.scheduleAtFixedRate(balanceTimerTask, 60000, 60000);
 	}
 }

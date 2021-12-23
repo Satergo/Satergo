@@ -28,15 +28,12 @@ public class CreateWalletCtrl implements Initializable {
 
 	@FXML
 	public void initializeWallet(ActionEvent e) {
-		System.out.println("Init.");
 		if (walletName.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("walletNameRequired"));
 		else if (password.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("passwordRequired"));
 		else {
-			System.out.println("els");
 			mnemonicPhrase = ErgoInterface.generateMnemonicPhrase("english");
 			mnemonicPhraseArea.setText(mnemonicPhrase);
 			mnemonicPhraseLabel.setVisible(true);
-			System.out.println("mnemonicPhraseLabel = " + mnemonicPhraseLabel);
 			walletName.setDisable(true);
 			password.setDisable(true);
 			addMnemonicPassword.setDisable(true);
