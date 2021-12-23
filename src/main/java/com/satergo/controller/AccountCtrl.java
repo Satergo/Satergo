@@ -115,7 +115,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 
 	@FXML
 	public void logout(ActionEvent e) {
-		Main.get().getWalletPage().cancelTimer();
+		Main.get().getWalletPage().cancelRepeatingTasks();
 		Main.get().setWallet(null);
 		Main.get().displayNewTopPage(Load.fxml("/wallet-setup.fxml"));
 		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE)

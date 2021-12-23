@@ -8,10 +8,12 @@ import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergouri.ErgoURIString;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -25,18 +27,16 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class WalletCtrl implements Initializable {
 
-	private final Timer TIMER = new Timer();
-	private TimerTask priceTimerTask, balanceTimerTask;
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(0);
 
-	public void cancelTimer() {
-		priceTimerTask.cancel();
-		balanceTimerTask.cancel();
-		TIMER.cancel();
+	public void cancelRepeatingTasks() {
+		scheduler.shutdown();
 	}
 
 	private final String initialTab;
@@ -163,25 +163,16 @@ public class WalletCtrl implements Initializable {
 
 		Main.programData().priceSource.addListener((observable, oldValue, newValue) -> updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get())));
 		Main.programData().priceCurrency.addListener((observable, oldValue, newValue) -> updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get())));
-		priceTimerTask = new TimerTask() {
-			@Override
-			public void run() {
-				BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
-				Platform.runLater(() -> WalletCtrl.this.updatePriceValue(oneErgValue));
-			}
-		};
-		TIMER.scheduleAtFixedRate(priceTimerTask, 50000, 60000);
-		balanceTimerTask = new TimerTask() {
-			@Override
-			public void run() {
-				// run in other thread
-				Balance totalBalance = Main.get().getWallet().balance();
-				Platform.runLater(() -> {
-					updateBalance(totalBalance);
-					updatePriceValue(oneErgValue);
-				});
-			}
-		};
-		TIMER.scheduleAtFixedRate(balanceTimerTask, 60000, 60000);
+		scheduler.scheduleAtFixedRate(() -> {
+			BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
+			Platform.runLater(() -> WalletCtrl.this.updatePriceValue(oneErgValue));
+		}, 50, 60, TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(() -> {
+			Balance totalBalance = Main.get().getWallet().balance();
+			Platform.runLater(() -> {
+				updateBalance(totalBalance);
+				updatePriceValue(oneErgValue);
+			});
+		}, 60, 60, TimeUnit.SECONDS);
 	}
 }

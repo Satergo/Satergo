@@ -1,10 +1,10 @@
 package com.satergo.ergo;
 
 import com.grack.nanojson.JsonObject;
-import com.satergo.Main;
-import com.satergo.Utils;
 import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
+import com.satergo.Main;
+import com.satergo.Utils;
 import com.satergo.controller.NodeOverviewCtrl;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -30,8 +30,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,8 +80,8 @@ public class EmbeddedFullNode {
 	public final SimpleDoubleProperty nodeSyncProgress = new SimpleDoubleProperty(0);
 	public final SimpleIntegerProperty nodeBlocksLeft = new SimpleIntegerProperty(1);
 
-	private Timer checkingTimer;
-	private TimerTask pollerTask, versionUpdateCheckTask;
+	private ScheduledExecutorService scheduler;
+
 	private int lastVersionUpdateAlert = 0;
 
 	public int port() {
@@ -130,82 +132,74 @@ public class EmbeddedFullNode {
 		return binDirectory.resolve("java");
 	}
 
-	private void startTimers() {
-		if (checkingTimer != null) {
-			checkingTimer.cancel();
-		}
-		checkingTimer = new Timer();
-		pollerTask = new TimerTask() {
-			@Override
-			public void run() {
-				try {
-					int nodeHeight = ErgoInterface.getNodeBlockHeight(localHttpAddress());
-					int networkHeight = ErgoInterface.getNetworkBlockHeight(networkType);
-					// not sure if needed
-					Platform.runLater(() -> {
-						nodeBlockHeight.set(nodeHeight);
-						networkBlockHeight.set(networkHeight);
-					});
-				} catch (Exception ignored) {} // todo
-			}
-		};
-		checkingTimer.scheduleAtFixedRate(pollerTask, 10000, 20000);
+	private void scheduleRepeatingTasks() {
+		scheduler = Executors.newScheduledThreadPool(0);
+		scheduler.scheduleAtFixedRate(() -> {
+			try {
+				int nodeHeight = ErgoInterface.getNodeBlockHeight(localHttpAddress());
+				int networkHeight = ErgoInterface.getNetworkBlockHeight(networkType);
+				// not sure if needed
+				Platform.runLater(() -> {
+					nodeBlockHeight.set(nodeHeight);
+					networkBlockHeight.set(networkHeight);
+				});
+			} catch (Exception ignored) {} // todo
+		}, 10, 20, TimeUnit.SECONDS);
+		int versionInt;
 		try {
 			String versionRaw = readVersion();
 			String versionNormalized = versionRaw.split("\\.").length == 3 ? versionRaw + ".0" : versionRaw;
-			int versionInt = Utils.versionToInt(versionNormalized);
-			versionUpdateCheckTask = new TimerTask() {
-				@Override
-				public void run() {
-					JsonObject latestNodeData = Utils.fetchLatestNodeData();
-					String latestVersion = latestNodeData.getString("tag_name").substring(1);
-					int latestVersionInt = Utils.versionToInt(latestVersion);
+			versionInt = Utils.versionToInt(versionNormalized);
+		} catch (NumberFormatException ignored) {
+			return;
+		}
+		scheduler.scheduleAtFixedRate(() -> {
+			JsonObject latestNodeData = Utils.fetchLatestNodeData();
+			String latestVersion = latestNodeData.getString("tag_name").substring(1);
+			int latestVersionInt = Utils.versionToInt(latestVersion);
 
-					if (lastVersionUpdateAlert != latestVersionInt && versionInt < latestVersionInt) {
-						Platform.runLater(() -> {
-							Alert alert = new Alert(Alert.AlertType.NONE);
-							alert.initOwner(Main.get().stage());
-							alert.setTitle(Main.lang("programName"));
-							alert.setHeaderText(Main.lang("aNewErgoNodeVersionHasBeenFound"));
-							alert.setContentText(Main.lang("nodeUpdateDescription").formatted(
-									latestVersion,
-									LocalDateTime.parse(latestNodeData.getString("published_at"), DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
-									latestNodeData.getString("body")));
-							ButtonType update = new ButtonType(Main.lang("update"), ButtonBar.ButtonData.YES);
-							ButtonType notNow = new ButtonType(Main.lang("notNow"), ButtonBar.ButtonData.CANCEL_CLOSE);
-							alert.getButtonTypes().addAll(update, notNow);
-							lastVersionUpdateAlert = latestVersionInt;
-							alert.showAndWait().ifPresent(t -> {
-								if (t == update) {
-									Alert updatingAlert = Utils.alert(Alert.AlertType.NONE, Main.lang("updatingErgoNode..."));
-									new Thread(() -> {
-										downloadUpdate(nodeDirectory.toPath(), latestVersion, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
-										try {
-											Files.delete(nodeJar.toPath());
-										} catch (IOException e) {
-											throw new RuntimeException(e);
-										}
-										Platform.runLater(() -> {
-											updatingAlert.getDialogPane().getButtonTypes().add(ButtonType.OK); // a window cannot be closed unless it has a button
-											updatingAlert.close();
-											try {
-												((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).logVersionUpdate(latestVersion);
-											} catch (Exception ignored) {} // could happen if user somehow logs out while it is updating, so wallet page becomes null
-											stop();
-											waitForExit();
-											Main.node = Main.get().nodeFromInfo();
-											Main.node.start();
-											Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
-										});
-									}).start();
+			if (lastVersionUpdateAlert != latestVersionInt && versionInt < latestVersionInt) {
+				Platform.runLater(() -> {
+					Alert alert = new Alert(Alert.AlertType.NONE);
+					alert.initOwner(Main.get().stage());
+					alert.setTitle(Main.lang("programName"));
+					alert.setHeaderText(Main.lang("aNewErgoNodeVersionHasBeenFound"));
+					alert.setContentText(Main.lang("nodeUpdateDescription").formatted(
+							latestVersion,
+							LocalDateTime.parse(latestNodeData.getString("published_at"), DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+							latestNodeData.getString("body")));
+					ButtonType update = new ButtonType(Main.lang("update"), ButtonBar.ButtonData.YES);
+					ButtonType notNow = new ButtonType(Main.lang("notNow"), ButtonBar.ButtonData.CANCEL_CLOSE);
+					alert.getButtonTypes().addAll(update, notNow);
+					lastVersionUpdateAlert = latestVersionInt;
+					alert.showAndWait().ifPresent(t -> {
+						if (t == update) {
+							Alert updatingAlert = Utils.alert(Alert.AlertType.NONE, Main.lang("updatingErgoNode..."));
+							new Thread(() -> {
+								downloadUpdate(nodeDirectory.toPath(), latestVersion, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
+								try {
+									Files.delete(nodeJar.toPath());
+								} catch (IOException e) {
+									throw new RuntimeException(e);
 								}
-							});
-						});
-					}
-				}
-			};
-			checkingTimer.scheduleAtFixedRate(versionUpdateCheckTask, Duration.ofSeconds(5).toMillis(), Duration.ofHours(4).toMillis());
-		} catch (NumberFormatException ignored) {}
+								Platform.runLater(() -> {
+									updatingAlert.getDialogPane().getButtonTypes().add(ButtonType.OK); // a window cannot be closed unless it has a button
+									updatingAlert.close();
+									try {
+										((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).logVersionUpdate(latestVersion);
+									} catch (Exception ignored) {} // could happen if user somehow logs out while it is updating, so wallet page becomes null
+									stop();
+									waitForExit();
+									Main.node = Main.get().nodeFromInfo();
+									Main.node.start();
+									Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
+								});
+							}).start();
+						}
+					});
+				});
+			}
+		}, 5, Duration.ofHours(4).toSeconds(), TimeUnit.SECONDS);
 	}
 
 	/**
@@ -239,7 +233,7 @@ public class EmbeddedFullNode {
 			command[6] = confFile.getName();
 			System.out.println("running node with command: " + Arrays.toString(command));
 			process = new PtyProcessBuilder().setCommand(command).setDirectory(nodeDirectory.getAbsolutePath()).start();
-			startTimers();
+			scheduleRepeatingTasks();
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
@@ -255,9 +249,7 @@ public class EmbeddedFullNode {
 
 	public void stop() {
 		process.destroy();
-		pollerTask.cancel();
-		versionUpdateCheckTask.cancel();
-		checkingTimer.cancel();
+		scheduler.shutdown();
 	}
 	
 	public void waitForExit() {

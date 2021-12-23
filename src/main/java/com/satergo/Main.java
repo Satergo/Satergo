@@ -9,12 +9,10 @@ import javafx.beans.property.ObjectProperty;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import jfxtras.styles.jmetro.JMetro;
@@ -89,7 +87,6 @@ public class Main extends Application {
 			else jMetro.getOverridingStylesheets().clear();
 			jMetro.getOverridingStylesheets().add(Utils.resourcePath("/global.css"));
 		};
-		System.out.println("Font.font(\"sans-serif\").getSize() = " + Font.font("sans-serif").getSize());
 		updateOverrides.run();
 		jMetro.styleProperty().addListener((observable, oldValue, newValue) -> updateOverrides.run());
 
@@ -161,7 +158,7 @@ public class Main extends Application {
 		if (node != null && node.isRunning())
 			node.stop();
 		if (walletPage != null) {
-			walletPage.cancelTimer();
+			walletPage.cancelRepeatingTasks();
 		}
 		try {
 			Launcher.getIPC().stopListening();

@@ -46,7 +46,7 @@ public class SettingsCtrl implements Initializable, WalletTab {
 		language.setValue(Main.get().translations.getEntry(Main.programData().language.get()));
 		language.valueProperty().addListener((observable, oldValue, newValue) -> {
 			Main.get().setLanguage(newValue);
-			Main.get().getWalletPage().cancelTimer();
+			Main.get().getWalletPage().cancelRepeatingTasks();
 			WalletCtrl walletCtrl = new WalletCtrl("settings");
 			Main.get().displayWalletPage(new Pair<>(Load.fxmlControllerFactory("/wallet.fxml", walletCtrl), walletCtrl));
 		});
