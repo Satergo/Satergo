@@ -44,7 +44,7 @@ if (project.hasProperty("platform") && project.findProperty("platform") != "auto
 
 	def arch = System.getProperty("os.arch")
 	if (arch != "amd64") platform += "-" + arch
-	if (currentOs.isLinux() && arch == "arm32") platform += "-monocle"
+	if (currentOs.isLinux() && arch == "arm32") throw new IllegalArgumentException("linux arm32 not supported")
 }
 
 def javaFxVersion = '17'
@@ -86,11 +86,11 @@ runtime {
 			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-aarch64_bin.tar.gz")
 		}
 	}
-	if (platform == "linux-arm32-monocle") {
-		targetPlatform("linux-arm32") {
-			jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.1%2B12/OpenJDK17U-jdk_arm_linux_hotspot_17.0.1_12.tar.gz")
-		}
-	}
+//	if (platform == "linux-arm32-monocle") {
+//		targetPlatform("linux-arm32") {
+//			jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.1%2B12/OpenJDK17U-jdk_arm_linux_hotspot_17.0.1_12.tar.gz")
+//		}
+//	}
 	if (platform == "win") {
 		targetPlatform("windows-x64") {
 			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_windows-x64_bin.zip")
