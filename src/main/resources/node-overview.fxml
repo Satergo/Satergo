@@ -9,7 +9,7 @@
 <?import javafx.scene.control.CheckBox?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" stylesheets="welcome.css" styleClass="background" fx:controller="com.satergo.controller.NodeOverviewCtrl">
 	<padding><Insets topRightBottomLeft="20"/></padding>
-	<Label text="Type: Embedded Full Node"/>
+	<HBox><Label text="%networkTypeC"/><Label text=" "/><Label fx:id="networkType"/></HBox>
 	<HBox spacing="10" alignment="CENTER_LEFT">
 		<Label text="%statusC"/>
 		<ProgressBar fx:id="progress" progress="0"/>

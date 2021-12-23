@@ -21,8 +21,9 @@ repositories {
 		}
 	}
 	maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
-	// this is required for org.jetbrains.pty4j:purejavacomm:0.12.5, but it is expected that they'll add it to maven before Feb 1st, 2022
-	jcenter() {
+	// for org.jetbrains.pty4j:purejavacomm:0.12.5, which is used by pty4j
+	maven {
+		url 'https://packages.jetbrains.team/maven/p/ij/intellij-dependencies'
 		content {
 			includeGroup 'org.jetbrains.pty4j'
 		}
@@ -68,7 +69,7 @@ runtime {
 	options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
 	additive = true // makes addModules add modules instead of replacing
 	addModules("jdk.crypto.ec") // needed for HTTPS
-	addModules("java.naming") // needed for SLF4J which is used by ergo node
+	addModules("java.naming") // needed for SLF4J which is used by the Ergo node
 	imageZip = file("runtimes/${project.name}-v${project.version}.zip") // the plugin automatically adds platform to the end
 	launcher {
 		jvmArgs = [ '-Dsatergo.launcher={{BIN_DIR}}/Satergo' + (platform == "win" ? ".bat" : "") ]
@@ -125,7 +126,7 @@ tasks.findByName("runtime").doLast {
 	if (platform == "win") {
 		file("${imageDirPath}/bin/" + project.name).delete()
 		def runFile = file("${imageDirPath}/run.bat")
-		runFile.write("@start %~dp0\\bin\\" + project.name + ".bat")
+		runFile.write("@start %~dp0\\bin\\" + project.name + ".bat %*")
 	} else {
 		file("${imageDirPath}/bin/" + project.name + ".bat").delete()
 		def runFile = file("${imageDirPath}/run." + (platform.startsWith("mac") ? "command" : "sh"))

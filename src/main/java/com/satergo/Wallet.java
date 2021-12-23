@@ -4,12 +4,14 @@ import com.satergo.ergo.Balance;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
 import com.satergo.extra.IncorrectPasswordException;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import javafx.stage.FileChooser;
 import org.ergoplatform.appkit.Address;
+import org.ergoplatform.appkit.ErgoToken;
 import org.ergoplatform.appkit.Mnemonic;
 import org.ergoplatform.appkit.SecretString;
 
@@ -63,6 +65,8 @@ public final class Wallet {
 		this.name.addListener((observable, oldValue, newValue) -> saveToFile());
 	}
 
+	public final SimpleObjectProperty<Balance> lastKnownBalance = new SimpleObjectProperty<>();
+
 	public String getName() {
 		return name.get();
 	}
@@ -83,8 +87,8 @@ public final class Wallet {
 		return ErgoInterface.getBalance(Main.programData().nodeNetworkType.get(), masterPublicAddress());
 	}
 
-	public String transact(Address recipient, long amountToSend, long feeAmount) {
-		return ErgoInterface.transact(ErgoInterface.newNodeApiClient(Main.programData().nodeNetworkType.get(), Main.programData().nodeAddress.get()), ctx -> ErgoInterface.newWithMnemonicProver(ctx, mnemonic), recipient, amountToSend, feeAmount);
+	public String transact(Address recipient, long amountToSend, long feeAmount, ErgoToken... tokens) {
+		return ErgoInterface.transact(ErgoInterface.newNodeApiClient(Main.programData().nodeNetworkType.get(), Main.programData().nodeAddress.get()), ctx -> ErgoInterface.newWithMnemonicProver(ctx, mnemonic), recipient, amountToSend, feeAmount, tokens);
 	}
 
 	public void changePassword(SecretString currentPassword, SecretString newPassword) throws IncorrectPasswordException {

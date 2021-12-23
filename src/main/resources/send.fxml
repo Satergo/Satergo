@@ -20,14 +20,21 @@
 
 	<Region prefHeight="4"/>
 
+	<Hyperlink fx:id="addToken" onAction="#addToken" text="%addToken"/>
+	<VBox fx:id="tokenList">
+
+	</VBox>
+
+	<Region prefHeight="4"/>
+
 	<Label text="%fee"/>
 	<TextField fx:id="fee" promptText="%defaultMinimum"/>
 
 	<Region prefHeight="4"/>
 
-	<Button fx:id="send" text="%send"/>
+	<Button onAction="#send" text="%send"/>
 
-	<HBox fx:id="txIdContainer" visible="false" managed="false" spacing="2">
+	<HBox fx:id="txIdContainer" visible="false" managed="false" spacing="2" alignment="BASELINE_LEFT">
 		<VBox.margin><Insets top="4"/></VBox.margin>
 
 		<Label text="%transactionIdC"/> <Hyperlink fx:id="txLink"/> <Button fx:id="copyTxId" text="%copy"/>

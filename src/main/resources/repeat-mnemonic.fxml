@@ -10,7 +10,7 @@
 
 	<Group fx:id="verifyHolder"/>
 
-	<Label text="%mnemonicPassword"/>
+	<Label fx:id="mnemonicPasswordLabel" text="%mnemonicPassword"/>
 
 	<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword"/>
 

@@ -8,12 +8,11 @@ import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergouri.ErgoURIString;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -50,15 +49,6 @@ public class WalletCtrl implements Initializable {
 		this("account");
 	}
 
-	private Balance lastBalance;
-
-	/**
-	 * Updates every minute
-	 */
-	public Balance getLastBalance() {
-		return lastBalance;
-	}
-
 	@FXML private BorderPane root;
 	@FXML private BorderPane sidebar;
 	@FXML private Label headTitle;
@@ -82,7 +72,7 @@ public class WalletCtrl implements Initializable {
 	}
 
 	private void updateBalance(Balance totalBalance) {
-		this.lastBalance = totalBalance;
+		Main.get().getWallet().lastKnownBalance.set(totalBalance);
 		String formatted = format.format(ErgoInterface.toFullErg(totalBalance.confirmed()));
 		if (formatted.equals("0") && totalBalance.confirmed() != 0)
 			this.balance.setText("~0");
@@ -97,7 +87,7 @@ public class WalletCtrl implements Initializable {
 		DecimalFormat priceFormat = new DecimalFormat("0");
 		priceFormat.setMaximumFractionDigits(Main.programData().priceCurrency.get().displayDecimals);
 		priceCurrency.setText(Main.programData().priceCurrency.get().uc());
-		priceValue.setText(priceFormat.format(ErgoInterface.toFullErg(lastBalance.confirmed()).multiply(oneErgValue)));
+		priceValue.setText(priceFormat.format(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed()).multiply(oneErgValue)));
 	}
 
 	@Override
@@ -130,6 +120,9 @@ public class WalletCtrl implements Initializable {
 
 		headTitle.textProperty().bind(Bindings.concat("Ergo - ", Main.get().getWallet().name));
 
+		updateBalance(Main.get().getWallet().balance());
+		updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get()));
+
 		tabs.put("myTokens", Load.fxmlNodeAndController("/my-tokens.fxml"));
 		tabs.put("account", Load.fxmlNodeAndController("/account.fxml"));
 		tabs.put("send", Load.fxmlNodeAndController("/send.fxml"));
@@ -160,8 +153,6 @@ public class WalletCtrl implements Initializable {
 
 		((ToggleButton) root.lookup("#" + initialTab)).setSelected(true);
 
-		updateBalance(Main.get().getWallet().balance());
-		updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get()));
 		Main.programData().priceSource.addListener((observable, oldValue, newValue) -> updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get())));
 		Main.programData().priceCurrency.addListener((observable, oldValue, newValue) -> updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get())));
 		priceTimerTask = new TimerTask() {
@@ -184,6 +175,6 @@ public class WalletCtrl implements Initializable {
 				});
 			}
 		};
-		TIMER.scheduleAtFixedRate(balanceTimerTask, 60000, 60000);
+		TIMER.scheduleAtFixedRate(balanceTimerTask, 20000, 20000);
 	}
 }

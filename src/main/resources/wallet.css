@@ -4,3 +4,8 @@
 #sidebar .toggle-button:selected, #settings:selected {
 	-fx-background-color: DIMGRAY;
 }
+
+.text-field.error {
+  -fx-text-box-border: red;
+  -fx-focus-color: red;
+}

@@ -47,11 +47,9 @@ public class AccountCtrl implements Initializable, WalletTab {
 	@FXML
 	public void changeWalletName(ActionEvent e) {
 		TextInputDialog dialog = new TextInputDialog();
-		dialog.initOwner(Main.get().stage());
 		// todo title etc
-		String newName = dialog.showAndWait().orElse(null);
-		if (newName == null) return;
-		Main.get().getWallet().setName(newName);
+		dialog.initOwner(Main.get().stage());
+		dialog.showAndWait().ifPresent(newName -> Main.get().getWallet().setName(newName));
 	}
 
 	@FXML
@@ -165,7 +163,11 @@ public class AccountCtrl implements Initializable, WalletTab {
 		DecimalFormat lossless = new DecimalFormat("0");
 		lossless.setMinimumFractionDigits(9);
 		lossless.setMaximumFractionDigits(9);
-		totalBalance.setText(lossless.format(ErgoInterface.toFullErg(Main.get().getWallet().balance().confirmed())) + " ERG");
+		totalBalance.setText(lossless.format(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed())) + " ERG");
+		// binding with a converter could be used here
+		Main.get().getWallet().lastKnownBalance.addListener((observable, oldValue, newValue) -> {
+			totalBalance.setText(lossless.format(ErgoInterface.toFullErg(newValue.confirmed())) + " ERG");
+		});
 		updateAddresses();
 		Main.get().getWallet().myAddresses.addListener((MapChangeListener<Integer, String>) change -> updateAddresses());
 	}

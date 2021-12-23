@@ -4,7 +4,7 @@ import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.ProgramData;
 import com.satergo.ergo.EmbeddedFullNode;
-import com.satergo.extra.EmbeddedNodeInfo;
+import com.satergo.ergo.EmbeddedNodeInfo;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -63,7 +63,7 @@ public class FullNodeSourceCtrl {
 		if (!nodeInfoFile.exists()) {
 			Dialog<Pair<NetworkType, File>> dialog = new Dialog<>();
 			dialog.initOwner(Main.get().stage());
-			dialog.setTitle("Satergo");
+			dialog.setTitle(Main.lang("programName"));
 			dialog.setHeaderText(Main.lang("moreInformationNeededNode"));
 			Parent root = Load.fxml("/need-more-info-existing-node.fxml");
 			ComboBox<NetworkType> networkType = (ComboBox<NetworkType>) root.lookup("#networkType");

@@ -43,7 +43,7 @@ public class ReceiveCtrl implements Initializable, WalletTab {
 	private static class AddressLine extends BorderPane {
 		@FXML public ToggleButton qr;
 		@SuppressWarnings("unused")
-		@FXML private Label name, address;
+		@FXML private Label index, name, address;
 		@SuppressWarnings("unused")
 		@FXML private Button copy;
 
@@ -52,7 +52,8 @@ public class ReceiveCtrl implements Initializable, WalletTab {
 		public AddressLine(ToggleGroup qrGroup, int index, String name, Address address) {
 			Load.thisFxml(this, "/receive-address-line.fxml");
 			this.qr.setToggleGroup(qrGroup);
-			this.name.setText(index + ": " + name);
+			this.index.setText("#" + index);
+			this.name.setText(name);
 			this.address.setText(address.toString());
 			this.copy.setOnAction(e -> Utils.copyStringToClipboard(address.toString()));
 			this.addr = address;

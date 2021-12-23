@@ -2,7 +2,7 @@ package com.satergo.controller;
 
 import com.satergo.*;
 import com.satergo.ergo.EmbeddedFullNode;
-import com.satergo.extra.EmbeddedNodeInfo;
+import com.satergo.ergo.EmbeddedNodeInfo;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

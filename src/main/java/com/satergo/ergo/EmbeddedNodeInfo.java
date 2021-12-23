@@ -1,6 +1,5 @@
-package com.satergo.extra;
+package com.satergo.ergo;
 
-import com.satergo.ergo.EmbeddedFullNode;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;

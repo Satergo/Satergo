@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.util.ResourceBundle;
 
 public class NodeOverviewCtrl implements Initializable, WalletTab {
+	@FXML private Label networkType;
 	@FXML private ProgressBar progress;
 	@FXML private Label blocksNodeNetwork;
 	@FXML private ComboBox<EmbeddedFullNode.LogLevel> logLevel;
@@ -67,6 +68,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		transferLog();
+		networkType.textProperty().bind(Main.programData().nodeNetworkType.asString());
 		logLevel.setValue(Main.node.logLevel);
 		logLevel.getItems().addAll(EmbeddedFullNode.LogLevel.values());
 		logLevel.valueProperty().addListener((observable, oldValue, newValue) -> {

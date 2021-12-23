@@ -9,6 +9,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
@@ -19,6 +20,8 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
@@ -139,6 +142,15 @@ public class Main extends Application {
 		});
 
 		programData.lightTheme.addListener((observable, oldValue, newValue) -> jMetro.setStyle(newValue ? Style.LIGHT : Style.DARK));
+
+		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+			StringWriter stringWriter = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(stringWriter);
+			throwable.printStackTrace(printWriter);
+			String stackTrace = stringWriter.toString();
+			System.err.println(stackTrace);
+			Utils.alertException("Unexpected error", "An unexpected error occurred", stackTrace);
+		});
 	}
 
 	@Override

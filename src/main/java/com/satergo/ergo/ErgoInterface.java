@@ -87,14 +87,17 @@ public class ErgoInterface {
 			Address sender = senderProver.getEip3Addresses().get(0);
 			List<InputBox> unspent = ctx.getUnspentBoxesFor(sender, 0, 20);
 			System.out.println("unspent = " + unspent);
-			List<InputBox> boxesToSpend = BoxOperations.selectTop(unspent, amountToSend + Parameters.MinFee);
+			List<InputBox> boxesToSpend = BoxOperations.selectTop(unspent, amountToSend + feeAmount, List.of(tokensToSend));
 			UnsignedTransactionBuilder txB = ctx.newTxBuilder();
-			OutBox newBox = txB.outBoxBuilder()
-					.value(amountToSend)
-					.tokens(tokensToSend)
-					.contract(ctx.compileContract(ConstantsBuilder.create()
-							.item("recipientPk", recipient.getPublicKey())
-							.build(), "{ recipientPk }")).build();
+			OutBoxBuilder newBoxBuilder = txB.outBoxBuilder();
+			newBoxBuilder.value(amountToSend);
+			if (tokensToSend.length > 0) {
+				newBoxBuilder.tokens(tokensToSend);
+			}
+			newBoxBuilder.contract(ctx.compileContract(ConstantsBuilder.create()
+					.item("recipientPk", recipient.getPublicKey())
+					.build(), "{ recipientPk }")).build();
+			OutBox newBox = newBoxBuilder.build();
 			UnsignedTransaction unsignedTx = txB
 					.boxesToSpend(boxesToSpend).outputs(newBox)
 					.fee(feeAmount)
@@ -124,6 +127,18 @@ public class ErgoInterface {
 	}
 
 	public static BigDecimal toFullErg(long nanoErg) {
-		return new BigDecimal(String.valueOf(nanoErg)).movePointLeft(9);
+		return BigDecimal.valueOf(nanoErg).movePointLeft(9);
+	}
+
+	public static long longTokenAmount(BigDecimal fullTokenAmount, int decimals) {
+		return fullTokenAmount.movePointRight(decimals).longValue();
+	}
+
+	public static BigDecimal fullTokenAmount(long longTokenAmount, int decimals) {
+		return BigDecimal.valueOf(longTokenAmount).movePointLeft(decimals);
+	}
+
+	public static boolean hasValidNumberOfDecimals(BigDecimal fullErg) {
+		return Utils.getNumberOfDecimalPlaces(fullErg) <= 9;
 	}
 }

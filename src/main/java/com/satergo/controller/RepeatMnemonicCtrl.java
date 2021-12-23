@@ -30,7 +30,7 @@ public class RepeatMnemonicCtrl implements Initializable {
 	}
 
 	private MnemonicPhraseOrderVerify verify;
-	@FXML private Label mnemonicProgress;
+	@FXML private Label mnemonicProgress, mnemonicPasswordLabel;
 	@FXML private Group verifyHolder;
 	@FXML private PasswordField mnemonicPassword;
 
@@ -39,6 +39,12 @@ public class RepeatMnemonicCtrl implements Initializable {
 		verify = new MnemonicPhraseOrderVerify(mnemonic.getPhrase().toStringUnsecure().split(" "));
 		verifyHolder.getChildren().add(verify);
 		verify.onWordAdded = verify.onWordRemoved = word -> mnemonicProgress.setText(String.join(" ", verify.userOrder));
+		if (mnemonic.getPassword().isEmpty()) {
+			mnemonicPasswordLabel.setVisible(false);
+			mnemonicPassword.setVisible(false);
+			mnemonicPasswordLabel.setManaged(false);
+			mnemonicPassword.setManaged(false);
+		}
 	}
 
 	@FXML

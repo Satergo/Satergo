@@ -1,7 +1,6 @@
 package com.satergo.ergo;
 
 import com.satergo.Utils;
-import com.satergo.extra.EmbeddedNodeInfo;
 import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
 import javafx.application.Platform;
@@ -24,13 +23,11 @@ public class EmbeddedFullNode {
 	public enum LogLevel { ERROR, WARN, INFO, DEBUG, TRACE, OFF }
 
 	public final File nodeDirectory;
-//	private Process process;
 	private PtyProcess process;
 
 	private final NetworkType networkType;
 	public LogLevel logLevel;
 	public final File nodeJar;
-//	public String[] arguments;
 	private final File confFile;
 	public final File infoFile;
 	public EmbeddedNodeInfo info;
@@ -43,11 +40,6 @@ public class EmbeddedFullNode {
 		this.confFile = confFile;
 		infoFile = new File(nodeDirectory, EmbeddedNodeInfo.FILE_NAME);
 		this.info = info;
-
-//		this.arguments = new String[] {
-//				"--" + networkType.toString().toLowerCase(Locale.ROOT),
-//				"-c", confFileName.getName()
-//		};
 
 		nodeSyncProgress.bind(nodeBlockHeight.divide(networkBlockHeight));
 		nodeBlocksLeft.bind(networkBlockHeight.subtract(nodeBlockHeight));
@@ -88,7 +80,7 @@ public class EmbeddedFullNode {
 //		if (!m.find()) throw new IllegalArgumentException();
 //		return m.group(1);
 //	}
-//
+
 //	public String readVersion() {
 //		try {
 //			return readVersion(nodeJar);
@@ -146,7 +138,6 @@ public class EmbeddedFullNode {
 			command[4] = "--" + networkType.toString().toLowerCase(Locale.ROOT);
 			command[5] = "-c";
 			command[6] = confFile.getName();
-//			System.arraycopy(arguments, 0, command, 4, arguments.length);
 			System.out.println("running node with command: " + Arrays.toString(command));
 			process = new PtyProcessBuilder().setCommand(command).setDirectory(nodeDirectory.getAbsolutePath()).start();
 			startHeightPolling();

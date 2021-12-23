@@ -3,10 +3,14 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ToggleButton?>
+<?import javafx.geometry.Insets?>
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
 	<left>
-		<HBox spacing="8" alignment="CENTER_LEFT">
-			<ToggleButton fx:id="qr" text="%qr"/>
+		<HBox spacing="4" alignment="CENTER_LEFT">
+			<ToggleButton fx:id="qr" text="%qr">
+				<HBox.margin><Insets right="4"/></HBox.margin>
+			</ToggleButton>
+			<Label fx:id="index" opacity="0.5"/>
 			<Label fx:id="name" BorderPane.alignment="CENTER_LEFT"/>
 		</HBox>
 	</left>

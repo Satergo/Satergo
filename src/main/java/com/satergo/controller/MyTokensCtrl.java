@@ -19,9 +19,8 @@ public class MyTokensCtrl implements Initializable, WalletTab {
 
 	@FXML private GridPane root;
 
-	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-		List<TokenBalance> tokens = Main.get().getWallet().balance().confirmedTokens();
+	private void update(List<TokenBalance> tokens) {
+		root.getChildren().clear();
 		for (int i = 0; i < tokens.size(); i++) {
 			TokenBalance token = tokens.get(i);
 			Label nameLabel = new Label(token.name() == null ? Main.lang("unnamed_parentheses") : token.name());
@@ -32,5 +31,11 @@ public class MyTokensCtrl implements Initializable, WalletTab {
 			copy.setOnAction(e -> Utils.copyStringToClipboard(token.id()));
 			root.add(copy, 2, i);
 		}
+	}
+
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		update(Main.get().getWallet().lastKnownBalance.get().confirmedTokens());
+		Main.get().getWallet().lastKnownBalance.addListener((observable, oldValue, newValue) -> update(newValue.confirmedTokens()));
 	}
 }

@@ -5,8 +5,10 @@ import com.satergo.extra.PasswordInputDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
@@ -46,6 +48,7 @@ public class Utils {
 
 	public static void alert(Alert.AlertType type, String headerText, String contentText) {
 		Alert alert = new Alert(type);
+		alert.initOwner(Main.get().stage());
 		alert.setTitle(Main.lang("programName"));
 		alert.setHeaderText(headerText);
 		alert.setContentText(contentText);
@@ -59,6 +62,21 @@ public class Utils {
 		alert.setGraphic(null);
 		alert.setHeaderText(null);
 		alert.setContentText(contentText);
+		alert.show();
+	}
+
+	public static void alertException(String title, String headerText, String exceptionText) {
+		Alert alert = new Alert(Alert.AlertType.ERROR);
+		alert.initOwner(Main.get().stage());
+		alert.setTitle(title);
+		alert.setHeaderText(headerText);
+		TextArea textArea = new TextArea(exceptionText);
+		textArea.setEditable(false);
+		textArea.setWrapText(true);
+		textArea.setMaxWidth(Double.MAX_VALUE);
+		textArea.setMaxHeight(Double.MAX_VALUE);
+		alert.getDialogPane().setExpandableContent(textArea);
+		alert.getDialogPane().setExpanded(true);
 		alert.show();
 	}
 
@@ -165,5 +183,9 @@ public class Utils {
 		}
 		inputStream.close();
 		outputStream.close();
+	}
+
+	public static int getNumberOfDecimalPlaces(BigDecimal bigDecimal) {
+		return Math.max(0, bigDecimal.stripTrailingZeros().scale());
 	}
 }
