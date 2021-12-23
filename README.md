@@ -4,7 +4,7 @@ Desktop wallet for the cryptocurrency Ergo with embedded node functionality. Dow
 ## Supported platforms
 More can easily be added.
 - Windows (x64)
-- Linux (x64, aarch64)
+- Linux (x64 and aarch64)
 - Mac (x64 and aarch64)
 - Universal (Java 17+)
 
