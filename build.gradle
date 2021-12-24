@@ -53,6 +53,7 @@ def javaFxModules = [ 'base', 'controls', 'fxml', 'swing', 'graphics' ]
 dependencies {
 	implementation ('org.jfxtras:jmetro:11.6.15') {
 		exclude group: 'org.openjfx'
+		exclude group: 'org.controlsfx'
 	}
 
 	implementation 'com.github.ergoplatform:ergo-appkit:d07973367c'
