@@ -9,7 +9,7 @@
 	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
 	<Label text="%remoteNodeSetup" styleClass="welcome-text"/>
 
-	<HBox spacing="8" alignment="CENTER_LEFT"><Label text="Don't understand this?"/> <Button onAction="#useKnownPublicNode" text="Click here to use a known mainnet node"/></HBox>
+	<HBox spacing="8" alignment="CENTER_LEFT"><Label text="%dontUnderstandThis"/> <Button onAction="#useKnownPublicNode" text="%clickHereToUsePublicMainnetNode"/></HBox>
 
 	<TextField fx:id="address" promptText="%address"/>
 
