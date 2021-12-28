@@ -16,7 +16,7 @@
 		<Label fx:id="blocksNodeNetwork" text="0/1"/>
 		<Button onAction="#restart" text="%restart"/>
 		<Button onAction="#clearLog" text="%clearLog"/>
-		<CheckBox fx:id="autoScroll" text="%autoScroll"/>
+		<CheckBox fx:id="pauseLog" text="%pauseLog"/>
 	</HBox>
 	<HBox spacing="10" alignment="CENTER_LEFT"><ComboBox fx:id="logLevel"/><Label fx:id="logLevelNote" text="%logLevelOnNodeRestart" visible="false"/></HBox>
 	<TextArea fx:id="log" editable="false" VBox.vgrow="ALWAYS"/>
