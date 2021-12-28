@@ -17,35 +17,33 @@ import java.nio.file.Files;
 import java.util.ResourceBundle;
 
 public class NodeOverviewCtrl implements Initializable, WalletTab {
+	private static final int LOG_LENGTH_LIMIT = 100_000;
+
 	@FXML private Label networkType;
 	@FXML private ProgressBar progress;
 	@FXML private Label blocksNodeNetwork;
 	@FXML private ComboBox<EmbeddedFullNode.LogLevel> logLevel;
 	@FXML private TextArea log;
 	@FXML private Label logLevelNote;
-	@FXML private CheckBox autoScroll;
-	private double lastScrollTop;
+	@FXML private CheckBox pauseLog;
 
 	private void transferLog() {
 		new Thread(() -> {
 			try {
 				InputStream inputStream = Main.node.getStandardOutput();
-				long logSize = 0;
 				byte[] buffer = new byte[8192];
 				int read;
 				while ((read = inputStream.read(buffer, 0, 8192)) >= 0) {
-					logSize += read;
 					String s = new String(buffer, 0, read, StandardCharsets.UTF_8);
-					Platform.runLater(() -> {
-						lastScrollTop = log.getScrollTop();
-						log.setText(log.getText() + s);
-					});
+					Platform.runLater(() -> appendText(s));
+					Thread.sleep(10);
 				}
-			} catch (IOException e) {
+			} catch (IOException | InterruptedException e) {
 				if (!e.getMessage().contains("Stream closed"))
 					e.printStackTrace();
+				else System.out.println("[info] Node log stream closed");
 			}
-		}).start();
+		}, "Node log transfer").start();
 	}
 
 	@FXML
@@ -53,8 +51,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		Main.node.logLevel = logLevel.getValue();
 		Main.node.stop();
 		Main.node.waitForExit();
-		lastScrollTop = log.getScrollTop();
-		log.setText(log.getText() + "\n-------- " + Main.lang("nodeWasRestartedLog") + " --------\n\n");
+		appendText("\n-------- " + Main.lang("nodeWasRestartedLog") + " --------\n\n");
 		Main.node.start();
 		logLevelNote.setVisible(false);
 		transferLog();
@@ -80,17 +77,36 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 			}
 			logLevelNote.setVisible(newValue != Main.node.logLevel);
 		});
-		autoScroll.selectedProperty().bindBidirectional(Main.programData().nodeLogAutoScroll);
-		log.textProperty().addListener((observable, oldValue, newValue) -> {
-			if (autoScroll.isSelected()) Platform.runLater(() -> log.setScrollTop(Double.POSITIVE_INFINITY));
-			else Platform.runLater(() -> log.setScrollTop(lastScrollTop));
+		pauseLog.selectedProperty().addListener((observable, oldValue, newValue) -> {
+			if (!newValue && !queuedLogContent.isEmpty()) {
+				appendText(queuedLogContent.toString());
+			}
+			queuedLogContent = new StringBuilder();
 		});
+		log.textProperty().addListener((observable, oldValue, newValue) -> {
+			if (newValue.length() > LOG_LENGTH_LIMIT) {
+				log.deleteText(0, newValue.length() - LOG_LENGTH_LIMIT);
+			}
+		});
+		log.setWrapText(true);
 		progress.progressProperty().bind(Main.node.nodeSyncProgress);
 		blocksNodeNetwork.textProperty().bind(Bindings.concat(Main.node.nodeBlockHeight, "/", Main.node.networkBlockHeight));
 	}
 
 	public void logVersionUpdate(String latestVersion) {
-		lastScrollTop = log.getScrollTop();
-		log.setText(log.getText() + "\n-------- " + Main.lang("nodeWasUpdatedToVersion_s_log").formatted(latestVersion) + " --------\n\n");
+		appendText("\n-------- " + Main.lang("nodeWasUpdatedToVersion_s_log").formatted(latestVersion) + " --------\n\n");
+	}
+
+	private StringBuilder queuedLogContent = new StringBuilder();
+
+	private void appendText(String text) {
+		if (pauseLog.isSelected()) {
+			queuedLogContent.append(text);
+			if (queuedLogContent.length() > LOG_LENGTH_LIMIT) {
+				queuedLogContent.replace(0, queuedLogContent.length() - LOG_LENGTH_LIMIT, "");
+			}
+		} else {
+			log.appendText(text);
+		}
 	}
 }
