@@ -4,9 +4,12 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.layout.HBox?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.RemoteNodeSetupCtrl" styleClass="background" stylesheets="welcome.css" spacing="10">
 	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
 	<Label text="%remoteNodeSetup" styleClass="welcome-text"/>
+
+	<HBox spacing="8" alignment="CENTER_LEFT"><Label text="Don't understand this?"/> <Button onAction="#useKnownPublicNode" text="Click here to use a known mainnet node"/></HBox>
 
 	<TextField fx:id="address" promptText="%address"/>
 

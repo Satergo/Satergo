@@ -36,4 +36,11 @@ public class RemoteNodeSetupCtrl implements Initializable {
 		networkType.getItems().addAll(NetworkType.values());
 		networkType.setValue(NetworkType.MAINNET);
 	}
+
+	@FXML
+	public void useKnownPublicNode(ActionEvent e) {
+		// TODO node discovery or at the very least a list of nodes MUST be used to prevent centralization issues
+		address.setText("http://213.239.193.208:9053");
+		continueSetup(null);
+	}
 }
