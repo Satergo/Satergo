@@ -192,6 +192,9 @@ public class EmbeddedFullNode {
 									waitForExit();
 									Main.node = Main.get().nodeFromInfo();
 									Main.node.start();
+									try {
+										((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).transferLog();
+									} catch (Exception ignored) {}
 									Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
 								});
 							}).start();

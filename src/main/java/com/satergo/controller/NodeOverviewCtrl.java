@@ -27,7 +27,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@FXML private Label logLevelNote;
 	@FXML private CheckBox pauseLog;
 
-	private void transferLog() {
+	public void transferLog() {
 		new Thread(() -> {
 			try {
 				InputStream inputStream = Main.node.getStandardOutput();
