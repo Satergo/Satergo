@@ -17,7 +17,7 @@ import java.nio.file.Files;
 import java.util.ResourceBundle;
 
 public class NodeOverviewCtrl implements Initializable, WalletTab {
-	private static final int LOG_LENGTH_LIMIT = 100_000;
+	private static final int LOG_LENGTH_LIMIT = 1_000_000;
 
 	@FXML private Label networkType;
 	@FXML private ProgressBar progress;
