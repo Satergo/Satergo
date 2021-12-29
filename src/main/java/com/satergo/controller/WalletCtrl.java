@@ -110,7 +110,7 @@ public class WalletCtrl implements Initializable {
 			blocksLeft.textProperty().bind(Bindings.format(Main.lang("blocksLeft_d"), Main.node.nodeBlocksLeft));
 		} else {
 			networkStatus.setVisible(false);
-			blocksLeft.setText(Main.lang("remoteNode") + "\n" + Main.programData().nodeNetworkType.get());
+			blocksLeft.setText(Main.lang("remoteNode") + " - " + Main.programData().nodeNetworkType.get());
 		}
 		priceBox.visibleProperty().bind(Main.programData().showPrice);
 		priceBox.managedProperty().bind(Main.programData().showPrice);
