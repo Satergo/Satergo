@@ -16,6 +16,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 import org.ergoplatform.appkit.Address;
@@ -23,6 +24,7 @@ import org.ergoplatform.appkit.SecretString;
 
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
@@ -103,14 +105,30 @@ public class AccountCtrl implements Initializable, WalletTab {
 
 	@FXML
 	public void addAddress(ActionEvent e) {
-		int index = Main.get().getWallet().nextAddressIndex();
-		TextInputDialog dialog = new TextInputDialog();
+		int nextIndex = Main.get().getWallet().nextAddressIndex();
+		Dialog<Pair<Integer, String>> dialog = new Dialog<>();
 		dialog.initOwner(Main.get().stage());
-		dialog.setTitle(Main.lang("addressName"));
+		dialog.setTitle(Main.lang("addAddress"));
 		dialog.setHeaderText(null);
-		String name = dialog.showAndWait().orElse(null);
-		if (name == null) return;
-		Main.get().getWallet().myAddresses.put(index, name);
+		TextField index = new TextField(String.valueOf(nextIndex));
+		index.setStyle("-right-button-visible: false;");
+		index.setPromptText("#");
+		index.setPrefWidth(44);
+		TextField name = new TextField();
+		name.setPromptText(Main.lang("addressName"));
+		HBox row = new HBox(index, name);
+		row.setSpacing(4);
+		dialog.getDialogPane().setContent(row);
+		dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+		dialog.setResultConverter(t -> {
+			if (t == ButtonType.OK) {
+				return new Pair<>(index.getText().isBlank() ? null : Integer.parseInt(index.getText()), name.getText());
+			}
+			return null;
+		});
+		Pair<Integer, String> result = dialog.showAndWait().orElse(null);
+		if (result == null) return;
+		Main.get().getWallet().myAddresses.put(Objects.requireNonNullElse(result.getKey(), nextIndex), result.getValue());
 	}
 
 	@FXML
