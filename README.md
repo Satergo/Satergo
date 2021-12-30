@@ -34,3 +34,4 @@ To build runtimes for all platforms, run `./build-all-runtimes.sh`.
 - Project: (see [LICENSE](LICENSE))
 - Some icons: The Monero Project (see [m-images/LICENSE](src/main/resources/m-images/LICENSE))
 - Settings gear icon: https://www.flaticon.com/authors/google
+- Other icons: see [icons.properties](src/main/resources/icons.properties)

@@ -5,6 +5,7 @@ import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergouri.ErgoURIString;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.scene.Group;
 import javafx.scene.Parent;
@@ -13,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import jfxtras.styles.jmetro.JMetro;
@@ -25,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class Main extends Application {
 
@@ -89,6 +92,12 @@ public class Main extends Application {
 		};
 		updateOverrides.run();
 		jMetro.styleProperty().addListener((observable, oldValue, newValue) -> updateOverrides.run());
+
+		Icon.icons = ResourceBundle.getBundle("icons");
+		Icon.defaultColor.bind(Bindings.when(themeStyleProperty().isEqualTo(Style.DARK))
+				.then(Color.rgb(255, 255, 255))
+				.otherwise(Color.rgb(41, 41, 41)));
+		Icon.defaultHeight = 16;
 
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
 			StringWriter stringWriter = new StringWriter();

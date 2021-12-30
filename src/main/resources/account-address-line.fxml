@@ -2,6 +2,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.Button?>
+<?import com.satergo.Icon?>
+<?import javafx.scene.control.Tooltip?>
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
 	<left>
 		<HBox spacing="4" alignment="CENTER_LEFT">
@@ -12,8 +14,14 @@
 	<right>
 		<HBox spacing="8" alignment="CENTER_RIGHT">
 			<Label fx:id="address"/>
-			<Button fx:id="copy" text="%copy"/>
-			<Button fx:id="remove" text="%remove"/>
+			<Button fx:id="copy">
+				<graphic><Icon icon="copy-regular"/></graphic>
+				<tooltip><Tooltip text="%copy"/></tooltip>
+			</Button>
+			<Button fx:id="remove">
+				<graphic><Icon icon="trash-alt"/></graphic>
+				<tooltip><Tooltip text="%remove"/></tooltip>
+			</Button>
 		</HBox>
 	</right>
 </fx:root>
