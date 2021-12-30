@@ -12,11 +12,15 @@
 		</HBox>
 	</left>
 	<right>
-		<HBox spacing="8" alignment="CENTER_RIGHT">
+		<HBox spacing="6" alignment="CENTER_RIGHT">
 			<Label fx:id="address"/>
 			<Button fx:id="copy">
 				<graphic><Icon icon="copy-regular"/></graphic>
 				<tooltip><Tooltip text="%copy"/></tooltip>
+			</Button>
+			<Button fx:id="rename">
+				<graphic><Icon icon="pen-solid"/></graphic>
+				<tooltip><Tooltip text="%rename"/></tooltip>
 			</Button>
 			<Button fx:id="remove">
 				<graphic><Icon icon="trash-alt"/></graphic>

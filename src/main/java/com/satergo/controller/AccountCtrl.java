@@ -144,7 +144,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		@SuppressWarnings("unused")
 		@FXML private Label index, name, address;
 		@SuppressWarnings("unused")
-		@FXML private Button copy, remove;
+		@FXML private Button copy, rename, remove;
 
 		public AddressLine(int index, String name, Address address, Runnable removed, Consumer<String> renamed) {
 			Load.thisFxml(this, "/account-address-line.fxml");
@@ -152,20 +152,18 @@ public class AccountCtrl implements Initializable, WalletTab {
 			this.name.setText(name);
 			this.address.setText(address.toString());
 			this.copy.setOnAction(e -> Utils.copyStringToClipboard(address.toString()));
-			this.remove.setOnAction(e -> removed.run());
-			setOnContextMenuRequested(e -> {
-				ContextMenu contextMenu = new ContextMenu();
-				MenuItem menuItem = new MenuItem("rename");
-				menuItem.setOnAction(ae -> {
-					TextInputDialog dialog = new TextInputDialog();
-					String newName = dialog.showAndWait().orElse(null);
-					if (newName == null) return;
-					this.name.setText(newName);
-					renamed.accept(newName);
-				});
-				contextMenu.getItems().add(menuItem);
-				contextMenu.show(this, e.getScreenX(), e.getScreenY());
+			this.rename.setOnAction(e -> {
+				TextInputDialog dialog = new TextInputDialog();
+				dialog.initOwner(Main.get().stage());
+				dialog.setTitle(Main.lang("renameAddress"));
+				dialog.setHeaderText(null);
+				dialog.getEditor().setPromptText(Main.lang("addressName"));
+				String newName = dialog.showAndWait().orElse(null);
+				if (newName == null) return;
+				this.name.setText(newName);
+				renamed.accept(newName);
 			});
+			this.remove.setOnAction(e -> removed.run());
 		}
 	}
 
