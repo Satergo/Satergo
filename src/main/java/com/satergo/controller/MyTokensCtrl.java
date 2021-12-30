@@ -1,6 +1,5 @@
 package com.satergo.controller;
 
-import com.satergo.Icon;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.TokenBalance;
@@ -8,7 +7,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
@@ -29,9 +27,7 @@ public class MyTokensCtrl implements Initializable, WalletTab {
 			root.add(nameLabel, 0, i);
 			GridPane.setHgrow(nameLabel, Priority.ALWAYS);
 			root.add(new Label(new BigDecimal(token.amount()).movePointLeft(token.decimals()).toPlainString()), 1, i);
-			Button copy = new Button();
-			copy.setTooltip(new Tooltip(Main.lang("copy")));
-			copy.setGraphic(new Icon("copy-regular"));
+			Button copy = new Button(Main.lang("copyTokenId"));
 			copy.setOnAction(e -> Utils.copyStringToClipboard(token.id()));
 			root.add(copy, 2, i);
 		}
