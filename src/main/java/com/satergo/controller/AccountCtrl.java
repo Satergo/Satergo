@@ -49,8 +49,10 @@ public class AccountCtrl implements Initializable, WalletTab {
 	@FXML
 	public void changeWalletName(ActionEvent e) {
 		TextInputDialog dialog = new TextInputDialog();
-		// todo title etc
 		dialog.initOwner(Main.get().stage());
+		dialog.setTitle(Main.lang("renameWallet"));
+		dialog.setHeaderText(null);
+		dialog.getEditor().setPromptText(Main.lang("walletName"));
 		dialog.showAndWait().ifPresent(newName -> Main.get().getWallet().setName(newName));
 	}
 
