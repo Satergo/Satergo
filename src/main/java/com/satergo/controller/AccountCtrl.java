@@ -130,6 +130,14 @@ public class AccountCtrl implements Initializable, WalletTab {
 		});
 		Pair<Integer, String> result = dialog.showAndWait().orElse(null);
 		if (result == null) return;
+		if (Main.get().getWallet().myAddresses.containsKey(result.getKey())) {
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("anAddressWithThisIndexAlreadyExists"));
+			return;
+		}
+		if (result.getKey() < 0) {
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("invalidAddressIndex"));
+			return;
+		}
 		Main.get().getWallet().myAddresses.put(Objects.requireNonNullElse(result.getKey(), nextIndex), result.getValue());
 	}
 
