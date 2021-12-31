@@ -144,7 +144,7 @@ public class EmbeddedFullNode {
 					networkBlockHeight.set(networkHeight);
 				});
 			} catch (Exception ignored) {} // todo
-		}, 10, 20, TimeUnit.SECONDS);
+		}, 10, 10, TimeUnit.SECONDS);
 		int versionInt;
 		try {
 			String versionRaw = readVersion();

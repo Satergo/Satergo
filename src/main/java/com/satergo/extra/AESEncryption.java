@@ -39,14 +39,13 @@ public class AESEncryption {
 		byte[] iv = new byte[12];
 		secureRandom.nextBytes(iv);
 
-		// Prepare your password
+		// Prepare password
 		SecretKey secretKey = generateSecretKey(password, iv);
-
 
 		Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
 		GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
 
-		// Encryption mode on!
+		// Encryption mode on
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
 
 		// Encrypt the data
@@ -82,31 +81,29 @@ public class AESEncryption {
 		byte[] iv = new byte[noonceSize];
 		byteBuffer.get(iv);
 
-		// Prepare your password
+		// Prepare password
 		SecretKey secretKey = generateSecretKey(password, iv);
 
-		// get the rest of encrypted data
+		// Get the rest of encrypted data
 		byte[] cipherBytes = new byte[byteBuffer.remaining()];
 		byteBuffer.get(cipherBytes);
 
 		Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
 		GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
 
-		// Encryption mode on!
+		// Decryption mode on
 		cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
 
-		// Encrypt the data
+		// Decrypt the data
 		return cipher.doFinal(cipherBytes);
 	}
 
 	/**
 	 * Function to generate a 128-bit key from the given password and iv
 	 *
-	 * @param password
-	 * @param iv
+	 * @param password Password
+	 * @param iv Initialization vector
 	 * @return Secret key
-	 * @throws NoSuchAlgorithmException
-	 * @throws InvalidKeySpecException
 	 */
 	public static SecretKey generateSecretKey(char[] password, byte[] iv) throws NoSuchAlgorithmException, InvalidKeySpecException {
 		KeySpec spec = new PBEKeySpec(password, iv, 65536, 128); // AES-128
