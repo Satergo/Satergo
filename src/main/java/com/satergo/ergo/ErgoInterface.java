@@ -26,6 +26,12 @@ public class ErgoInterface {
 		return ctx.newProverBuilder().withMnemonic(mnemonic).withEip3Secret(0).build();
 	}
 
+	public static ErgoProver newWithMnemonicProver(BlockchainContext ctx, Mnemonic mnemonic, Iterable<Integer> derivedAddresses) {
+		ErgoProverBuilder ergoProverBuilder = ctx.newProverBuilder().withMnemonic(mnemonic);
+		derivedAddresses.forEach(ergoProverBuilder::withEip3Secret);
+		return ergoProverBuilder.build();
+	}
+
 	public static Balance getBalance(NetworkType networkType, Address address) {
 		// I don't want to use explorer here...
 		HttpClient httpClient = HttpClient.newHttpClient();
@@ -70,24 +76,24 @@ public class ErgoInterface {
 
 	/**
 	 * @param ergoClient ErgoClient, see for example {@link #newNodeApiClient}
-	 * @param ergoProverFunction function that creates the ErgoProver using a BlockchainContext, see for example {@link #newWithMnemonicProver}
-	 * @param recipient address to send to
-	 * @param amountToSend amount to send in nanoERGs
+	 * @param ergoProverFunction Function that creates the ErgoProver using a BlockchainContext, see for example {@link #newWithMnemonicProver}
+	 * @param recipient Address to send to
+	 * @param amountToSend Amount to send (in nanoERGs)
 	 * @param feeAmount Fee, minimum {@link Parameters#MinFee}
-	 * @param tokensToSend tokens to send
-	 * @throws InputBoxesSelectionException if not enough ERG or not enough tokens were found
-	 * @return the transaction ID
+	 * @param changeAddress The address where leftover ERGs or tokens from UTXOs will be sent
+	 * @param tokensToSend Tokens to send
+	 * @throws InputBoxesSelectionException If not enough ERG or not enough tokens were found
+	 * @return The transaction ID with quotes around it
 	 */
 	public static String transact(ErgoClient ergoClient, Function<BlockchainContext, ErgoProver> ergoProverFunction,
-								  Address recipient, long amountToSend, long feeAmount, ErgoToken... tokensToSend) throws InputBoxesSelectionException {
+								  Address recipient, long amountToSend, long feeAmount, Address changeAddress, ErgoToken... tokensToSend) throws InputBoxesSelectionException {
 		if (feeAmount < Parameters.MinFee) {
 			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
 		}
 		return ergoClient.execute(ctx -> {
 			ErgoProver senderProver = ergoProverFunction.apply(ctx);
 			Address sender = senderProver.getEip3Addresses().get(0);
-			List<InputBox> unspent = ctx.getUnspentBoxesFor(sender, 0, 20);
-			System.out.println("unspent = " + unspent);
+			List<InputBox> unspent = senderProver.getEip3Addresses().stream().flatMap(address -> ctx.getUnspentBoxesFor(address, 0, 20).stream()).toList();
 			List<InputBox> boxesToSpend = BoxOperations.selectTop(unspent, amountToSend + feeAmount, List.of(tokensToSend));
 			UnsignedTransactionBuilder txB = ctx.newTxBuilder();
 			OutBoxBuilder newBoxBuilder = txB.outBoxBuilder();

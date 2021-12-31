@@ -31,8 +31,8 @@ import java.util.ResourceBundle;
 
 public class Main extends Application {
 
-	public static final String VERSION = "0.0.1";
-	public static final int VERSION_CODE = 1;
+	public static final String VERSION = "0.0.2";
+	public static final int VERSION_CODE = 2;
 
 	public static EmbeddedFullNode node;
 	// from command line

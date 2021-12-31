@@ -23,6 +23,11 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 public final class Wallet {
 
@@ -83,12 +88,21 @@ public final class Wallet {
 		return ErgoInterface.getPublicEip3Address(Main.programData().nodeNetworkType.get(), mnemonic, index);
 	}
 
-	public Balance balance() {
-		return ErgoInterface.getBalance(Main.programData().nodeNetworkType.get(), masterPublicAddress());
+	/**
+	 * Returns the balance of all addresses combined (checking is done in parallel)
+	 */
+	public Balance totalBalance() {
+		return myAddresses.keySet().parallelStream().map(this::publicAddress)
+				.map(address -> ErgoInterface.getBalance(Main.programData().nodeNetworkType.get(), address))
+				.reduce(Balance::combine).orElseThrow();
 	}
 
 	public String transact(Address recipient, long amountToSend, long feeAmount, ErgoToken... tokens) {
-		return ErgoInterface.transact(ErgoInterface.newNodeApiClient(Main.programData().nodeNetworkType.get(), Main.programData().nodeAddress.get()), ctx -> ErgoInterface.newWithMnemonicProver(ctx, mnemonic), recipient, amountToSend, feeAmount, tokens);
+		return ErgoInterface.transact(ErgoInterface.newNodeApiClient(
+				Main.programData().nodeNetworkType.get(),
+				Main.programData().nodeAddress.get()),
+				ctx -> ErgoInterface.newWithMnemonicProver(ctx, mnemonic, myAddresses.keySet()),
+				recipient, amountToSend, feeAmount, publicAddress(0), tokens);
 	}
 
 	public void changePassword(SecretString currentPassword, SecretString newPassword) throws IncorrectPasswordException {

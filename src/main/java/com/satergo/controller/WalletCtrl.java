@@ -128,7 +128,7 @@ public class WalletCtrl implements Initializable {
 
 		headTitle.textProperty().bind(Bindings.concat("Ergo - ", Main.get().getWallet().name));
 
-		updateBalance(Main.get().getWallet().balance());
+		updateBalance(Main.get().getWallet().totalBalance());
 		updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get()));
 
 		tabs.put("myTokens", Load.fxmlNodeAndController("/my-tokens.fxml"));
@@ -168,7 +168,7 @@ public class WalletCtrl implements Initializable {
 			Platform.runLater(() -> WalletCtrl.this.updatePriceValue(oneErgValue));
 		}, 50, 60, TimeUnit.SECONDS);
 		scheduler.scheduleAtFixedRate(() -> {
-			Balance totalBalance = Main.get().getWallet().balance();
+			Balance totalBalance = Main.get().getWallet().totalBalance();
 			Platform.runLater(() -> {
 				updateBalance(totalBalance);
 				updatePriceValue(oneErgValue);
