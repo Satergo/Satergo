@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" type="HBox" spacing="4">
+	<TextField fx:id="index" promptText="#" prefWidth="44" style="-right-button-visible: false;"/>
+	<TextField fx:id="name" promptText="%addressName"/>
+</fx:root>

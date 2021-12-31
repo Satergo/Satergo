@@ -112,19 +112,16 @@ public class AccountCtrl implements Initializable, WalletTab {
 		dialog.initOwner(Main.get().stage());
 		dialog.setTitle(Main.lang("addAddress"));
 		dialog.setHeaderText(null);
-		TextField index = new TextField(String.valueOf(nextIndex));
-		index.setStyle("-right-button-visible: false;");
-		index.setPromptText("#");
-		index.setPrefWidth(44);
-		TextField name = new TextField();
-		name.setPromptText(Main.lang("addressName"));
-		HBox row = new HBox(index, name);
-		row.setSpacing(4);
-		dialog.getDialogPane().setContent(row);
+		var content = new HBox() {
+			{ Load.thisFxml(this, "/dialog/add-address.fxml"); }
+			@FXML TextField index, name;
+		};
+		content.index.setText(String.valueOf(nextIndex));
+		dialog.getDialogPane().setContent(content);
 		dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 		dialog.setResultConverter(t -> {
 			if (t == ButtonType.OK) {
-				return new Pair<>(index.getText().isBlank() ? null : Integer.parseInt(index.getText()), name.getText());
+				return new Pair<>(content.index.getText().isBlank() ? null : Integer.parseInt(content.index.getText()), content.name.getText());
 			}
 			return null;
 		});
