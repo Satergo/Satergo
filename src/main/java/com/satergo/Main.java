@@ -83,6 +83,7 @@ public class Main extends Application {
 
 		scene = new Scene(new Group(), 1000, 600);
 		primaryStage.setScene(scene);
+		primaryStage.setMinWidth(304);
 		jMetro.setScene(scene);
 		jMetro.setStyle(programData.lightTheme.get() ? Style.LIGHT : Style.DARK);
 		Runnable updateOverrides = () -> {
