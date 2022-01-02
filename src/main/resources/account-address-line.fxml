@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import com.satergo.Icon?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.geometry.Insets?>
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
 	<left>
 		<HBox spacing="4" alignment="CENTER_LEFT">
@@ -11,9 +12,13 @@
 			<Label fx:id="name"/>
 		</HBox>
 	</left>
+	<center>
+		<Label fx:id="address" BorderPane.alignment="CENTER_RIGHT" textOverrun="CENTER_ELLIPSIS">
+			<BorderPane.margin><Insets left="6" right="6"/></BorderPane.margin>
+		</Label>
+	</center>
 	<right>
 		<HBox spacing="6" alignment="CENTER_RIGHT">
-			<Label fx:id="address"/>
 			<Button fx:id="copy">
 				<graphic><Icon icon="copy-regular"/></graphic>
 				<tooltip><Tooltip text="%copy"/></tooltip>

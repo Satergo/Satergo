@@ -153,7 +153,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		@SuppressWarnings("unused")
 		@FXML private Button copy, rename, remove;
 
-		public AddressLine(int index, String name, Address address, Runnable removed, Consumer<String> renamed) {
+		public AddressLine(int index, String name, Address address, Runnable removed, Consumer<String> renamed, boolean removable) {
 			Load.thisFxml(this, "/account-address-line.fxml");
 			this.index.setText("#" + index);
 			this.name.setText(name);
@@ -170,14 +170,20 @@ public class AccountCtrl implements Initializable, WalletTab {
 				this.name.setText(newName);
 				renamed.accept(newName);
 			});
-			this.remove.setOnAction(e -> removed.run());
+			if (removable) {
+				this.remove.setOnAction(e -> removed.run());
+			} else {
+				this.remove.setVisible(false);
+			}
 		}
 	}
 
 	private void updateAddresses() {
 		addresses.getChildren().clear();
 		Main.get().getWallet().myAddresses.forEach((index, name) -> {
-			addresses.getChildren().add(new AddressLine(index, name, Main.get().getWallet().publicAddress(index), () -> Main.get().getWallet().myAddresses.remove(index), newName -> Main.get().getWallet().myAddresses.put(index, newName)));
+			addresses.getChildren().add(new AddressLine(index, name, Main.get().getWallet().publicAddress(index),
+					() -> Main.get().getWallet().myAddresses.remove(index),
+					newName -> Main.get().getWallet().myAddresses.put(index, newName), index != 0));
 		});
 	}
 
