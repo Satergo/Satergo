@@ -48,7 +48,7 @@ public class EmbeddedFullNode {
 	private final NetworkType networkType;
 	public LogLevel logLevel;
 	public final File nodeJar;
-	private final File confFile;
+	public final File confFile;
 	public final File infoFile;
 	public EmbeddedNodeInfo info;
 

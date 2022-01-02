@@ -65,8 +65,8 @@ public class AccountCtrl implements Initializable, WalletTab {
 		dialog.setHeaderText("Change password");
 
 		// Set the button types.
-		ButtonType loginButtonType = new ButtonType(Main.lang("change"), ButtonBar.ButtonData.OK_DONE);
-		dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+		ButtonType changeType = new ButtonType(Main.lang("change"), ButtonBar.ButtonData.OK_DONE);
+		dialog.getDialogPane().getButtonTypes().addAll(changeType, ButtonType.CANCEL);
 
 		// Create the currentPassword and newPassword labels and fields.
 		GridPane grid = new GridPane();
@@ -82,7 +82,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		grid.add(new Label(Main.lang("newC")), 0, 1);
 		grid.add(newPassword, 1, 1);
 
-		Node changeButton = dialog.getDialogPane().lookupButton(loginButtonType);
+		Node changeButton = dialog.getDialogPane().lookupButton(changeType);
 		changeButton.setDisable(true);
 		currentPassword.textProperty().addListener((observable, oldValue, newValue) -> {
 			changeButton.setDisable(newValue.trim().isEmpty());
@@ -90,7 +90,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		dialog.getDialogPane().setContent(grid);
 		Platform.runLater(currentPassword::requestFocus);
 		dialog.setResultConverter(dialogButton -> {
-			if (dialogButton == loginButtonType) {
+			if (dialogButton == changeType) {
 				return new Pair<>(currentPassword.getText(), newPassword.getText());
 			}
 			return null;

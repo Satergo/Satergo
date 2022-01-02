@@ -1,9 +1,6 @@
 package com.satergo.ergo;
 
-import com.grack.nanojson.JsonArray;
-import com.grack.nanojson.JsonObject;
-import com.grack.nanojson.JsonParser;
-import com.grack.nanojson.JsonParserException;
+import com.grack.nanojson.*;
 import com.satergo.Utils;
 import org.ergoplatform.appkit.*;
 
@@ -113,6 +110,29 @@ public class ErgoInterface {
 			SignedTransaction signedTx = senderProver.sign(unsignedTx);
 			return ctx.sendTransaction(signedTx);
 		});
+	}
+
+	public enum UnlockingResult { INCORRECT_API_KEY, INCORRECT_PASSWORD, SUCCESS }
+	public static UnlockingResult unlockServerNodeWallet(String nodeApiAddress, String apiKey, String password) {
+		HttpClient httpClient = HttpClient.newHttpClient();
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(nodeApiAddress).resolve("/wallet/unlock"))
+				.header("Content-Type", "application/json")
+				.header("api_key", apiKey)
+				.POST(HttpRequest.BodyPublishers.ofString(JsonWriter.string().object().value("pass", password).end().done())).build();
+		try {
+			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+			if (response.statusCode() == 403) {
+				return UnlockingResult.INCORRECT_API_KEY;
+			} else if (response.statusCode() == 400) {
+				return UnlockingResult.INCORRECT_PASSWORD;
+			} else if (response.statusCode() == 200) {
+				return UnlockingResult.SUCCESS;
+			}
+			System.out.println("response.statusCode() = " + response.statusCode() + " ; " + response.body());
+			return null;
+		} catch (IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static String generateMnemonicPhrase(String languageId) {
