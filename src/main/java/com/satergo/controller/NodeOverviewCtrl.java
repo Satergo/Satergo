@@ -90,7 +90,9 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		});
 		log.setWrapText(true);
 		progress.progressProperty().bind(Main.node.nodeSyncProgress);
-		blocksNodeNetwork.textProperty().bind(Bindings.concat(Main.node.nodeBlockHeight, "/", Main.node.networkBlockHeight));
+		blocksNodeNetwork.textProperty().bind(Bindings.concat(
+				Bindings.when(Main.node.nodeBlockHeight.lessThan(0)).then("?").otherwise(Main.node.nodeBlockHeight.asString()),
+				"/", Bindings.when(Main.node.networkBlockHeight.lessThan(0)).then("?").otherwise(Main.node.networkBlockHeight.asString())));
 	}
 
 	public void logVersionUpdate(String latestVersion) {

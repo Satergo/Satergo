@@ -107,7 +107,8 @@ public class WalletCtrl implements Initializable {
 			if (!Main.node.isRunning()) // a refresh due to language change will not stop the node (see SettingsCtrl), so check if it is running
 				Main.node.start();
 			networkStatus.progressProperty().bind(Main.node.nodeSyncProgress);
-			blocksLeft.textProperty().bind(Bindings.format(Main.lang("blocksLeft_d"), Main.node.nodeBlocksLeft));
+			blocksLeft.textProperty().bind(Bindings.format(Main.lang("blocksLeft_s"),
+					Bindings.when(Main.node.nodeBlocksLeft.lessThan(0)).then("?").otherwise(Main.node.nodeBlocksLeft.asString())));
 		} else {
 			networkStatus.setVisible(false);
 			blocksLeft.setText(Main.lang("remoteNode") + " - " + Main.programData().nodeNetworkType.get());

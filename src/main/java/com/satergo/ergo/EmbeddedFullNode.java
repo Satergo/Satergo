@@ -75,8 +75,8 @@ public class EmbeddedFullNode {
 		}
 	}
 
-	public final SimpleIntegerProperty nodeBlockHeight = new SimpleIntegerProperty(0);
-	public final SimpleIntegerProperty networkBlockHeight = new SimpleIntegerProperty(1);
+	public final SimpleIntegerProperty nodeBlockHeight = new SimpleIntegerProperty(-1);
+	public final SimpleIntegerProperty networkBlockHeight = new SimpleIntegerProperty(-2);
 	public final SimpleDoubleProperty nodeSyncProgress = new SimpleDoubleProperty(0);
 	public final SimpleIntegerProperty nodeBlocksLeft = new SimpleIntegerProperty(1);
 
