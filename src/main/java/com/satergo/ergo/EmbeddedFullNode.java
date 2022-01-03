@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -51,6 +50,7 @@ public class EmbeddedFullNode {
 	public final File confFile;
 	public final File infoFile;
 	public EmbeddedNodeInfo info;
+	public final ErgoNodeAccess nodeAccess;
 
 	private EmbeddedFullNode(File nodeDirectory, NetworkType networkType, LogLevel logLevel, File nodeJar, File confFile, EmbeddedNodeInfo info) {
 		this.nodeDirectory = nodeDirectory;
@@ -60,6 +60,7 @@ public class EmbeddedFullNode {
 		this.confFile = confFile;
 		infoFile = new File(nodeDirectory, EmbeddedNodeInfo.FILE_NAME);
 		this.info = info;
+		this.nodeAccess = new ErgoNodeAccess(URI.create(localApiHttpAddress()));
 
 		nodeSyncProgress.bind(nodeBlockHeight.divide(networkBlockHeight));
 		nodeBlocksLeft.bind(networkBlockHeight.subtract(nodeBlockHeight));
@@ -84,12 +85,12 @@ public class EmbeddedFullNode {
 
 	private int lastVersionUpdateAlert = 0;
 
-	public int port() {
+	public int apiPort() {
 		return networkType == NetworkType.MAINNET ? 9053 : 9052;
 	}
 
-	public String localHttpAddress() {
-		return "http://127.0.0.1:" + port();
+	public String localApiHttpAddress() {
+		return "http://127.0.0.1:" + apiPort();
 	}
 
 	private static String readVersion(File file) throws IOException {
@@ -136,7 +137,7 @@ public class EmbeddedFullNode {
 		scheduler = Executors.newScheduledThreadPool(0);
 		scheduler.scheduleAtFixedRate(() -> {
 			try {
-				int nodeHeight = ErgoInterface.getNodeBlockHeight(localHttpAddress());
+				int nodeHeight = nodeAccess.getBlockHeight();
 				int networkHeight = ErgoInterface.getNetworkBlockHeight(networkType);
 				// not sure if needed
 				Platform.runLater(() -> {

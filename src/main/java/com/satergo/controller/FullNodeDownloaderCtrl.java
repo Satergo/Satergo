@@ -93,7 +93,7 @@ public class FullNodeDownloaderCtrl implements Initializable {
 			throw new RuntimeException(ex);
 		}
 		Main.node = Main.get().nodeFromInfo();
-		Main.programData().nodeAddress.set(Main.node.localHttpAddress());
+		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
 		Main.node.firstTimeSetup();
 		Main.get().displayPage(Load.fxml("/wallet-setup.fxml"));
 	}

@@ -102,7 +102,7 @@ public class FullNodeSourceCtrl {
 		}
 		Main.programData().blockchainNodeKind.set(ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE);
 		Main.node = Main.get().nodeFromInfo();
-		Main.programData().nodeAddress.set(Main.node.localHttpAddress());
+		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
 		Main.programData().nodeNetworkType.set(Main.node.info.networkType());
 		Main.get().displayPage(Load.fxml("/wallet-setup.fxml"));
 	}

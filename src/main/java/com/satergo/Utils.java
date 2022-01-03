@@ -9,10 +9,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.ergoplatform.appkit.ErgoId;
 
 import java.io.File;
 import java.io.IOException;
@@ -239,5 +241,9 @@ public class Utils {
 			hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
 		}
 		return new String(hexChars, StandardCharsets.UTF_8);
+	}
+
+	public static Image tokenIcon36x36(ErgoId tokenId) {
+		return new Image("https://raw.githubusercontent.com/Satergo/Resources/master/token-icons-36x36/" + tokenId + ".png", true);
 	}
 }

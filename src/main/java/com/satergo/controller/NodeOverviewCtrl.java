@@ -3,7 +3,7 @@ package com.satergo.controller;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.EmbeddedFullNode;
-import com.satergo.ergo.ErgoInterface;
+import com.satergo.ergo.ErgoNodeAccess;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
@@ -174,12 +174,13 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		});
 		serverWalletPassword.setOnAction(ae -> dialog.getDialogPane().lookupButton(ButtonType.APPLY).fireEvent(new ActionEvent()));
 		dialog.showAndWait().ifPresent(result -> {
-			ErgoInterface.UnlockingResult unlockingResult = ErgoInterface.unlockServerNodeWallet(Main.node.localHttpAddress(), result.getKey(), result.getValue());
+			ErgoNodeAccess.UnlockingResult unlockingResult = Main.node.nodeAccess.unlockWallet(result.getKey(), result.getValue());
 			String message = unlockingResult == null ? Main.lang("unknownResult") : Main.lang(Map.of(
-					ErgoInterface.UnlockingResult.INCORRECT_API_KEY, "incorrectApiKey",
-					ErgoInterface.UnlockingResult.INCORRECT_PASSWORD, "incorrectServerWalletPassword",
-					ErgoInterface.UnlockingResult.SUCCESS, "success").get(unlockingResult));
-			Utils.alert(unlockingResult != ErgoInterface.UnlockingResult.SUCCESS ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION, message);
+					ErgoNodeAccess.UnlockingResult.INCORRECT_API_KEY, "incorrectApiKey",
+					ErgoNodeAccess.UnlockingResult.INCORRECT_PASSWORD, "incorrectServerWalletPassword",
+					ErgoNodeAccess.UnlockingResult.NOT_INITIALIZED, "serverWalletIsNotInitialized",
+					ErgoNodeAccess.UnlockingResult.SUCCESS, "success").get(unlockingResult));
+			Utils.alert(unlockingResult != ErgoNodeAccess.UnlockingResult.SUCCESS ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION, message);
 		});
 	}
 

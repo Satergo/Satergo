@@ -9,14 +9,16 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.function.Function;
+
+import static java.net.http.HttpResponse.BodyHandlers.ofString;
+import static org.ergoplatform.appkit.RestApiErgoClient.getDefaultExplorerUrl;
 
 public class ErgoInterface {
 
 	public static ErgoClient newNodeApiClient(NetworkType networkType, String nodeApiAddress) {
-		return RestApiErgoClient.create(nodeApiAddress, networkType, "", RestApiErgoClient.getDefaultExplorerUrl(networkType));
+		return RestApiErgoClient.create(nodeApiAddress, networkType, "", getDefaultExplorerUrl(networkType));
 	}
 
 	public static ErgoProver newWithMnemonicProver(BlockchainContext ctx, Mnemonic mnemonic) {
@@ -32,9 +34,9 @@ public class ErgoInterface {
 	public static Balance getBalance(NetworkType networkType, Address address) {
 		// I don't want to use explorer here...
 		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(RestApiErgoClient.getDefaultExplorerUrl(networkType) + "/api/v1/addresses/" + address + "/balance/total")).build();
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getDefaultExplorerUrl(networkType)).resolve("/api/v1/addresses/" + address + "/balance/total")).build();
 		try {
-			JsonObject body = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
+			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());
 			JsonObject confirmed = body.getObject("confirmed");
 			JsonObject unconfirmed = body.getObject("unconfirmed");
 			Function<JsonObject, TokenBalance> tokenDeserialize = obj -> new TokenBalance(obj.getString("tokenId"), obj.getLong("amount"), obj.getInt("decimals"), obj.getString("name"));
@@ -48,23 +50,11 @@ public class ErgoInterface {
 		}
 	}
 
-	public static int getNodeBlockHeight(String nodeApiAddress) {
-		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(nodeApiAddress).resolve("/blocks/lastHeaders/1")).build();
-		try {
-			JsonArray body = JsonParser.array().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
-			if (body.isEmpty()) return 0;
-			return body.getObject(0).getInt("height");
-		} catch (JsonParserException | IOException | InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public static int getNetworkBlockHeight(NetworkType networkType) {
 		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(RestApiErgoClient.getDefaultExplorerUrl(networkType) + "/blocks?limit=1&sortBy=height&sortDirection=desc")).build();
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getDefaultExplorerUrl(networkType) + "/blocks?limit=1&sortBy=height&sortDirection=desc")).build();
 		try {
-			JsonObject body = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
+			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());
 			return body.getArray("items").getObject(0).getInt("height");
 		} catch (JsonParserException | IOException | InterruptedException e) {
 			throw new RuntimeException(e);
@@ -112,25 +102,14 @@ public class ErgoInterface {
 		});
 	}
 
-	public enum UnlockingResult { INCORRECT_API_KEY, INCORRECT_PASSWORD, SUCCESS }
-	public static UnlockingResult unlockServerNodeWallet(String nodeApiAddress, String apiKey, String password) {
+	public static JsonObject getTokenItem(NetworkType networkType, ErgoId tokenId) {
 		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(nodeApiAddress).resolve("/wallet/unlock"))
-				.header("Content-Type", "application/json")
-				.header("api_key", apiKey)
-				.POST(HttpRequest.BodyPublishers.ofString(JsonWriter.string().object().value("pass", password).end().done())).build();
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getDefaultExplorerUrl(networkType))
+				.resolve("/api/v1/boxes/byTokenId/").resolve(tokenId.toString() + "/").resolve("?limit=1")).build();
 		try {
-			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-			if (response.statusCode() == 403) {
-				return UnlockingResult.INCORRECT_API_KEY;
-			} else if (response.statusCode() == 400) {
-				return UnlockingResult.INCORRECT_PASSWORD;
-			} else if (response.statusCode() == 200) {
-				return UnlockingResult.SUCCESS;
-			}
-			System.out.println("response.statusCode() = " + response.statusCode() + " ; " + response.body());
-			return null;
-		} catch (IOException | InterruptedException e) {
+			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());
+			return body.getArray("items").getObject(0);
+		} catch (IOException | InterruptedException | JsonParserException e) {
 			throw new RuntimeException(e);
 		}
 	}
