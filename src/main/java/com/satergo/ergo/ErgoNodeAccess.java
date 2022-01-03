@@ -16,6 +16,7 @@ import static java.net.http.HttpResponse.BodyHandlers.ofString;
 
 public class ErgoNodeAccess {
 
+	private final HttpClient httpClient = HttpClient.newHttpClient();
 	private final URI apiAddress;
 
 	public ErgoNodeAccess(URI apiAddress) {
@@ -23,7 +24,6 @@ public class ErgoNodeAccess {
 	}
 
 	public int getBlockHeight() {
-		HttpClient httpClient = HttpClient.newHttpClient();
 		HttpRequest request = Utils.httpRequestBuilder().uri(apiAddress.resolve("/blocks/lastHeaders/1")).build();
 		try {
 			JsonArray body = JsonParser.array().from(httpClient.send(request, ofString()).body());
@@ -37,7 +37,6 @@ public class ErgoNodeAccess {
 	public enum UnlockingResult { INCORRECT_API_KEY, INCORRECT_PASSWORD, NOT_INITIALIZED, UNKNOWN, SUCCESS }
 
 	public UnlockingResult unlockWallet(String apiKey, String password) {
-		HttpClient httpClient = HttpClient.newHttpClient();
 		HttpRequest request = Utils.httpRequestBuilder().uri(apiAddress.resolve("/wallet/unlock"))
 				.header("Content-Type", "application/json")
 				.header("api_key", apiKey)

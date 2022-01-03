@@ -11,6 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -92,6 +93,10 @@ public class SendCtrl implements Initializable, WalletTab {
 		for (TokenBalance token : ownedTokens) {
 			MenuItem menuItem = new MenuItem();
 			menuItem.setText(token.name() + " (" + token.id().substring(0, 20) + "...)");
+			ImageView icon = new ImageView(Utils.tokenIcon32x32(ErgoId.create(token.id())));
+			icon.setFitWidth(32);
+			icon.setFitHeight(32);
+			menuItem.setGraphic(icon);
 			menuItem.setOnAction(ae -> tokenList.getChildren().add(new TokenLine(token)));
 			contextMenu.getItems().add(menuItem);
 		}

@@ -243,6 +243,10 @@ public class Utils {
 		return new String(hexChars, StandardCharsets.UTF_8);
 	}
 
+	public static Image tokenIcon32x32(ErgoId tokenId) {
+		return new Image("https://raw.githubusercontent.com/Satergo/Resources/master/token-icons-32x32/" + tokenId + ".png", true);
+	}
+
 	public static Image tokenIcon36x36(ErgoId tokenId) {
 		return new Image("https://raw.githubusercontent.com/Satergo/Resources/master/token-icons-36x36/" + tokenId + ".png", true);
 	}
