@@ -34,7 +34,7 @@ public class ErgoNodeAccess {
 		}
 	}
 
-	public enum UnlockingResult { INCORRECT_API_KEY, INCORRECT_PASSWORD, NOT_INITIALIZED, SUCCESS }
+	public enum UnlockingResult { INCORRECT_API_KEY, INCORRECT_PASSWORD, NOT_INITIALIZED, UNKNOWN, SUCCESS }
 
 	public UnlockingResult unlockWallet(String apiKey, String password) {
 		HttpClient httpClient = HttpClient.newHttpClient();
@@ -53,7 +53,7 @@ public class ErgoNodeAccess {
 			} else if (response.statusCode() == 200) {
 				return UnlockingResult.SUCCESS;
 			}
-			return null;
+			return UnlockingResult.UNKNOWN;
 		} catch (IOException | InterruptedException | JsonParserException e) {
 			throw new RuntimeException(e);
 		}

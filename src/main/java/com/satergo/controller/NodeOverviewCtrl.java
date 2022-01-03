@@ -175,10 +175,11 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		serverWalletPassword.setOnAction(ae -> dialog.getDialogPane().lookupButton(ButtonType.APPLY).fireEvent(new ActionEvent()));
 		dialog.showAndWait().ifPresent(result -> {
 			ErgoNodeAccess.UnlockingResult unlockingResult = Main.node.nodeAccess.unlockWallet(result.getKey(), result.getValue());
-			String message = unlockingResult == null ? Main.lang("unknownResult") : Main.lang(Map.of(
+			String message = Main.lang(Map.of(
 					ErgoNodeAccess.UnlockingResult.INCORRECT_API_KEY, "incorrectApiKey",
 					ErgoNodeAccess.UnlockingResult.INCORRECT_PASSWORD, "incorrectServerWalletPassword",
 					ErgoNodeAccess.UnlockingResult.NOT_INITIALIZED, "serverWalletIsNotInitialized",
+					ErgoNodeAccess.UnlockingResult.UNKNOWN, "unknownResult",
 					ErgoNodeAccess.UnlockingResult.SUCCESS, "success").get(unlockingResult));
 			Utils.alert(unlockingResult != ErgoNodeAccess.UnlockingResult.SUCCESS ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION, message);
 		});
