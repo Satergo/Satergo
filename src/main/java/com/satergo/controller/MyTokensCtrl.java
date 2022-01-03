@@ -23,8 +23,8 @@ public class MyTokensCtrl implements Initializable, WalletTab {
 
 	private void update(List<TokenBalance> tokens) {
 		root.getChildren().clear();
-		for (int i = 0; i < 10; i++) {
-			TokenBalance token = tokens.get(0);
+		for (int i = 0; i < tokens.size(); i++) {
+			TokenBalance token = tokens.get(i);
 			Label nameLabel = new Label(token.name() == null ? Main.lang("unnamed_parentheses") : token.name());
 			ImageView icon = new ImageView(Utils.tokenIcon36x36(ErgoId.create(token.id())));
 			// Give it a size so that even if there is no icon for this token, it will take the same amount of height as those with an icon
