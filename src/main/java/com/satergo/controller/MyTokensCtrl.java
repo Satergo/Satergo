@@ -7,8 +7,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import org.ergoplatform.appkit.ErgoId;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -21,15 +23,20 @@ public class MyTokensCtrl implements Initializable, WalletTab {
 
 	private void update(List<TokenBalance> tokens) {
 		root.getChildren().clear();
-		for (int i = 0; i < tokens.size(); i++) {
-			TokenBalance token = tokens.get(i);
+		for (int i = 0; i < 10; i++) {
+			TokenBalance token = tokens.get(0);
 			Label nameLabel = new Label(token.name() == null ? Main.lang("unnamed_parentheses") : token.name());
-			root.add(nameLabel, 0, i);
+			ImageView icon = new ImageView(Utils.tokenIcon36x36(ErgoId.create(token.id())));
+			// Give it a size so that even if there is no icon for this token, it will take the same amount of height as those with an icon
+			icon.setFitWidth(36);
+			icon.setFitHeight(36);
+			root.add(icon, 0, i);
+			root.add(nameLabel, 1, i);
 			GridPane.setHgrow(nameLabel, Priority.ALWAYS);
-			root.add(new Label(new BigDecimal(token.amount()).movePointLeft(token.decimals()).toPlainString()), 1, i);
+			root.add(new Label(new BigDecimal(token.amount()).movePointLeft(token.decimals()).toPlainString()), 2, i);
 			Button copy = new Button(Main.lang("copyTokenId"));
 			copy.setOnAction(e -> Utils.copyStringToClipboard(token.id()));
-			root.add(copy, 2, i);
+			root.add(copy, 3, i);
 		}
 	}
 
