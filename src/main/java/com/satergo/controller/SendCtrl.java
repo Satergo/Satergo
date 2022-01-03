@@ -3,7 +3,7 @@ package com.satergo.controller;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
-import com.satergo.ergo.TokenInfo;
+import com.satergo.ergo.TokenBalance;
 import com.satergo.ergouri.ErgoURIString;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -45,11 +45,11 @@ public class SendCtrl implements Initializable, WalletTab {
 
 	private static class TokenLine extends BorderPane {
 		private final TextField amount = new TextField();
-		public final TokenInfo tokenInfo;
+		public final TokenBalance tokenInfo;
 
-		public TokenLine(TokenInfo tokenInfo) {
+		public TokenLine(TokenBalance tokenInfo) {
 			this.tokenInfo = tokenInfo;
-			setLeft(new Label(tokenInfo.name() + " (" + tokenInfo.id().toString().substring(0, 20) + "...)"));
+			setLeft(new Label(tokenInfo.name() + " (" + tokenInfo.id().substring(0, 20) + "...)"));
 			setAlignment(getLeft(), Pos.CENTER_LEFT);
 			amount.setPromptText(Main.lang("amount"));
 			amount.textProperty().addListener((observable, oldValue, newValue) -> setIsValidAmount(amountIsValid() || amount.getText().isEmpty()));
@@ -88,10 +88,10 @@ public class SendCtrl implements Initializable, WalletTab {
 	@FXML
 	public void addToken(ActionEvent e) {
 		ContextMenu contextMenu = new ContextMenu();
-		List<TokenInfo> ownedTokens = Main.get().getWallet().lastKnownBalance.get().confirmedTokens().stream().map(t -> new TokenInfo(ErgoId.create(t.id()), t.decimals(), t.name())).sorted().collect(Collectors.toList());
-		for (TokenInfo token : ownedTokens) {
+		List<TokenBalance> ownedTokens = Main.get().getWallet().lastKnownBalance.get().confirmedTokens();
+		for (TokenBalance token : ownedTokens) {
 			MenuItem menuItem = new MenuItem();
-			menuItem.setText(token.name() + " (" + token.id().toString().substring(0, 20) + "...)");
+			menuItem.setText(token.name() + " (" + token.id().substring(0, 20) + "...)");
 			menuItem.setOnAction(ae -> tokenList.getChildren().add(new TokenLine(token)));
 			contextMenu.getItems().add(menuItem);
 		}
@@ -137,7 +137,7 @@ public class SendCtrl implements Initializable, WalletTab {
 					return;
 				}
 				tokensToSend[i] = new ErgoToken(tokenLine.tokenInfo.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenInfo.decimals()));
-				tokenNames.put(tokenLine.tokenInfo.id(), tokenLine.tokenInfo.name());
+				tokenNames.put(ErgoId.create(tokenLine.tokenInfo.id()), tokenLine.tokenInfo.name());
 			}
 			BigDecimal feeFullErg = null;
 			if (!fee.getText().isBlank()) {
