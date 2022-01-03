@@ -14,7 +14,7 @@
 	<fx:define>
 		<ContextMenu fx:id="extra">
 			<items>
-				<MenuItem onAction="#setApiKey" text="%updateApiKey"/>
+				<MenuItem onAction="#setApiKey" text="%changeApiKey"/>
 				<MenuItem onAction="#openConf" text="%openConf"/>
 				<MenuItem onAction="#unlockServerWallet" text="%unlockServerWallet"/>
 			</items>

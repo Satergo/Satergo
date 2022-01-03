@@ -135,7 +135,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	public void setApiKey(ActionEvent e) throws IOException {
 		TextInputDialog dialog = new TextInputDialog();
 		dialog.initOwner(Main.get().stage());
-		dialog.setTitle(Main.lang("updateApiKey"));
+		dialog.setTitle(Main.lang("changeApiKey"));
 		dialog.setHeaderText(Main.lang("willBeChangedOnNodeRestart"));
 		dialog.getEditor().setPromptText(Main.lang("newApiKey"));
 		String key = dialog.showAndWait().orElse(null);
