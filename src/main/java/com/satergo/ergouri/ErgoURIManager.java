@@ -12,12 +12,13 @@ public interface ErgoURIManager {
 			System.out.println("[note] ErgoURI could not find the launcher executable, this is probably a development environment");
 			return null;
 		}
-		return Path.of(property);
+		return Path.of(property).normalize();
 	}
 
 	void register() throws IOException;
 	void unregister() throws IOException;
 	boolean isRegistered();
+	boolean actionRequired();
 
 	static ErgoURIManager getForPlatform() {
 		String osName = System.getProperty("os.name", "unknown").toLowerCase(Locale.ROOT);

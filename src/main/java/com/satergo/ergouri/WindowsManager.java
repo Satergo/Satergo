@@ -9,6 +9,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 class WindowsManager implements ErgoURIManager {
+
+	@Override
+	public boolean actionRequired() {
+		return true;
+	}
+
 	@Override
 	public void register() throws IOException {
 		if (ErgoURIManager.getExecutablePath() == null) return;
@@ -30,9 +36,10 @@ class WindowsManager implements ErgoURIManager {
 				[HKEY_CLASSES_ROOT\\ergo\\shell\\open]
 				
 				[HKEY_CLASSES_ROOT\\ergo\\shell\\open\\command]
-				@="\\"{path}\\" \\"%1\\""
+				@="\\"{path}\\" --uri \\"%1\\""
 				""".replace("{path}", pathDoubleBackslash));
-		Shell32.INSTANCE.ShellExecute(null, "runas", "reg", "IMPORT satergo_ergo_uri_register.reg", System.getProperty("java.io.tmpdir"), 0);
+		Shell32.INSTANCE.ShellExecute(null, "runas",
+				"reg", "IMPORT \"" + regFilePath + "\"", null, 0);
 	}
 
 	@Override
@@ -47,7 +54,8 @@ class WindowsManager implements ErgoURIManager {
 				[-HKEY_CLASSES_ROOT\\ergo\\DefaultIcon]
 				[-HKEY_CLASSES_ROOT\\ergo]
 				""");
-		Shell32.INSTANCE.ShellExecute(null, "runas", "reg", "IMPORT satergo_ergo_uri_unregister.reg", System.getProperty("java.io.tmpdir"), 0);
+		Shell32.INSTANCE.ShellExecute(null, "runas",
+				"reg", "IMPORT \"" + regFilePath + "\"", null, 0);
 	}
 
 	@Override

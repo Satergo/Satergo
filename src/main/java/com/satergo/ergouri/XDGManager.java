@@ -33,6 +33,11 @@ class XDGManager implements ErgoURIManager {
 	}
 
 	@Override
+	public boolean actionRequired() {
+		return false;
+	}
+
+	@Override
 	public void register() throws IOException {
 		if (ErgoURIManager.getExecutablePath() == null) return;
 		// create .desktop file; todo icon

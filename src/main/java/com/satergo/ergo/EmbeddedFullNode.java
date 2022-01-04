@@ -225,8 +225,8 @@ public class EmbeddedFullNode {
 	}
 
 	public void start() {
+		if (isRunning()) throw new IllegalStateException("this node is already running");
 		try {
-			if (isRunning()) throw new IllegalStateException("this node is already running");
 			String[] command = new String[7];
 			command[0] = findJavaBinary().toString();
 			command[1] = "-jar";
