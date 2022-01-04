@@ -3,6 +3,7 @@ package com.satergo.ergouri;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Optional;
 
 public interface ErgoURIManager {
 
@@ -20,18 +21,18 @@ public interface ErgoURIManager {
 	boolean isRegistered();
 	boolean actionRequired();
 
-	static ErgoURIManager getForPlatform() {
+	static Optional<ErgoURIManager> getForPlatform() {
 		String osName = System.getProperty("os.name", "unknown").toLowerCase(Locale.ROOT);
 		if (osName.startsWith("windows")) {
-			return new WindowsManager();
+			return Optional.of(new WindowsManager());
 		} else if (osName.startsWith("linux")) {
 			if (System.getenv("XDG_SESSION_TYPE") != null) {
-				return new XDGManager();
+				return Optional.of(new XDGManager());
 			}
-			return null;
+			return Optional.empty();
 		} else if (osName.contains("mac") || osName.contains("darwin")) {
-			return null;
+			return Optional.empty();
 		}
-		return null;
+		return Optional.empty();
 	}
 }
