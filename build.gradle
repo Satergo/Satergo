@@ -74,8 +74,9 @@ runtime {
 	addModules("java.naming") // needed for SLF4J which is used by the Ergo node
 	imageZip = file("runtimes/${project.name}-v${project.version}.zip") // the plugin automatically adds platform to the end
 	launcher {
-		jvmArgs = [ '-Dsatergo.launcher={{BIN_DIR}}/Satergo' + (platform == "win" ? ".bat" : "") ]
-		noConsole = false
+		jvmArgs = [ '-Dsatergo.launcher={{BIN_DIR}}/Satergo' + (platform == "win" ? ".bat" : ""),
+					'-Dsatergo.platform=' + platform ]
+		noConsole = true
 	}
 	if (platform == "linux") {
 		targetPlatform("linux-x64") {
@@ -109,11 +110,11 @@ runtime {
 	}
 }
 
-// Make builds reproducible
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
+// Make builds reproducible
 tasks.withType(AbstractArchiveTask) {
 	preserveFileTimestamps = false
 	reproducibleFileOrder = true
