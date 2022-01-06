@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.regex.Matcher;
@@ -187,7 +188,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 
 	private void updateConfApiKey(String apiKey) throws IOException {
 		byte[] hashBytes = (byte[]) Blake2b256.hash(apiKey);
-		String hash = Utils.bytesToHex(hashBytes);
+		String hash = HexFormat.of().formatHex(hashBytes);
 		Pattern confApiKeyHashPattern = Pattern.compile("apiKeyHash\\s*=\\s*\"[A-Za-z\\d]+\"");
 		String conf = Files.readString(Main.node.confFile.toPath());
 		Matcher m1 = confApiKeyHashPattern.matcher(conf);
