@@ -14,7 +14,7 @@
 		<Label GridPane.columnIndex="0" GridPane.rowIndex="2" text="%password" GridPane.hgrow="ALWAYS"/>
 		<PasswordField fx:id="password" promptText="%enterWalletPassword" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="300"/>
 
-		<Hyperlink fx:id="addMnemonicPassword" text="%addMnemonicPasswordOptional" onAction="#addMnemonicPassword" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3"/>
+		<Hyperlink fx:id="addMnemonicPassword" text="%addMnemonicPasswordOptional" onAction="#addMnemonicPassword" styleClass="text-color" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3"/>
 
 		<Label fx:id="mnemonicPasswordLabel" GridPane.columnIndex="0" GridPane.rowIndex="3" text="%mnemonicPassword" visible="false" GridPane.hgrow="ALWAYS"/>
 		<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword" GridPane.columnIndex="1" GridPane.rowIndex="3" visible="false" prefWidth="300"/>

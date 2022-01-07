@@ -54,6 +54,13 @@ public class RestoreFromSeedCtrl implements Initializable {
 			});
 			if (matches.size() > 20) suggestionContainer.getChildren().add(new Label(Main.lang("dddAndMore")));
 		});
+		showMnemonicPassword.managedProperty().bind(showMnemonicPassword.visibleProperty());
+		mnemonicPassword.managedProperty().bind(mnemonicPassword.visibleProperty());
+		showMnemonicPassword.visibleProperty().bind(mnemonicPassword.visibleProperty().not());
+		mnemonicPassword.focusedProperty().addListener((observable, oldValue, newValue) -> {
+			if (!newValue && mnemonicPassword.getText().isEmpty())
+				mnemonicPassword.setVisible(false);
+		});
 	}
 
 	@FXML
@@ -78,5 +85,12 @@ public class RestoreFromSeedCtrl implements Initializable {
 		if (path == null) return;
 		Main.get().setWallet(Wallet.create(path, mnemonic, walletName.getText(), SecretString.create(walletPassword.getText())));
 		Main.get().displayWalletPage();
+	}
+
+	@FXML private Hyperlink showMnemonicPassword;
+
+	@FXML
+	public void showMnemonicPassword(ActionEvent actionEvent) {
+		mnemonicPassword.setVisible(true);
 	}
 }

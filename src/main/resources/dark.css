@@ -4,3 +4,7 @@
 	background_focused_color: #2B2B2B;
 	text_focused_color: #FFFFFF;
 }
+
+.hyperlink.text-color {
+	-fx-text-fill: white;
+}

@@ -63,7 +63,7 @@ dependencies {
 	implementation 'com.github.ergoplatform:ergo-appkit:d07973367c'
 	implementation 'org.slf4j:slf4j-simple:1.7.32'
 	implementation 'com.grack:nanojson:1.7' // used for numerous HTTP APIs and ProgramData saving
-	implementation 'org.jetbrains.pty4j:pty4j:0.12.5' // for running node
+	implementation 'org.jetbrains.pty4j:pty4j:0.12.7' // for running node
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
 	implementation 'com.google.zxing:core:3.4.1' // used for qr codes
 	implementation 'net.java.dev.jna:jna:5.10.0' // used for running the registration of ergo uri with admin privileges on Windows
