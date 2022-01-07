@@ -173,7 +173,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 			if (removable) {
 				this.remove.setOnAction(e -> removed.run());
 			} else {
-				this.remove.setVisible(false);
+				this.remove.setDisable(true);
 			}
 		}
 	}
