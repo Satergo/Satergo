@@ -4,6 +4,10 @@ plugins {
 	id 'org.beryx.runtime' version '1.12.7'
 }
 
+java {
+	sourceCompatibility = JavaLanguageVersion.of(17)
+}
+
 group 'com.satergo'
 version '0.0.2'
 
