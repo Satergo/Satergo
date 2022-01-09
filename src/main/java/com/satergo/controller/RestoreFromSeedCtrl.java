@@ -7,6 +7,7 @@ import info.debatty.java.stringsimilarity.NormalizedLevenshtein;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import org.ergoplatform.appkit.Mnemonic;
@@ -21,7 +22,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-public class RestoreFromSeedCtrl implements Initializable {
+public class RestoreFromSeedCtrl implements SetupPage.WithoutLanguage, Initializable {
+	@FXML private Parent root;
 	@FXML private TextArea mnemonicPhrase;
 	@FXML private FlowPane suggestionContainer;
 	@FXML private TextField walletName;
@@ -92,5 +94,10 @@ public class RestoreFromSeedCtrl implements Initializable {
 	@FXML
 	public void showMnemonicPassword(ActionEvent actionEvent) {
 		mnemonicPassword.setVisible(true);
+	}
+
+	@Override
+	public Parent content() {
+		return root;
 	}
 }

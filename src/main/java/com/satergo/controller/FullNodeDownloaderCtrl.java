@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import org.ergoplatform.appkit.NetworkType;
@@ -21,9 +22,10 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.util.ResourceBundle;
 
-public class FullNodeDownloaderCtrl implements Initializable {
+public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initializable {
 	private Utils.NodeVersion version;
 
+	@FXML private Parent root;
 	@FXML private ProgressBar progressBar;
 	@FXML private Label nodeVersion;
 	@FXML private Button download, continueSetup;
@@ -95,7 +97,7 @@ public class FullNodeDownloaderCtrl implements Initializable {
 		Main.node = Main.get().nodeFromInfo();
 		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
 		Main.node.firstTimeSetup();
-		Main.get().displayPage(Load.fxml("/wallet-setup.fxml"));
+		Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
 	}
 
 	@Override
@@ -109,5 +111,10 @@ public class FullNodeDownloaderCtrl implements Initializable {
 			nodeDirectory = null;
 			customFolderLocation.setText(Main.lang("currentNone"));
 		} else nodeDirectory = new File("node");
+	}
+
+	@Override
+	public Parent content() {
+		return root;
 	}
 }

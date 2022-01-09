@@ -8,6 +8,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -18,7 +19,9 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ResourceBundle;
 
-public class RepeatMnemonicCtrl implements Initializable {
+public class RepeatMnemonicCtrl implements Initializable, SetupPage.WithoutLanguage {
+	@FXML private Parent root;
+
 	private final String walletName;
 	private final SecretString password;
 	private final Mnemonic mnemonic;
@@ -59,5 +62,10 @@ public class RepeatMnemonicCtrl implements Initializable {
 			Main.get().setWallet(Wallet.create(path, mnemonic, walletName, password));
 			Main.get().displayWalletPage();
 		}
+	}
+
+	@Override
+	public Parent content() {
+		return root;
 	}
 }

@@ -24,16 +24,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class FullNodeSourceCtrl {
+public class FullNodeSourceCtrl implements SetupPage.WithLanguage {
+	@FXML private Parent root;
 
 	private File existingNodeConfFile;
 
 	@FXML
 	public void downloadAndSetup(MouseEvent e) {
 		if (e.getButton() == MouseButton.PRIMARY) {
-			Main.get().displayPage(Load.fxml("/full-node-downloader.fxml"));
+			Main.get().displaySetupPage(Load.<FullNodeDownloaderCtrl>fxmlController("/full-node-downloader.fxml"));
 		}
 	}
 
@@ -49,7 +49,7 @@ public class FullNodeSourceCtrl {
 		File[] files = nodeDirectory.listFiles();
 		// try to find the node jar automatically, with the ergo*.jar pattern
 		List<File> candidates = files == null ? null : Arrays.stream(files)
-				.filter(f -> f.getName().startsWith("ergo") && f.getName().endsWith(".jar")).collect(Collectors.toList());
+				.filter(f -> f.getName().startsWith("ergo") && f.getName().endsWith(".jar")).toList();
 		File nodeJar = candidates != null && candidates.size() == 1 ? candidates.get(0) : null;
 		if (nodeJar == null) { // could not find, request from user
 			FileChooser fileChooser = new FileChooser();
@@ -104,6 +104,16 @@ public class FullNodeSourceCtrl {
 		Main.node = Main.get().nodeFromInfo();
 		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
 		Main.programData().nodeNetworkType.set(Main.node.info.networkType());
-		Main.get().displayPage(Load.fxml("/wallet-setup.fxml"));
+		Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+	}
+
+	@Override
+	public Parent recreate() {
+		return Load.fxml("/full-node-source.fxml");
+	}
+
+	@Override
+	public Parent content() {
+		return root;
 	}
 }

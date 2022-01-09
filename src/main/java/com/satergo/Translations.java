@@ -17,7 +17,7 @@ public class Translations {
 	private Locale locale;
 	private ResourceBundle resourceBundle;
 
-	public static record Entry(String code, String name, String credit) {
+	public record Entry(String code, String name, String credit) {
 		public static final StringConverter<Entry> TO_NAME_CONVERTER = new StringConverter<>() {
 			@Override
 			public String toString(Entry object) {
@@ -59,7 +59,11 @@ public class Translations {
 
 	public void setLocale(Locale locale) {
 		this.locale = locale;
-		resourceBundle = ResourceBundle.getBundle(baseName, locale);
+		resourceBundle = ResourceBundle.getBundle(baseName);
+	}
+
+	public Locale getLocale() {
+		return locale;
 	}
 
 	public ResourceBundle getBundle() {

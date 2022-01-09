@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ComboBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.FullNodeDownloaderCtrl" styleClass="background" stylesheets="welcome.css" spacing="10">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.FullNodeDownloaderCtrl" styleClass="background" stylesheets="welcome.css" fx:id="root" spacing="10">
 	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
 	<Label text="%fullNodeSetup" styleClass="welcome-text"/>
 

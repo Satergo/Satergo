@@ -3,11 +3,10 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.Image?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" stylesheets="welcome.css" styleClass="background" fx:controller="com.satergo.controller.BlockchainSetupCtrl">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" stylesheets="welcome.css" styleClass="background" fx:id="root" fx:controller="com.satergo.controller.BlockchainSetupCtrl">
 	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
 	<Label styleClass="welcome-text" text="%welcome"/>
 	<Region prefHeight="20"/>
-	<ComboBox fx:id="language"/>
 	<AnchorPane fx:id="localFullNode" styleClass="welcome-option">
 		<ImageView AnchorPane.leftAnchor="24" AnchorPane.topAnchor="16">
 			<Image url="@/m-images/local-node-full.png"/>

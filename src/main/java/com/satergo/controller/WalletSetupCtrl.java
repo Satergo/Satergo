@@ -6,18 +6,21 @@ import com.satergo.Utils;
 import com.satergo.Wallet;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Parent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 
 import java.io.File;
 
-public class WalletSetupCtrl {
+public class WalletSetupCtrl implements SetupPage.WithLanguage, SetupPage.CustomLeft {
+
+	@FXML private Parent root;
 
 	@FXML
 	public void createWallet(MouseEvent e) {
 		if (e.getButton() == MouseButton.PRIMARY)
-			Main.get().displayPage(Load.fxml("/create-wallet.fxml"));
+			Main.get().displaySetupPage(Load.<CreateWalletCtrl>fxmlController("/create-wallet.fxml"));
 	}
 
 	@FXML
@@ -37,11 +40,31 @@ public class WalletSetupCtrl {
 	@FXML
 	public void restoreFromSeed(MouseEvent e) {
 		if (e.getButton() == MouseButton.PRIMARY)
-			Main.get().displayPage(Load.fxml("/restore-wallet-from-seed.fxml"));
+			Main.get().displaySetupPage(Load.<RestoreFromSeedCtrl>fxmlController("/restore-wallet-from-seed.fxml"));
 	}
 
 	@FXML
 	public void returnToBlockchainSetup(ActionEvent e) {
-		Main.get().displayNewTopPage(Load.fxml("/blockchain-setup.fxml"));
+		Main.get().displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/blockchain-setup.fxml"));
+	}
+
+	@Override
+	public Parent recreate() {
+		return Load.fxml("/wallet-setup.fxml");
+	}
+
+	@Override
+	public Parent content() {
+		return root;
+	}
+
+	@Override
+	public boolean hasLeft() {
+		return true;
+	}
+
+	@Override
+	public void left() {
+		Main.get().displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/blockchain-setup.fxml"));
 	}
 }

@@ -7,6 +7,7 @@ import com.satergo.ergo.ErgoInterface;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import org.ergoplatform.appkit.Mnemonic;
@@ -15,8 +16,9 @@ import org.ergoplatform.appkit.SecretString;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class CreateWalletCtrl implements Initializable {
-	@FXML private GridPane root;
+public class CreateWalletCtrl implements SetupPage.WithoutLanguage, Initializable {
+	@FXML private Parent root;
+	@FXML private GridPane grid;
 	@FXML private TextArea mnemonicPhraseArea;
 	@FXML private TextField walletName;
 	@FXML private PasswordField password, mnemonicPassword;
@@ -48,16 +50,18 @@ public class CreateWalletCtrl implements Initializable {
 
 	@FXML
 	public void continueWallet(ActionEvent e) {
-		Main.get().displayPage(Load.fxmlControllerFactory("/repeat-mnemonic.fxml", new RepeatMnemonicCtrl(
+		RepeatMnemonicCtrl ctrl = new RepeatMnemonicCtrl(
 				walletName.getText(),
 				SecretString.create(password.getText()),
-				Mnemonic.create(SecretString.create(mnemonicPhrase), SecretString.create(mnemonicPassword.getText())))));
+				Mnemonic.create(SecretString.create(mnemonicPhrase), SecretString.create(mnemonicPassword.getText())));
+		Load.fxmlControllerFactory("/repeat-mnemonic.fxml", ctrl);
+		Main.get().displaySetupPage(ctrl);
 	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		root.prefWidthProperty().bind(Main.get().stage().widthProperty().multiply(0.8));
-		root.maxWidthProperty().bind(root.prefWidthProperty());
+		grid.prefWidthProperty().bind(Main.get().stage().widthProperty().multiply(0.8));
+		grid.maxWidthProperty().bind(grid.prefWidthProperty());
 		mnemonicPhraseLabel.managedProperty().bind(mnemonicPhraseLabel.visibleProperty());
 		copyMnemonicPhrase.managedProperty().bind(mnemonicPhraseLabel.managedProperty());
 		copyMnemonicPhrase.visibleProperty().bind(mnemonicPhraseLabel.visibleProperty());
@@ -72,5 +76,10 @@ public class CreateWalletCtrl implements Initializable {
 		addMnemonicPassword.setVisible(false);
 		mnemonicPasswordLabel.setVisible(true);
 		mnemonicPassword.setVisible(true);
+	}
+
+	@Override
+	public Parent content() {
+		return root;
 	}
 }

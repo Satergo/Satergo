@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import com.satergo.Icon?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="root" styleClass="background" fx:controller="com.satergo.controller.SetupPageHolderCtrl">
+
+	<HBox>
+		<Button fx:id="left" onAction="#left" disable="true" focusTraversable="false">
+			<graphic><Icon icon="arrow-left-solid"/></graphic>
+		</Button>
+		<ComboBox fx:id="language" focusTraversable="false"/>
+	</HBox>
+
+</VBox>

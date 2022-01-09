@@ -7,6 +7,7 @@ import com.satergo.Utils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -15,7 +16,8 @@ import org.ergoplatform.appkit.NetworkType;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class RemoteNodeSetupCtrl implements Initializable {
+public class RemoteNodeSetupCtrl implements SetupPage.WithoutLanguage, Initializable {
+	@FXML private Parent root;
 	@FXML private TextField address;
 	@FXML private ComboBox<NetworkType> networkType;
 
@@ -27,7 +29,7 @@ public class RemoteNodeSetupCtrl implements Initializable {
 			Main.programData().blockchainNodeKind.set(ProgramData.BlockchainNodeKind.REMOTE_NODE);
 			Main.programData().nodeNetworkType.set(networkType.getValue());
 			Main.programData().nodeAddress.set(address.getText());
-			Main.get().displayPage(Load.fxml("/wallet-setup.fxml"));
+			Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
 		}
 	}
 
@@ -42,5 +44,10 @@ public class RemoteNodeSetupCtrl implements Initializable {
 		// TODO node discovery or at the very least a list of nodes MUST be used to prevent centralization issues
 		address.setText("http://213.239.193.208:9053");
 		continueSetup(null);
+	}
+
+	@Override
+	public Parent content() {
+		return root;
 	}
 }

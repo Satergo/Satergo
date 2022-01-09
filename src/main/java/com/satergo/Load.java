@@ -44,6 +44,10 @@ public class Load {
 		}
 	}
 
+	public static <CT>CT fxmlController(String location) {
+		return Load.<Parent, CT>fxmlNodeAndController(location).getValue();
+	}
+
 	public static void thisFxml(Parent thisObject, String location) {
 		FXMLLoader fxmlLoader = new FXMLLoader(Utils.resource(location), resourceBundle);
 		fxmlLoader.setRoot(thisObject);
