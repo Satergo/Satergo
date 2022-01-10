@@ -11,12 +11,13 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.util.Pair;
 import org.ergoplatform.appkit.NetworkType;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class RemoteNodeSetupCtrl implements SetupPage.WithoutLanguage, Initializable {
+public class RemoteNodeSetupCtrl implements SetupPage.WithLanguage, Initializable {
 	@FXML private Parent root;
 	@FXML private TextField address;
 	@FXML private ComboBox<NetworkType> networkType;
@@ -49,5 +50,13 @@ public class RemoteNodeSetupCtrl implements SetupPage.WithoutLanguage, Initializ
 	@Override
 	public Parent content() {
 		return root;
+	}
+
+	@Override
+	public Parent recreate() {
+		Pair<Parent, RemoteNodeSetupCtrl> load = Load.fxmlNodeAndController("/remote-node-setup.fxml");
+		load.getValue().address.setText(address.getText());
+		load.getValue().networkType.setValue(networkType.getValue());
+		return load.getKey();
 	}
 }
