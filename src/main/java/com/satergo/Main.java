@@ -95,6 +95,9 @@ public class Main extends Application {
 				.otherwise(Color.rgb(41, 41, 41)));
 		Icon.defaultHeight = 16;
 
+		// For Pty4J
+		System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "WARN");
+
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
 			StringWriter stringWriter = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(stringWriter);
