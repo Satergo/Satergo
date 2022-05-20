@@ -14,7 +14,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class WalletSetupCtrl implements SetupPage.WithLanguage, SetupPage.CustomLeft {
+public class WalletSetupCtrl implements Initializable, SetupPage.WithLanguage, SetupPage.CustomLeft {
 
 	@FXML private Label nodeConfigurationInfo;
 	@FXML private Parent root;
