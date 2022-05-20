@@ -1,8 +1,12 @@
+import com.satergo.build.SatergoBuildPlugin
+
 plugins {
 	id 'java'
 	id 'application'
-	id 'org.beryx.runtime' version '1.12.7'
+	id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
+
+apply plugin: SatergoBuildPlugin
 
 java {
 	sourceCompatibility = JavaLanguageVersion.of(17)
@@ -71,45 +75,69 @@ dependencies {
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 }
 
-runtime {
-	options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
-	additive = true // makes addModules add modules instead of replacing
-	addModules("jdk.crypto.ec") // needed for HTTPS
-	addModules("java.naming") // needed for SLF4J which is used by the Ergo node
-	imageZip = file("runtimes/${project.name}-v${project.version}.zip") // the plugin automatically adds platform to the end
-	launcher {
-		jvmArgs = [ '-Dsatergo.launcher={{BIN_DIR}}/Satergo' + (platform == "win" ? ".bat" : ""),
-					'-Dsatergo.platform=' + platform ]
-		noConsole = true
+satergoRuntime {
+
+	extraModules = ["jdk.crypto.ec", "java.naming"]
+	extraJlinkOptions = ["--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"]
+	cleanupRuntimeContent = true
+	cacheRuntimes = true
+
+	runProguard = !project.hasProperty("dontshrink")
+	proguardConfig = "proguard.pro"
+	proguardOutputName = "Satergo-${project.version}-${platform}-shrunk.jar"
+
+	includeJarInRuntime = true
+
+	launcherScript {
+		type = platform == "win" ? "bat" : "sh"
+		name = "Satergo"
+		mainClass = application.mainClass.get()
+		defaultJvmOpts = ['-Dsatergo.launcher={APP_HOME}/bin/Satergo',
+						  '-Dsatergo.platform=' + platform ]
 	}
-	if (platform == "linux") {
-		targetPlatform("linux-x64") {
-			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-x64_bin.tar.gz")
+
+	switch (platform) {
+		case "linux": {
+			platformName = "linux-x64"
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-x64_bin.tar.gz")
+			break
 		}
-	}
-	if (platform == "linux-aarch64") {
-		targetPlatform("linux-aarch64") {
-			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-aarch64_bin.tar.gz")
+		case "linux-aarch64": {
+			platformName = "linux-aarch64"
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-aarch64_bin.tar.gz")
+			break
 		}
-	}
-//	if (platform == "linux-arm32-monocle") {
-//		targetPlatform("linux-arm32") {
-//			jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.1%2B12/OpenJDK17U-jdk_arm_linux_hotspot_17.0.1_12.tar.gz")
-//		}
-//	}
-	if (platform == "win") {
-		targetPlatform("windows-x64") {
-			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_windows-x64_bin.zip")
+		case "win": {
+			platformName = "windows-x64"
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_windows-x64_bin.zip")
+			break
 		}
-	}
-	if (platform == "mac") {
-		targetPlatform("mac-x64") {
-			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_macos-x64_bin.tar.gz")
+		case "mac": {
+			platformName = "mac-x64"
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_macos-x64_bin.tar.gz")
+			break
 		}
+		case "mac-aarch64": {
+			platformName = "mac-aarch64"
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_macos-aarch64_bin.tar.gz")
+			break
+		}
+		default: throw new IllegalArgumentException()
 	}
-	if (platform == "mac-aarch64") {
-		targetPlatform("mac-aarch64") {
-			jdkHome = jdkDownload("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_macos-aarch64_bin.tar.gz")
+
+	createArchive = true
+	archiveOutputPath = file("runtimes/${project.name}-v${project.version}-${platformName}.zip").toPath()
+
+	// Create a convenient run file in the top level
+	doBeforeArchival {
+		if (platform == "win") {
+			def runFile = file("${buildDir}/${runtimeDirectoryName}/run.bat")
+			runFile.write("@start %~dp0\\bin\\${project.name}.bat %*")
+		} else {
+			def runFile = file("${buildDir}/${runtimeDirectoryName}/run.${platform.startsWith("mac") ? "command" : "sh"}")
+			runFile.write('#!/bin/sh\n' +
+					'eval "\\"$(dirname $0)/bin/' + project.name + '\\" $*"')
+			runFile.setExecutable(true)
 		}
 	}
 }
@@ -122,23 +150,4 @@ tasks.withType(JavaCompile) {
 tasks.withType(AbstractArchiveTask) {
 	preserveFileTimestamps = false
 	reproducibleFileOrder = true
-}
-
-// Add convenient run files and remove redundant ones
-tasks.findByName("runtime").doLast {
-	String imageDirName = project.name + "-" + runtime.targetPlatforms.get().keySet().iterator().next()
-	String imageDirPath = "${buildDir}/image/${imageDirName}"
-	file("${imageDirPath}/release").delete()
-	file("${imageDirPath}/legal").deleteDir()
-	if (platform == "win") {
-		file("${imageDirPath}/bin/" + project.name).delete()
-		def runFile = file("${imageDirPath}/run.bat")
-		runFile.write("@start %~dp0\\bin\\" + project.name + ".bat %*")
-	} else {
-		file("${imageDirPath}/bin/" + project.name + ".bat").delete()
-		def runFile = file("${imageDirPath}/run." + (platform.startsWith("mac") ? "command" : "sh"))
-		runFile.write("#!/bin/sh\n" +
-				"eval \"\\\"\$(dirname \$0)/bin/" + project.name + "\\\" \$*\"")
-		runFile.setExecutable(true)
-	}
 }

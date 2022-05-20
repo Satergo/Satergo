@@ -120,7 +120,7 @@ public class Main extends Application {
 				displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
 			} else {
 				Utils.PasswordRequestResult passwordResult = Utils.requestPassword(Main.lang("passwordOf_s").formatted(programData.lastWallet.get().getFileName()), password -> {
-					setWallet(Wallet.load(programData.lastWallet.get(), password));
+					setWallet(Wallet.fromFile(programData.lastWallet.get(), password));
 				});
 				switch (passwordResult) {
 					case NOT_GIVEN -> {
