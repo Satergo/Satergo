@@ -3,6 +3,7 @@ package com.satergo;
 import com.satergo.controller.*;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergouri.ErgoURIString;
+import com.satergo.extra.IncorrectPasswordException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -26,8 +27,8 @@ import java.util.*;
 
 public class Main extends Application {
 
-	public static final String VERSION = "0.0.2";
-	public static final int VERSION_CODE = 2;
+	public static final String VERSION = "0.0.3";
+	public static final int VERSION_CODE = 3;
 
 	public static EmbeddedFullNode node;
 	// from command line
@@ -99,15 +100,9 @@ public class Main extends Application {
 		System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "WARN");
 
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-			StringWriter stringWriter = new StringWriter();
-			PrintWriter printWriter = new PrintWriter(stringWriter);
-			throwable.printStackTrace(printWriter);
-			String stackTrace = stringWriter.toString();
-			System.err.println(stackTrace);
-			Utils.alertException("Unexpected error", "An unexpected error occurred", stackTrace);
+			Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable);
 		});
 
-		Parent root;
 		if (programData.blockchainNodeKind.get() == null ||
 				(programData.blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE && !Files.isRegularFile(programData.embeddedNodeInfo.get()))) {
 			displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/blockchain-setup.fxml"));
@@ -119,23 +114,21 @@ public class Main extends Application {
 			if (programData.lastWallet.get() == null || !Files.isRegularFile(programData.lastWallet.get())) {
 				displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
 			} else {
-				Utils.PasswordRequestResult passwordResult = Utils.requestPassword(Main.lang("passwordOf_s").formatted(programData.lastWallet.get().getFileName()), password -> {
-					setWallet(Wallet.fromFile(programData.lastWallet.get(), password));
-				});
-				switch (passwordResult) {
-					case NOT_GIVEN -> {
-						programData.lastWallet.set(null);
-						displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+				String password = Utils.requestPassword(Main.lang("passwordOf_s").formatted(programData.lastWallet.get().getFileName()));
+				if (password == null) {
+					programData.lastWallet.set(null);
+					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+				} else try {
+					setWallet(Wallet.load(programData.lastWallet.get(), password));
+					Pair<Parent, WalletCtrl> load = Load.fxmlNodeAndController("/wallet.fxml");
+					walletPage = load.getValue();
+					if (initErgoURI != null) {
+						load.getValue().openSendWithErgoURI(initErgoURI);
 					}
-					case CORRECT -> {
-						Pair<Parent, WalletCtrl> load = Load.fxmlNodeAndController("/wallet.fxml");
-						walletPage = load.getValue();
-						if (initErgoURI != null) {
-							load.getValue().openSendWithErgoURI(initErgoURI);
-						}
-						displayNewTopPage(load.getKey());
-					}
-					case INCORRECT -> displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+					displayNewTopPage(load.getKey());
+				} catch (IncorrectPasswordException e) {
+					Utils.alertIncorrectPassword();
+					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
 				}
 			}
 		}
@@ -143,10 +136,12 @@ public class Main extends Application {
 		primaryStage.show();
 
 		new Thread(() -> {
-			UpdateChecker.VersionInfo latest = UpdateChecker.fetchLatestInfo();
-			if (UpdateChecker.isNewer(latest.versionCode())) {
-				Platform.runLater(() -> UpdateChecker.showUpdatePopup(latest));
-			}
+			try {
+				UpdateChecker.VersionInfo latest = UpdateChecker.fetchLatestInfo();
+				if (UpdateChecker.isNewer(latest.versionCode())) {
+					Platform.runLater(() -> UpdateChecker.showUpdatePopup(latest));
+				}
+			} catch (IOException ignored) {}
 		}).start();
 
 		programData.lightTheme.addListener((observable, oldValue, newValue) -> jMetro.setStyle(newValue ? Style.LIGHT : Style.DARK));

@@ -59,7 +59,7 @@ public class RepeatMnemonicCtrl implements Initializable, SetupPage.WithoutLangu
 		} else {
 			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), walletName + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 			if (path == null) return;
-			Main.get().setWallet(Wallet.create(path, mnemonic, walletName, password));
+			Main.get().setWallet(Wallet.create(path, mnemonic, walletName, password.getData(), true));
 			Main.get().displayWalletPage();
 		}
 	}

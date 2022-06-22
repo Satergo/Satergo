@@ -50,11 +50,12 @@ public class ProgramData {
 	public final SimpleEnumProperty<CommonCurrency>
 			priceCurrency = new SimpleEnumProperty<>(CommonCurrency.class, null, "priceCurrency", CommonCurrency.values()[0]);
 	public final SimpleBooleanProperty
-			lightTheme = new SimpleBooleanProperty(null, "lightTheme", false);
+			lightTheme = new SimpleBooleanProperty(null, "lightTheme", false),
+			requirePasswordForSending = new SimpleBooleanProperty(null, "requirePasswordForSending", true);
 
 	private final List<ObservableValue<?>> allSettings = List.of(
 			blockchainNodeKind, nodeAddress, lastWallet, embeddedNodeInfo, nodeNetworkType, nodeLogAutoScroll, skippedUpdate,
-			language, showPrice, priceSource, priceCurrency, lightTheme);
+			language, showPrice, priceSource, priceCurrency, lightTheme, requirePasswordForSending);
 
 	public ProgramData(Path path) {
 		this.path = path;

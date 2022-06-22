@@ -1,7 +1,7 @@
 package com.satergo.controller;
 
 import com.satergo.*;
-import javafx.event.ActionEvent;
+import com.satergo.extra.IncorrectPasswordException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -47,21 +47,21 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithLanguage, S
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(Main.lang("wallet"), "*." + Wallet.FILE_EXTENSION));
 		File file = fileChooser.showOpenDialog(Main.get().stage());
 		if (file == null) return;
-		Utils.requestPassword(Main.lang("passwordOf_s").formatted(file.getName()), password -> {
-			Main.get().setWallet(Wallet.fromFile(file.toPath(), password));
-			Main.get().displayWalletPage();
-		});
+		String password = Utils.requestPassword(Main.lang("passwordOf_s").formatted(file.getName()));
+		if (password != null) {
+			try {
+				Main.get().setWallet(Wallet.load(file.toPath(), password));
+				Main.get().displayWalletPage();
+			} catch (IncorrectPasswordException ex) {
+				Utils.alertIncorrectPassword();
+			}
+		}
 	}
 
 	@FXML
 	public void restoreFromSeed(MouseEvent e) {
 		if (e.getButton() == MouseButton.PRIMARY)
 			Main.get().displaySetupPage(Load.<RestoreFromSeedCtrl>fxmlController("/restore-wallet-from-seed.fxml"));
-	}
-
-	@FXML
-	public void returnToBlockchainSetup(ActionEvent e) {
-		Main.get().displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/blockchain-setup.fxml"));
 	}
 
 	@Override

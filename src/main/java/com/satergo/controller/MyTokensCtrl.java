@@ -19,10 +19,10 @@ import java.util.ResourceBundle;
 
 public class MyTokensCtrl implements Initializable, WalletTab {
 
-	@FXML private GridPane root;
+	@FXML private GridPane tokenList;
 
 	private void update(List<TokenBalance> tokens) {
-		root.getChildren().clear();
+		tokenList.getChildren().clear();
 		for (int i = 0; i < tokens.size(); i++) {
 			TokenBalance token = tokens.get(i);
 			Label nameLabel = new Label(token.name() == null ? Main.lang("unnamed_parentheses") : token.name());
@@ -30,13 +30,13 @@ public class MyTokensCtrl implements Initializable, WalletTab {
 			// Give it a size so that even if there is no icon for this token, it will take the same amount of height as those with an icon
 			icon.setFitWidth(36);
 			icon.setFitHeight(36);
-			root.add(icon, 0, i);
-			root.add(nameLabel, 1, i);
+			tokenList.add(icon, 0, i);
+			tokenList.add(nameLabel, 1, i);
 			GridPane.setHgrow(nameLabel, Priority.ALWAYS);
-			root.add(new Label(new BigDecimal(token.amount()).movePointLeft(token.decimals()).toPlainString()), 2, i);
+			tokenList.add(new Label(new BigDecimal(token.amount()).movePointLeft(token.decimals()).toPlainString()), 2, i);
 			Button copy = new Button(Main.lang("copyTokenId"));
 			copy.setOnAction(e -> Utils.copyStringToClipboard(token.id()));
-			root.add(copy, 3, i);
+			tokenList.add(copy, 3, i);
 		}
 	}
 

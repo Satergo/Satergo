@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Hyperlink?>
+<fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" type="HBox" spacing="8" alignment="CENTER_LEFT">
+	<Label text="&#10230;" minWidth="-Infinity"/>
+	<Label fx:id="address" maxWidth="Infinity" textOverrun="CENTER_ELLIPSIS" HBox.hgrow="ALWAYS"/>
+	<HBox minWidth="-Infinity" alignment="CENTER_LEFT">
+		<Hyperlink fx:id="tokens" text="%[tokens]" managed="${tokens.visible}"/>
+		<Label text=" " visible="${tokens.visible}" managed="${tokens.managed}"/>
+		<Label fx:id="amount"/>
+		<Label textFill="darkslategray" text=" ERG"/>
+	</HBox>
+</fx:root>

@@ -21,6 +21,7 @@ public class SettingsCtrl implements Initializable, WalletTab {
 	@FXML private ComboBox<CommonCurrency> priceCurrency;
 	@FXML private CheckBox lightTheme;
 	@FXML private ComboBox<Translations.Entry> language;
+	@FXML private CheckBox requirePasswordForSending;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -51,5 +52,6 @@ public class SettingsCtrl implements Initializable, WalletTab {
 			Main.get().displayWalletPage(new Pair<>(Load.fxmlControllerFactory("/wallet.fxml", walletCtrl), walletCtrl));
 		});
 		language.setConverter(Translations.Entry.TO_NAME_CONVERTER);
+		requirePasswordForSending.selectedProperty().bindBidirectional(Main.programData().requirePasswordForSending);
 	}
 }

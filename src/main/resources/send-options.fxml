@@ -1,0 +1,17 @@
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.Region?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" styleClass="background" spacing="4" fx:controller="com.satergo.controller.SendOptionsCtrl">
+	<padding><Insets top="10" right="10" left="10"/></padding>
+	<Label text="%inputAddressCandidatesC"/>
+	<FlowPane fx:id="candidates" hgap="4" vgap="4"/>
+	<Region prefHeight="8"/>
+	<HBox alignment="CENTER_LEFT" spacing="4">
+		<Label text="%changeAddressC"/>
+		<ComboBox fx:id="changeAddress"/>
+	</HBox>
+</VBox>

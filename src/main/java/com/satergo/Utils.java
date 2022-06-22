@@ -3,23 +3,18 @@ package com.satergo;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
-import com.satergo.extra.IncorrectPasswordException;
+import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.PasswordInputDialog;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.ergoplatform.appkit.ErgoClient;
 import org.ergoplatform.appkit.ErgoId;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URL;
@@ -29,7 +24,6 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public class Utils {
 
@@ -73,12 +67,17 @@ public class Utils {
 		return alert;
 	}
 
-	public static void alertException(String title, String headerText, String exceptionText) {
+	public static void alertException(String title, String headerText, Throwable throwable) {
 		Alert alert = new Alert(Alert.AlertType.ERROR);
 		alert.initOwner(Main.get().stage());
 		alert.setTitle(title);
 		alert.setHeaderText(headerText);
-		TextArea textArea = new TextArea(exceptionText);
+		StringWriter stringWriter = new StringWriter();
+		PrintWriter printWriter = new PrintWriter(stringWriter);
+		throwable.printStackTrace(printWriter);
+		String stackTrace = stringWriter.toString();
+		System.err.println(stackTrace);
+		TextArea textArea = new TextArea(stackTrace);
 		textArea.setEditable(false);
 		textArea.setWrapText(true);
 		textArea.setMaxWidth(Double.MAX_VALUE);
@@ -92,12 +91,26 @@ public class Utils {
 		Alert alert = new Alert(Alert.AlertType.NONE);
 		alert.initOwner(Main.get().stage());
 		alert.setHeaderText(headerText);
-		alert.setContentText(contentText);
-		ButtonType copy = new ButtonType("Copy", ButtonBar.ButtonData.OK_DONE);
+		Label label = new Label(contentText);
+		label.setWrapText(true);
+		alert.getDialogPane().setContent(label);
+		ButtonType copy = new ButtonType(Main.lang("copy"), ButtonBar.ButtonData.OK_DONE);
 		alert.getButtonTypes().add(copy);
 		alert.showAndWait().ifPresent(t -> {
 			if (t == copy) copyStringToClipboard(contentText);
 		});
+	}
+
+	public static void addCopyContextMenu(Labeled node) {
+		MenuItem menuItem = new MenuItem(Main.lang("copy"));
+		menuItem.setOnAction(e -> copyStringToClipboard(node.getText()));
+		node.setContextMenu(new ContextMenu(menuItem));
+	}
+
+	public static ErgoClient createErgoClient() {
+		return ErgoInterface.newNodeApiClient(
+				Main.programData().nodeNetworkType.get(),
+				Main.programData().nodeAddress.get());
 	}
 
 	public record NodeVersion(String version, URI uri) {
@@ -107,25 +120,18 @@ public class Utils {
 	}
 
 	public static NodeVersion fetchLatestNodeVersion() {
-		HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
-		HttpRequest request = httpRequestBuilder().uri(URI.create("https://github.com/ergoplatform/ergo/releases/latest"))
-				.method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
-		try {
-			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-			String link = response.uri().toString();
-			String version = link.substring(link.lastIndexOf('/') + 2);
-			return new NodeVersion(version, URI.create("https://github.com/ergoplatform/ergo/releases/download/v" + version + "/ergo-" + version + ".jar"));
-		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException(e);
-		}
+		JsonObject latest = fetchLatestNodeData();
+		return new NodeVersion(latest.getString("tag_name").substring(1), URI.create(latest.getArray("assets").getObject(0).getString("browser_download_url")));
 	}
 
 	public static JsonObject fetchLatestNodeData() {
-		HttpClient httpClient = HttpClient.newHttpClient();
 		HttpRequest request = httpRequestBuilder().uri(URI.create("https://api.github.com/repos/ergoplatform/ergo/releases")).build();
 		try {
-			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-			return JsonParser.array().from(response.body()).getObject(0);
+			HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			return JsonParser.array().from(response.body()).stream()
+					.map(o -> (JsonObject) o)
+					.filter(o -> !o.getBoolean("prerelease"))
+					.findFirst().orElseThrow(); // todo better handling?
 		} catch (IOException | InterruptedException | JsonParserException e) {
 			throw new RuntimeException(e);
 		}
@@ -147,19 +153,7 @@ public class Utils {
 		}
 	}
 
-	public interface PasswordRequestHandler {
-		void handle(String password) throws IncorrectPasswordException;
-	}
-
-	public enum PasswordRequestResult {
-		CORRECT, INCORRECT, NOT_GIVEN
-	}
-
-	/**
-	 * The password is considered correct if {@link IncorrectPasswordException} is not thrown from the handler
-	 * @param handler Not executed if result is NOT_GIVEN
-	 */
-	public static PasswordRequestResult requestPassword(String dialogTitle, PasswordRequestHandler handler) {
+	public static String requestPassword(String dialogTitle) {
 		PasswordInputDialog dialog = new PasswordInputDialog();
 		// the "open last wallet" popup is opened before the program stage is shown
 		if (Main.get().stage() != null && Main.get().stage().isShowing()) {
@@ -167,15 +161,11 @@ public class Utils {
 		}
 		Main.get().applySameTheme(dialog.getDialogPane().getScene());
 		dialog.setTitle(dialogTitle);
-		String password = dialog.showAndWait().orElse(null);
-		if (password == null) return PasswordRequestResult.NOT_GIVEN;
-		try {
-			handler.handle(password);
-			return PasswordRequestResult.CORRECT;
-		} catch (IncorrectPasswordException e) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectPassword"));
-			return PasswordRequestResult.INCORRECT;
-		}
+		return dialog.showAndWait().orElse(null);
+	}
+
+	public static void alertIncorrectPassword() {
+		Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectPassword"));
 	}
 
 	public static Path fileChooserSave(Window owner, String title, String initialFileName, FileChooser.ExtensionFilter... extensionFilters) {
@@ -189,19 +179,6 @@ public class Utils {
 
 	public static HttpRequest.Builder httpRequestBuilder() {
 		return HttpRequest.newBuilder().setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0");
-	}
-
-	public static void transferWithMeter(InputStream inputStream, OutputStream outputStream, Consumer<Long> bytes) throws IOException {
-		long downloaded = 0;
-		byte[] buffer = new byte[8192];
-		int read;
-		while ((read = inputStream.read(buffer, 0, 8192)) >= 0) {
-			outputStream.write(buffer, 0, read);
-			downloaded += read;
-			bytes.accept(downloaded);
-		}
-		inputStream.close();
-		outputStream.close();
 	}
 
 	public static int getNumberOfDecimalPlaces(BigDecimal bigDecimal) {

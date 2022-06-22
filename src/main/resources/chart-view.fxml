@@ -1,0 +1,27 @@
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" stylesheets="welcome.css" styleClass="background" type="VBox">
+	<fx:define>
+		<ToggleGroup fx:id="time"/>
+	</fx:define>
+	<HBox>
+		<ToggleButton text="24h" userData="1" toggleGroup="$time"/>
+		<ToggleButton text="7d" userData="7" toggleGroup="$time" selected="true"/>
+		<ToggleButton text="30d" userData="30" toggleGroup="$time"/>
+		<ToggleButton text="90d" userData="90" toggleGroup="$time"/>
+		<ToggleButton text="1y" userData="365" toggleGroup="$time"/>
+		<ToggleButton text="Max" userData="-1" toggleGroup="$time"/>
+	</HBox>
+	<LineChart fx:id="chart" createSymbols="false" legendVisible="false">
+		<xAxis>
+			<NumberAxis fx:id="xAxis" forceZeroInRange="false"/>
+		</xAxis>
+		<yAxis>
+			<NumberAxis fx:id="yAxis" forceZeroInRange="false"/>
+		</yAxis>
+	</LineChart>
+</fx:root>

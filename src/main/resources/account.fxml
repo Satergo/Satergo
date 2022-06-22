@@ -10,11 +10,11 @@
 		<Label text="%totalBalance" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
 		<Label fx:id="totalBalance" text="0.0 ERG" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.halignment="RIGHT"/>
 
-		<Label text="%mnemonicPhrase" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS"/>
-		<Button onAction="#retrieveMnemonicPhrase" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>
+		<Label fx:id="mnemonicPhraseLabel" text="%mnemonicPhrase" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS"/>
+		<Button fx:id="mnemonicPhraseButton" onAction="#retrieveMnemonicPhrase" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>
 
-		<Label text="%mnemonicPassword" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.hgrow="ALWAYS"/>
-		<Button onAction="#retrieveMnemonicPassword" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.halignment="RIGHT"/>
+		<Label fx:id="mnemonicPasswordLabel" text="%mnemonicPassword" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.hgrow="ALWAYS"/>
+		<Button fx:id="mnemonicPasswordButton" onAction="#retrieveMnemonicPassword" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.halignment="RIGHT"/>
 
 		<Label text="%walletName" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.hgrow="ALWAYS"/>
 		<Button onAction="#changeWalletName" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>

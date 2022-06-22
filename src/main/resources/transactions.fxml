@@ -1,10 +1,15 @@
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.control.Label?>
 <?import javafx.geometry.Insets?>
-<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.TransactionsCtrl">
-	<padding>
-		<Insets topRightBottomLeft="20"/>
-	</padding>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.TransactionsCtrl">
+	<padding><Insets topRightBottomLeft="20"/></padding>
 
+	<!--Label text="Pending"/>
 
-</GridPane>
+	<VBox fx:id="pending"/>
+
+	<Label text="Finished"/-->
+
+	<VBox fx:id="finished"/>
+
+</VBox>
+

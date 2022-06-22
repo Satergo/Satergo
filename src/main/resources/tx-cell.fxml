@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Hyperlink?>
+<fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.BorderPane" stylesheets="tx-cell.css">
+	<top>
+		<BorderPane fx:id="top">
+			<padding><Insets topRightBottomLeft="6"/></padding>
+			<left>
+				<Label fx:id="dateTime" BorderPane.alignment="CENTER_LEFT"/>
+			</left>
+			<right>
+				<HBox spacing="10" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
+					<Hyperlink fx:id="tokens" text="%[tokens]" managed="${tokens.visible}"/>
+					<Label fx:id="totalCoins"/>
+					<StackPane styleClass="arrow-button">
+						<StackPane fx:id="arrow" styleClass="arrow" StackPane.alignment="CENTER"/>
+					</StackPane>
+				</HBox>
+			</right>
+		</BorderPane>
+	</top>
+
+	<bottom>
+		<StackPane fx:id="bottomContainer">
+			<GridPane fx:id="bottom" visible="false" managed="${bottom.visible}" hgap="30">
+				<padding>
+					<Insets topRightBottomLeft="26"/>
+				</padding>
+				<columnConstraints>
+					<ColumnConstraints percentWidth="50"/>
+					<ColumnConstraints percentWidth="50"/>
+				</columnConstraints>
+				<VBox fx:id="inputs" spacing="2" GridPane.columnIndex="0"/>
+				<VBox fx:id="outputs" spacing="2" GridPane.columnIndex="1"/>
+			</GridPane>
+		</StackPane>
+	</bottom>
+</fx:root>

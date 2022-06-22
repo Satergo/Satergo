@@ -2,6 +2,7 @@ package com.satergo.extra;
 
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.TilePane;
 
 import java.util.ArrayList;
@@ -12,11 +13,14 @@ import java.util.function.Consumer;
 
 public class MnemonicPhraseOrderVerify extends TilePane {
 
+	private static final int COL_PER_ROW = 5;
+
 	public final ArrayList<String> userOrder = new ArrayList<>();
 
 	public MnemonicPhraseOrderVerify(String[] words) {
 		ArrayList<String> shuffled = new ArrayList<>(List.of(words));
 		Collections.shuffle(shuffled);
+		int col = 0, row = 0;
 		for (String word : shuffled) {
 			ToggleButton button = new ToggleButton(word);
 			button.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -33,8 +37,18 @@ public class MnemonicPhraseOrderVerify extends TilePane {
 			});
 			getChildren().add(button);
 		}
+		setPrefColumns(COL_PER_ROW);
 		setHgap(4);
 		setVgap(4);
+		addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+			int index = getChildren().indexOf((ToggleButton) e.getTarget());
+			switch (e.getCode()) {
+				case UP -> { if (index >= COL_PER_ROW) getChildren().get(index - COL_PER_ROW).requestFocus(); }
+				case LEFT -> { if (index > 0) getChildren().get(index - 1).requestFocus(); }
+				case DOWN -> { if (index < words.length - COL_PER_ROW) getChildren().get(index + COL_PER_ROW).requestFocus(); }
+				case RIGHT -> { if (index < words.length - 1) getChildren().get(index + 1).requestFocus(); }
+			}
+		});
 	}
 
 	public Consumer<String> onWordAdded = w -> {}, onWordRemoved = w -> {};

@@ -2,6 +2,8 @@ package com.satergo.controller;
 
 import com.satergo.Main;
 import com.satergo.Utils;
+import com.satergo.Wallet;
+import com.satergo.WalletKey;
 import com.satergo.ergo.ErgoInterface;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,6 +15,7 @@ import javafx.stage.Screen;
 import org.ergoplatform.appkit.Address;
 import org.ergoplatform.appkit.NetworkType;
 import org.ergoplatform.appkit.Parameters;
+import org.ergoplatform.appkit.UnsignedTransaction;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -71,7 +74,21 @@ public class AboutCtrl implements Initializable, WalletTab {
 
 		BigDecimal amountFullErg = dialog.showAndWait().orElse(null);
 		if (amountFullErg == null) return;
-		String txId = Main.get().getWallet().transact(DONATION_ADDRESS, ErgoInterface.toNanoErg(amountFullErg), Parameters.MinFee);
-		Utils.textDialogWithCopy(Main.lang("transactionId"), txId);
+		try {
+			Wallet wallet = Main.get().getWallet();
+			UnsignedTransaction unsignedTx = ErgoInterface.createUnsignedTransaction(Utils.createErgoClient(),
+					wallet.addressStream().toList(),
+					DONATION_ADDRESS, ErgoInterface.toNanoErg(amountFullErg), Parameters.MinFee, Main.get().getWallet().publicAddress(0));
+			String txId = wallet.transact(Utils.createErgoClient().execute(ctx -> {
+				try {
+					return wallet.key().sign(ctx, unsignedTx);
+				} catch (WalletKey.Failure ex) {
+					return null;
+				}
+			}));
+			if (txId != null) Utils.textDialogWithCopy(Main.lang("transactionId"), txId);
+		} catch (WalletKey.Failure ignored) {
+			// user already informed
+		}
 	}
 }

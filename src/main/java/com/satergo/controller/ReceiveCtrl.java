@@ -8,6 +8,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.Utils;
+import com.satergo.WalletKey;
 import com.satergo.ergouri.ErgoURIString;
 import javafx.collections.MapChangeListener;
 import javafx.embed.swing.SwingFXUtils;
@@ -63,7 +64,11 @@ public class ReceiveCtrl implements Initializable, WalletTab {
 	private void updateAddresses() {
 		addresses.getChildren().clear();
 		Main.get().getWallet().myAddresses.forEach((index, name) -> {
-			addresses.getChildren().add(new AddressLine(qrToggleGroup, index, name, Main.get().getWallet().publicAddress(index)));
+			try {
+				addresses.getChildren().add(new AddressLine(qrToggleGroup, index, name, Main.get().getWallet().publicAddress(index)));
+			} catch (WalletKey.Failure e) {
+				throw new RuntimeException(e);
+			}
 		});
 	}
 

@@ -1,9 +1,12 @@
 package com.satergo.controller;
 
-import com.satergo.*;
+import com.satergo.Load;
+import com.satergo.Main;
+import com.satergo.ProgramData;
+import com.satergo.Utils;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergo.EmbeddedNodeInfo;
-import javafx.application.Platform;
+import com.satergo.extra.DownloadTask;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -15,10 +18,8 @@ import org.ergoplatform.appkit.NetworkType;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.util.ResourceBundle;
 
@@ -59,28 +60,29 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initia
 		}
 		if (nodeDirectory.equals(new File("node")) && !nodeDirectory.exists())
 			nodeDirectory.mkdir();
-		new Thread(() -> {
-			try {
-				HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
-				HttpResponse<InputStream> dl = httpClient.send(Utils.httpRequestBuilder().uri(version.uri()).build(), HttpResponse.BodyHandlers.ofInputStream());
-				long totalBytes = Long.parseLong(dl.headers().firstValue("Content-Length").orElseThrow());
-				File file = new File(nodeDirectory, version.fileName());
-				if (!file.exists()) {
-					FileOutputStream outputStream = new FileOutputStream(file);
-					Utils.transferWithMeter(dl.body(), outputStream, bytes -> {
-						double progress = (double) bytes / (double) totalBytes;
-						Platform.runLater(() -> progressBar.setProgress(progress));
-					});
-				}
-				nodeJar = file;
-				Platform.runLater(() -> {
-					download.setDisable(true);
+		try {
+			File file = new File(nodeDirectory, version.fileName());
+			if (!file.exists()) {
+				DownloadTask downloadTask = new DownloadTask(
+						HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build(),
+						Utils.httpRequestBuilder().uri(version.uri()).build(),
+						new FileOutputStream(new File(nodeDirectory, version.fileName()))
+				);
+				progressBar.progressProperty().bind(downloadTask.progressProperty());
+				downloadTask.setOnSucceeded(se -> {
+					nodeJar = file;
 					continueSetup.setDisable(false);
 				});
-			} catch (IOException | InterruptedException ex) {
-				throw new RuntimeException(ex);
+				download.setDisable(true);
+				new Thread(downloadTask).start();
+			} else {
+				nodeJar = file;
+				download.setDisable(true);
+				continueSetup.setDisable(false);
 			}
-		}).start();
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 
 	@FXML

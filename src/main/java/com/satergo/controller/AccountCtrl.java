@@ -1,9 +1,6 @@
 package com.satergo.controller;
 
-import com.satergo.Load;
-import com.satergo.Main;
-import com.satergo.ProgramData;
-import com.satergo.Utils;
+import com.satergo.*;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.IncorrectPasswordException;
 import javafx.application.Platform;
@@ -20,30 +17,37 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 import org.ergoplatform.appkit.Address;
-import org.ergoplatform.appkit.SecretString;
 
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class AccountCtrl implements Initializable, WalletTab {
 	@FXML private Label totalBalance;
+	@FXML private Node mnemonicPhraseLabel, mnemonicPhraseButton, mnemonicPasswordLabel, mnemonicPasswordButton;
 	@FXML private VBox addresses;
 
 	@FXML
 	public void retrieveMnemonicPhrase(ActionEvent e) {
-		Utils.requestPassword(Main.lang("walletPassword"), password -> {
-			Utils.textDialogWithCopy(Main.lang("yourMnemonicPhrase"), Main.get().getWallet().getMnemonic(SecretString.create(password)).getPhrase().toStringUnsecure());
-		});
+		WalletKey.Local key = (WalletKey.Local) Main.get().getWallet().key();
+		try {
+			Utils.textDialogWithCopy(Main.lang("yourMnemonicPhrase"), key.getMnemonic().getPhrase().toStringUnsecure());
+		} catch (WalletKey.Failure ignored) {
+			// user already informed
+		}
 	}
 
 	@FXML
 	public void retrieveMnemonicPassword(ActionEvent e) {
-		Utils.requestPassword(Main.lang("walletPassword"), password -> {
-			Utils.textDialogWithCopy(Main.lang("yourMnemonicPassword"), Main.get().getWallet().getMnemonic(SecretString.create(password)).getPassword().toStringUnsecure());
-		});
+		WalletKey.Local key = (WalletKey.Local) Main.get().getWallet().key();
+		try {
+			Utils.textDialogWithCopy(Main.lang("yourMnemonicPassword"), key.getMnemonic().getPassword().toStringUnsecure());
+		} catch (WalletKey.Failure ignored) {
+			// user already informed
+		}
 	}
 
 	@FXML
@@ -53,14 +57,14 @@ public class AccountCtrl implements Initializable, WalletTab {
 		dialog.setTitle(Main.lang("renameWallet"));
 		dialog.setHeaderText(null);
 		dialog.getEditor().setPromptText(Main.lang("walletName"));
-		dialog.showAndWait().ifPresent(newName -> Main.get().getWallet().setName(newName));
+		dialog.showAndWait().ifPresent(newName -> Main.get().getWallet().name.set(newName));
 	}
 
 	@FXML
 	public void changeWalletPassword(ActionEvent e) {
 		// Create the custom dialog.
 		Dialog<Pair<String, String>> dialog = new Dialog<>();
-		Main.get().applySameTheme(dialog.getDialogPane().getScene());
+		dialog.initOwner(Main.get().stage());
 		dialog.setTitle(Main.lang("programName"));
 		dialog.setHeaderText("Change password");
 
@@ -99,9 +103,9 @@ public class AccountCtrl implements Initializable, WalletTab {
 		Pair<String, String> result = dialog.showAndWait().orElse(null);
 		if (result == null) return;
 		try {
-			Main.get().getWallet().changePassword(SecretString.create(result.getKey()),	SecretString.create(result.getValue()));
+			Main.get().getWallet().changePassword(result.getKey().toCharArray(), result.getValue().toCharArray());
 		} catch (IncorrectPasswordException ex) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectPassword"));
+			Utils.alertIncorrectPassword();
 		}
 	}
 
@@ -135,7 +139,8 @@ public class AccountCtrl implements Initializable, WalletTab {
 			Utils.alert(Alert.AlertType.ERROR, Main.lang("invalidAddressIndex"));
 			return;
 		}
-		Main.get().getWallet().myAddresses.put(Objects.requireNonNullElse(result.getKey(), nextIndex), result.getValue());
+		int index = Objects.requireNonNullElse(result.getKey(), nextIndex);
+		Main.get().getWallet().myAddresses.put(index, result.getValue());
 	}
 
 	@FXML
@@ -181,9 +186,13 @@ public class AccountCtrl implements Initializable, WalletTab {
 	private void updateAddresses() {
 		addresses.getChildren().clear();
 		Main.get().getWallet().myAddresses.forEach((index, name) -> {
-			addresses.getChildren().add(new AddressLine(index, name, Main.get().getWallet().publicAddress(index),
-					() -> Main.get().getWallet().myAddresses.remove(index),
-					newName -> Main.get().getWallet().myAddresses.put(index, newName), index != 0));
+			try {
+				addresses.getChildren().add(new AddressLine(index, name, Main.get().getWallet().publicAddress(index),
+						() -> Main.get().getWallet().myAddresses.remove(index),
+						newName -> Main.get().getWallet().myAddresses.put(index, name), index != 0));
+			} catch (WalletKey.Failure e) {
+				throw new RuntimeException(e);
+			}
 		});
 	}
 
@@ -199,5 +208,10 @@ public class AccountCtrl implements Initializable, WalletTab {
 		});
 		updateAddresses();
 		Main.get().getWallet().myAddresses.addListener((MapChangeListener<Integer, String>) change -> updateAddresses());
+		boolean isLocalWallet = Main.get().getWallet().key() instanceof WalletKey.Local;
+		Stream.of(mnemonicPhraseLabel, mnemonicPhraseButton, mnemonicPasswordLabel, mnemonicPasswordLabel).forEach(node -> {
+			node.setVisible(isLocalWallet);
+			node.setManaged(isLocalWallet);
+		});
 	}
 }

@@ -85,7 +85,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutLanguage, Initializ
 		Mnemonic mnemonic = Mnemonic.create(SecretString.create(mnemonicPhrase.getText()), SecretString.create(mnemonicPassword.getText()));
 		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 		if (path == null) return;
-		Main.get().setWallet(Wallet.create(path, mnemonic, walletName.getText(), SecretString.create(walletPassword.getText())));
+		Main.get().setWallet(Wallet.create(path, mnemonic, walletName.getText(), walletPassword.getText().toCharArray(), true));
 		Main.get().displayWalletPage();
 	}
 

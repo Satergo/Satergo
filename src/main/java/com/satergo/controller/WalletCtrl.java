@@ -3,17 +3,18 @@ package com.satergo.controller;
 import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.ProgramData;
+import com.satergo.WalletKey;
 import com.satergo.ergo.Balance;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergouri.ErgoURIString;
+import com.satergo.extra.ChartView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -57,7 +58,8 @@ public class WalletCtrl implements Initializable {
 	@FXML private ToggleGroup group;
 
 	@FXML private HBox priceBox;
-	@FXML private Label balance, priceValue, priceCurrency;
+	@FXML private Label balance, priceValue;
+	@FXML private Hyperlink priceCurrency;
 
 	@FXML private ToggleButton myTokens, settings, send, node;
 
@@ -127,7 +129,10 @@ public class WalletCtrl implements Initializable {
 			}
 		});
 
-		headTitle.textProperty().bind(Bindings.concat("Ergo - ", Main.get().getWallet().name));
+		headTitle.textProperty().bind(Main.get().getWallet().name);
+		Tooltip nameTooltip = new Tooltip();
+		nameTooltip.textProperty().bind(Main.get().getWallet().name);
+		headTitle.setTooltip(nameTooltip);
 
 		updateBalance(Main.get().getWallet().totalBalance());
 		updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get()));
@@ -175,5 +180,37 @@ public class WalletCtrl implements Initializable {
 				updatePriceValue(oneErgValue);
 			});
 		}, 60, 60, TimeUnit.SECONDS);
+
+		if (Main.get().getWallet().key() instanceof WalletKey.Local) {
+			Main.programData().requirePasswordForSending.addListener((observable, oldValue, newValue) -> {
+				WalletKey.Local key = (WalletKey.Local) Main.get().getWallet().key();
+				if (!oldValue && newValue) {
+					key.setCaching(WalletKey.Local.Caching.TIMED);
+				} else if (!newValue) {
+					key.setCaching(WalletKey.Local.Caching.PERMANENT);
+				}
+			});
+		}
+	}
+
+	@FXML
+	public void showChart(ActionEvent e) {
+		Dialog<Void> dialog = new Dialog<>();
+		dialog.initOwner(Main.get().stage());
+		dialog.setTitle("Ergo ERG/" + Main.programData().priceCurrency.get().uc());
+		Task<ChartView> chartViewTask = new Task<>() {
+			@Override
+			protected ChartView call() {
+				return new ChartView(Main.programData().priceCurrency.get());
+			}
+		};
+		chartViewTask.setOnRunning(b -> priceCurrency.setDisable(true));
+		chartViewTask.setOnSucceeded(b -> {
+			priceCurrency.setDisable(false);
+			dialog.getDialogPane().setContent(chartViewTask.getValue());
+			dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
+			dialog.show();
+		});
+		new Thread(chartViewTask).start();
 	}
 }

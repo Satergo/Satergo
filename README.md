@@ -1,14 +1,14 @@
 # Satergo
-Desktop wallet for the cryptocurrency Ergo with embedded node functionality. Downloads can be found at [the website](https://satergo.org).
+Desktop wallet for the cryptocurrency Ergo with embedded node functionality. Downloads can be found at [the website](https://satergo.com).
 
 Why use Satergo?
-- **Secure**: Everything is encrypted and stored with the program
+- **Secure**: Everything is encrypted and stored on your disk
 - **Independent**: Host your own node if you want to
 - **Invaluable**: Contribute to the Ergo network
 - **Portable**: Does not depend on any other software being installed
 - **Cross-platform**: Supports all major desktop platforms
-- **Fully featured**: Has many features but still easy to use
-- **Deterministic**: Know what runs on your computer
+- **Fully featured**: Has many features but is still easy to use
+- **Reliable**: You can be sure about what runs on your computer
 - **Light**: Usable in slow or portable operating system environments
 
 ## Supported platforms

@@ -1,0 +1,24 @@
+.green {
+	-fx-background-color: rgba(0, 255, 0, 0.1);
+}
+
+.red {
+	-fx-background-color: rgba(255, 0, 0, 0.1);
+}
+
+.arrow-button {
+	-fx-max-height: 0.78;
+	-fx-background-color: null;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+	-fx-padding: 0.0em 0.583em 0.0em 0.0em; /* 0 7 0 0 */
+}
+
+.arrow-button > .arrow {
+	arrow_color: white;
+	-fx-effect: null;
+	-fx-background-color: arrow_color;
+	-fx-background-insets: 0, 0;
+	-fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
+	-fx-shape: "M 4.21875 10.78125 L 2.78125 12.21875 L 15.28125 24.71875 L 16 25.40625 L 16.71875 24.71875 L 29.21875 12.21875 L 27.78125 10.78125 L 16 22.5625 Z";
+}

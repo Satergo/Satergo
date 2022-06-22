@@ -4,6 +4,9 @@ import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergo.ErgoNodeAccess;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigValueFactory;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
@@ -18,14 +21,15 @@ import scorex.crypto.hash.Blake2b256;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class NodeOverviewCtrl implements Initializable, WalletTab {
 	private static final int LOG_LENGTH_LIMIT = 1_000_000;
@@ -141,10 +145,14 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		dialog.getEditor().setPromptText(Main.lang("newApiKey"));
 		String key = dialog.showAndWait().orElse(null);
 		if (key != null) {
-			updateConfApiKey(key);
+			@SuppressWarnings("RedundantCast")
+			byte[] hashBytes = (byte[]) Blake2b256.hash(key);
+			String hash = HexFormat.of().formatHex(hashBytes);
+			setConfValue("scorex.restApi.apiKeyHash", hash);
 		}
 	}
 
+	@FXML
 	public void openConf(ActionEvent e) throws IOException {
 		try {
 			java.awt.Desktop.getDesktop().edit(Main.node.confFile);
@@ -153,6 +161,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		}
 	}
 
+	@FXML
 	public void unlockServerWallet(ActionEvent e) {
 		Dialog<Pair<String, String>> dialog = new Dialog<>();
 		dialog.initOwner(Main.get().stage());
@@ -186,30 +195,62 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		});
 	}
 
-	private void updateConfApiKey(String apiKey) throws IOException {
-		byte[] hashBytes = (byte[]) Blake2b256.hash(apiKey);
-		String hash = HexFormat.of().formatHex(hashBytes);
-		Pattern confApiKeyHashPattern = Pattern.compile("apiKeyHash\\s*=\\s*\"[A-Za-z\\d]+\"");
-		String conf = Files.readString(Main.node.confFile.toPath());
-		Matcher m1 = confApiKeyHashPattern.matcher(conf);
-		String newConf;
-		if (m1.find()) {
-			newConf = m1.replaceFirst("apiKeyHash = \"" + hash + "\"");
-		} else {
-			Pattern restApiPattern = Pattern.compile("restApi\\s*\\{");
-			Matcher m2 = restApiPattern.matcher(conf);
-			if (m2.find()) {
-				newConf = m2.replaceFirst("$0\n\t\tapiKeyHash = \"" + hash + "\"");
-			} else {
-				Pattern scorexPattern = Pattern.compile("scorex\\s*\\{");
-				Matcher m3 = scorexPattern.matcher(conf);
-				if (m3.find()) {
-					newConf = m3.replaceFirst("$0\n\trestApi {\n\t\tapiKeyHash = \"" + hash + "\"\n\t}");
-				} else {
-					newConf = conf + "\n\nscorex {\n\trestApi {\n\t\tapiKeyHash = \"" + hash + "\"\n\t}\n}";
+	@FXML
+	public void setPublicAddress(ActionEvent e) throws IOException {
+		Dialog<Pair<String, Integer>> dialog = new Dialog<>();
+		dialog.initOwner(Main.get().stage());
+		dialog.setTitle(Main.lang("setPublicAddress"));
+		dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.APPLY);
+		GridPane gridPane = new GridPane();
+		gridPane.setHgap(4);
+		TextField address = new TextField();
+		TextField port = new TextField(switch(Main.programData().nodeNetworkType.get()) {
+			case MAINNET -> "9030";
+			case TESTNET -> "9020";
+		});
+		gridPane.add(new Label(Main.lang("addressIPC")), 0, 0);
+		gridPane.add(address, 1, 0);
+		Button fetch = new Button("Fetch");
+		fetch.setOnAction(ae -> {
+			try {
+				HttpResponse<String> response = HttpClient.newHttpClient().send(Utils.httpRequestBuilder().uri(URI.create("https://icanhazip.com")).build(), HttpResponse.BodyHandlers.ofString());
+				if (response.statusCode() == 200) {
+					address.setText(response.body());
+					return;
 				}
+			} catch (IOException | InterruptedException ex) {
 			}
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("failedToFetchIPAddress"));
+		});
+		gridPane.add(new Label(Main.lang("portC")), 0, 1);
+		gridPane.add(port, 1, 1);
+		dialog.getDialogPane().setContent(gridPane);
+		Node applyButton = dialog.getDialogPane().lookupButton(ButtonType.APPLY);
+		port.textProperty().addListener((observable, oldValue, newValue) -> {
+			try {
+				Integer.parseInt(newValue);
+				applyButton.setDisable(false);
+			} catch (NumberFormatException ex) {
+				applyButton.setDisable(true);
+			}
+		});
+		dialog.setResultConverter(t -> {
+			if (t == ButtonType.APPLY) {
+				return new Pair<>(address.getText(), Integer.parseInt(port.getText()));
+			}
+			return null;
+		});
+		Pair<String, Integer> result = dialog.showAndWait().orElse(null);
+		if (result != null) {
+			setConfValue("scorex.network.declaredAddress", result.getKey() + ":" + result.getValue());
 		}
-		Files.writeString(Main.node.confFile.toPath(), newConf);
+	}
+
+	private void setConfValue(String propertyPath, Object value) throws IOException {
+		Files.writeString(Main.node.confFile.toPath(), ConfigFactory.parseFile(Main.node.confFile)
+				.withValue(propertyPath, ConfigValueFactory.fromAnyRef(propertyPath))
+				.root().render(ConfigRenderOptions.defaults()
+						.setOriginComments(false)
+						.setJson(false)));
 	}
 }

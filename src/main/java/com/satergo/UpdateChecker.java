@@ -17,16 +17,16 @@ import java.time.format.DateTimeFormatter;
 
 public class UpdateChecker {
 
-	private static final URI latestVersionInfoURI = URI.create("https://raw.githubusercontent.com/Satergo/satergo.com/master/latest.json");
+	private static final URI latestVersionInfoURI = URI.create("https://satergo.com/latest.json");
 
 	public record VersionInfo(String version, long versionCode, LocalDate dateReleased, String changelog) {}
 
-	public static VersionInfo fetchLatestInfo() {
+	public static VersionInfo fetchLatestInfo() throws IOException {
 		HttpRequest request = Utils.httpRequestBuilder().uri(latestVersionInfoURI).build();
 		try {
 			JsonObject body = JsonParser.object().from(HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body());
 			return new VersionInfo(body.getString("version"), body.getLong("versionCode"), LocalDate.parse(body.getString("dateReleased")), body.getString("changelog"));
-		} catch (JsonParserException | IOException | InterruptedException e) {
+		} catch (JsonParserException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 	}

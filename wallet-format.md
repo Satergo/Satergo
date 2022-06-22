@@ -2,29 +2,88 @@
 
 .erg wallets are a custom binary format used by Satergo to store the details of a wallet.
 
-The byte order is big endian. The files are encrypted with the AES/GCM/NoPadding cipher with authentication tag length 128, see [AESEncryption.java](src/main/java/com/satergo/extra/AESEncryption.java).
+The byte order is big endian. The cipher used is AES/GCM/NoPadding with authentication tag length 128, see [AESEncryption.java](src/main/java/com/satergo/extra/AESEncryption.java).
+
+## formatVersion 1
+In this version there is a magic number to determine the filetype and the format version is not encrypted either.
+
+The information is separated from the private key data to not need to keep both of them in-memory.
+
+The two sections must be encrypted with the **same password** and must use **different nonce values**.
+
+| Data type | Value                                                          |
+|-----------|----------------------------------------------------------------|
+| integer   | magic = 0x36003600 (dec 905983488) (36 00 36 00)               |
+| long      | format version                                                 |
+| integer   | length of private key section (including 12 nonce bytes)       |
+| byte[12]  | nonce/initialization vector (12 bytes)                         |
+| data      | encrypted wallet private key data                              |
+| integer   | length of encrypted details section (including 12 nonce bytes) |
+| byte[12]  | nonce/initialization vector (12 bytes)                         |
+| data      | encrypted details                                              |
+
+Encrypted wallet private key data: `(short) wallet key type id` followed by the serialized data.
+
+| Wallet key type ID | Value | Details                                |
+|--------------------|-------|----------------------------------------|
+| 0                  | LOCAL | The mnemonic is stored inside the file |
+
+`LOCAL` structure:
+
+| Data type          | Value                                                                                                       |
+|--------------------|-------------------------------------------------------------------------------------------------------------|
+| boolean            | [non-standard address derivation](https://github.com/ergoplatform/ergo/issues/1627), currently must be true |
+| short              | byte length of next field                                                                                   |
+| utf-8 string bytes | mnemonic phrase                                                                                             |
+| short              | byte length of next field                                                                                   |
+| utf-8 string bytes | mnemonic password                                                                                           |
+
+Encrypted wallet details data:
+
+| Data type                                           | Value                               |
+|-----------------------------------------------------|-------------------------------------|
+| short                                               | byte length of next field           |
+| utf-8 string bytes                                  | wallet name                         |
+| int                                                 | amount of derived address           |
+| [derived address entry](#derived-address-entry-0)[] | derived address entry               |
+| int                                                 | address book size                   |
+| [address book entry](#address-book-entry-0)[]       | address book entry                  |
+
+# OLD FORMAT
 
 ## formatVersion 0
+**Note: This version contains an unnecessary header. To get to the data, skip 6 bytes. This has been removed in later versions and future readers should not implement reading/writing it.**
+
+Encrypted data: (everything is encrypted in this version, even the version number)
 
 | Data type                                           | Value                     |
 |-----------------------------------------------------|---------------------------|
-| unsigned long                                       | format version            |
-| utf-8 zt string                                     | wallet name               |
-| utf-8 zt string                                     | mnemonic phrase           |
-| utf-8 zt string                                     | mnemonic password         |
-| unsigned int                                        | amount of derived address |
+| short                                               | (-21267, skip)            |
+| short                                               | (5, skip)                 |
+| short                                               | (skip)                    |
+| long                                                | format version            |
+| short                                               | byte length of next field |
+| utf-8 string bytes                                  | wallet name               |
+| short                                               | byte length of next field |
+| utf-8 string bytes                                  | mnemonic phrase           |
+| short                                               | byte length of next field |
+| utf-8 string bytes                                  | mnemonic password         |
+| int                                                 | amount of derived address |
 | [derived address entry](#derived-address-entry-0)[] | derived address entry     |
-| unsigned int                                        | address book size         |
+| int                                                 | address book size         |
 | [address book entry](#address-book-entry-0)[]       | address book entry        |
 
 ### Derived address entry (0)
-| Data type       | Value         |
-|-----------------|---------------|
-| int             | address index |
-| utf-8 zt string | address label |
+| Data type          | Value                     |
+|--------------------|---------------------------|
+| int                | address index             |
+| short              | byte length of next field |
+| utf-8 string bytes | address label             |
 
 ### Address book entry (0)
-| Data type       | Value   |
-|-----------------|---------|
-| utf-8 zt string | name    |
-| utf-8 zt string | address |
+| Data type          | Value                     |
+|--------------------|---------------------------|
+| short              | byte length of next field |
+| utf-8 string bytes | name                      |
+| short              | byte length of next field |
+| utf-8 string bytes | address                   |

@@ -25,7 +25,6 @@
 		<Label text="%restoreWalletUsingSeed" styleClass="option-title" AnchorPane.leftAnchor="70" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="20"/>
 	</AnchorPane>
 	<Label fx:id="nodeConfigurationInfo"/>
-	<Button text="%returnToBlockchainSetup" onAction="#returnToBlockchainSetup"/>
 
 	<Region VBox.vgrow="ALWAYS"/>
 	<Label fx:id="_version" alignment="BASELINE_RIGHT" maxWidth="Infinity"/>

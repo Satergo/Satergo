@@ -17,6 +17,7 @@
 				<MenuItem onAction="#setApiKey" text="%changeApiKey"/>
 				<MenuItem onAction="#openConf" text="%openConf"/>
 				<MenuItem onAction="#unlockServerWallet" text="%unlockServerWallet"/>
+				<MenuItem onAction="#setPublicAddress" text="%setPublicAddress"/>
 			</items>
 		</ContextMenu>
 	</fx:define>

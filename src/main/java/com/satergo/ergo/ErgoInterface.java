@@ -63,27 +63,25 @@ public class ErgoInterface {
 
 	/**
 	 * @param ergoClient ErgoClient, see for example {@link #newNodeApiClient}
-	 * @param ergoProverFunction Function that creates the ErgoProver using a BlockchainContext, see for example {@link #newWithMnemonicProver}
+	 * @param addresses Input addresses
 	 * @param recipient Address to send to
 	 * @param amountToSend Amount to send (in nanoERGs)
 	 * @param feeAmount Fee, minimum {@link Parameters#MinFee}
-	 * @param changeAddress The address where leftover ERGs or tokens from UTXOs will be sent
+	 * @param changeAddress The address where leftover ERG or tokens from UTXOs will be sent
 	 * @param tokensToSend Tokens to send
 	 * @throws InputBoxesSelectionException If not enough ERG or not enough tokens were found
 	 * @return The transaction ID with quotes around it
 	 */
-	public static String transact(ErgoClient ergoClient, Function<BlockchainContext, ErgoProver> ergoProverFunction,
+	public static UnsignedTransaction createUnsignedTransaction(ErgoClient ergoClient, List<Address> addresses,
 								  Address recipient, long amountToSend, long feeAmount, Address changeAddress, ErgoToken... tokensToSend) throws InputBoxesSelectionException {
 		if (feeAmount < Parameters.MinFee) {
 			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
 		}
 		return ergoClient.execute(ctx -> {
-			ErgoProver senderProver = ergoProverFunction.apply(ctx);
-			Address sender = senderProver.getEip3Addresses().get(0);
-			List<InputBox> unspent = senderProver.getEip3Addresses().stream().flatMap(address -> ctx.getUnspentBoxesFor(address, 0, 20).stream()).toList();
-			List<InputBox> boxesToSpend = BoxOperations.selectTop(unspent, amountToSend + feeAmount, List.of(tokensToSend));
-			UnsignedTransactionBuilder txB = ctx.newTxBuilder();
-			OutBoxBuilder newBoxBuilder = txB.outBoxBuilder();
+			List<InputBox> unspent = addresses.parallelStream().flatMap(address -> ctx.getUnspentBoxesFor(address, 0, 20).stream()).toList();
+			List<InputBox> boxesToSpend = BoxSelectorsJavaHelpers.selectBoxes(unspent, amountToSend + feeAmount, List.of(tokensToSend));
+			UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
+			OutBoxBuilder newBoxBuilder = txBuilder.outBoxBuilder();
 			newBoxBuilder.value(amountToSend);
 			if (tokensToSend.length > 0) {
 				newBoxBuilder.tokens(tokensToSend);
@@ -92,13 +90,11 @@ public class ErgoInterface {
 					.item("recipientPk", recipient.getPublicKey())
 					.build(), "{ recipientPk }")).build();
 			OutBox newBox = newBoxBuilder.build();
-			UnsignedTransaction unsignedTx = txB
+			return txBuilder
 					.boxesToSpend(boxesToSpend).outputs(newBox)
 					.fee(feeAmount)
-					.sendChangeTo(senderProver.getEip3Addresses().get(0).asP2PK())
+					.sendChangeTo(changeAddress.asP2PK())
 					.build();
-			SignedTransaction signedTx = senderProver.sign(unsignedTx);
-			return ctx.sendTransaction(signedTx);
 		});
 	}
 

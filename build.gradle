@@ -13,7 +13,7 @@ java {
 }
 
 group 'com.satergo'
-version '0.0.2'
+version '0.0.3'
 
 application {
 	mainClass = "com.satergo.Launcher"
@@ -22,12 +22,6 @@ application {
 
 repositories {
 	mavenCentral()
-	maven {
-		url 'https://jitpack.io'
-		content {
-			includeGroup 'com.github.ergoplatform'
-		}
-	}
 	maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 	// for org.jetbrains.pty4j:purejavacomm:0.12.5, which is used by pty4j
 	maven {
@@ -64,20 +58,21 @@ dependencies {
 		exclude group: 'org.controlsfx'
 	}
 
-	implementation 'com.github.ergoplatform:ergo-appkit:d07973367c'
-	implementation 'org.slf4j:slf4j-simple:1.7.33'
+	implementation 'org.ergoplatform:ergo-appkit_2.12:4.0.9'
+	implementation 'com.typesafe:config:1.4.2'
+	implementation 'org.slf4j:slf4j-simple:1.7.36'
 	implementation 'com.grack:nanojson:1.7' // used for numerous HTTP APIs and ProgramData saving
 	implementation 'org.jetbrains.pty4j:pty4j:0.12.7' // for running node
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
-	implementation 'com.google.zxing:core:3.4.1' // used for qr codes
-	implementation 'net.java.dev.jna:jna:5.10.0' // used for running the registration of ergo uri with admin privileges on Windows
-	implementation 'net.java.dev.jna:jna-platform:5.10.0' // used for running the registration of ergo uri with admin privileges on Windows
+	implementation 'com.google.zxing:core:3.5.0' // used for qr codes
+	implementation 'net.java.dev.jna:jna:5.11.0' // used for running the registration of ergo uri with admin privileges on Windows
+	implementation 'net.java.dev.jna:jna-platform:5.11.0' // used for running the registration of ergo uri with admin privileges on Windows
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 }
 
 satergoRuntime {
 
-	extraModules = ["jdk.crypto.ec", "java.naming"]
+	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets"]
 	extraJlinkOptions = ["--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"]
 	cleanupRuntimeContent = true
 	cacheRuntimes = true
@@ -94,6 +89,7 @@ satergoRuntime {
 		mainClass = application.mainClass.get()
 		defaultJvmOpts = ['-Dsatergo.launcher={APP_HOME}/bin/Satergo',
 						  '-Dsatergo.platform=' + platform ]
+		windowsConsole = false
 	}
 
 	switch (platform) {

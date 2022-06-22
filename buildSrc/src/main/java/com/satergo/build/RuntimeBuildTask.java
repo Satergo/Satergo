@@ -149,7 +149,11 @@ public class RuntimeBuildTask extends DefaultTask {
 					.replace("{DEFAULT_JVM_OPTS}", optsSerialized)
 					.replace("{WIN_JAVA_BINARY_NAME}", extension.launcherScript.windowsConsole ? "java" : "javaw");
 			String launcherName = extension.launcherScript.name + (extension.launcherScript.type == RuntimeBuildExt.LauncherScript.Type.BAT ? ".bat" : "");
-			Files.writeString(runtimeOutput.resolve("bin").resolve(launcherName), launcherScript);
+			Path launcherPath = runtimeOutput.resolve("bin").resolve(launcherName);
+			Files.writeString(launcherPath, launcherScript);
+			if (extension.launcherScript.type == RuntimeBuildExt.LauncherScript.Type.SH) {
+				launcherPath.toFile().setExecutable(true);
+			}
 		}
 
 		if (extension.doBeforeArchival != null) {
