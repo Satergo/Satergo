@@ -125,7 +125,7 @@ public class Main extends Application {
 					if (initErgoURI != null) {
 						load.getValue().openSendWithErgoURI(initErgoURI);
 					}
-					displayNewTopPage(load.getKey());
+					displayWalletPage(load);
 				} catch (IncorrectPasswordException e) {
 					Utils.alertIncorrectPassword();
 					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
