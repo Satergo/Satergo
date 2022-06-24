@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -41,10 +42,15 @@ class FileUtils {
 		}
 	}
 
-	private static void extractArchiveTo(ArchiveInputStream ais, Path outputDirectory) throws IOException {
+	private static void extractArchiveTo(ArchiveInputStream ais, Path outputDirectory, Function<String, String> nameRewrite) throws IOException {
 		ArchiveEntry archiveEntry = ais.getNextEntry();
 		while (archiveEntry != null) {
-			Path newFile = outputDirectory.resolve(archiveEntry.getName());
+			String name = nameRewrite.apply(archiveEntry.getName());
+			if (name == null || name.isBlank()) {
+				archiveEntry = ais.getNextEntry();
+				continue;
+			}
+			Path newFile = outputDirectory.resolve(name);
 			if (!newFile.normalize().startsWith(outputDirectory.normalize()))
 				throw new IllegalArgumentException("malicious archive tried to escape output directory");
 			if (archiveEntry.isDirectory()) {
@@ -76,11 +82,11 @@ class FileUtils {
 		ZIP, TAR_GZ
 	}
 
-	static void extractZipTo(InputStream inputStream, Path outputDirectory) throws IOException {
-		extractArchiveTo(new ZipArchiveInputStream(inputStream), outputDirectory);
+	static void extractZipTo(InputStream inputStream, Path outputDirectory, Function<String, String> nameRewrite) throws IOException {
+		extractArchiveTo(new ZipArchiveInputStream(inputStream), outputDirectory, nameRewrite);
 	}
 
-	static void extractTarGzTo(InputStream inputStream, Path outputDirectory) throws IOException {
-		extractArchiveTo(new TarArchiveInputStream(new GZIPInputStream(inputStream)), outputDirectory);
+	static void extractTarGzTo(InputStream inputStream, Path outputDirectory, Function<String, String> nameRewrite) throws IOException {
+		extractArchiveTo(new TarArchiveInputStream(new GZIPInputStream(inputStream)), outputDirectory, nameRewrite);
 	}
 }

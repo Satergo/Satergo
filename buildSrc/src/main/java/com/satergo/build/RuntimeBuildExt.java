@@ -24,6 +24,7 @@ public class RuntimeBuildExt {
 
 	public String platformName;
 	public URI jdkRuntimeURI;
+	public String jdkRuntimeRoot = "";
 	/**
 	 * Whether to cache the generated runtime for next use.
 	 * Cache is per the filename from {@link #jdkRuntimeURI} and is never automatically deleted.
@@ -62,7 +63,7 @@ public class RuntimeBuildExt {
 		this.doBeforeArchival = closure;
 	}
 
-	// For accessing from the pre-archival closure
+	// For accessing from the doBeforeArchival closure
 	public final String runtimeDirectoryName = "runtime";
 
 	/**

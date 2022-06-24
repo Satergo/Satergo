@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 import java.util.spi.ToolProvider;
 import java.util.stream.Collectors;
 
@@ -80,24 +81,32 @@ public class RuntimeBuildTask extends DefaultTask {
 		String[] jdkArchiveLinkParts = extension.jdkRuntimeURI.getPath().split("/");
 		String jdkArchiveName = jdkArchiveLinkParts[jdkArchiveLinkParts.length - 1];
 		Path cacheDir = getProject().getBuildDir().toPath().resolve(JDK_CACHE_DIR_NAME);
-		Files.createDirectory(cacheDir);
-		Path jdkExtractionDir = cacheDir.resolve(jdkArchiveName);
-		if (!Files.exists(jdkExtractionDir)) {
+		if (!Files.exists(cacheDir))
+			Files.createDirectory(cacheDir);
+		Path jdk = cacheDir.resolve(jdkArchiveName);
+		if (!Files.exists(jdk)) {
 			HttpResponse<InputStream> request = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build()
 					.send(HttpRequest.newBuilder().uri(extension.jdkRuntimeURI).build(), HttpResponse.BodyHandlers.ofInputStream());
 			FileUtils.ArchiveType archiveType;
 			if (jdkArchiveName.endsWith(".zip")) archiveType = FileUtils.ArchiveType.ZIP;
 			else if (jdkArchiveName.endsWith(".tar.gz")) archiveType = FileUtils.ArchiveType.TAR_GZ;
 			else throw new IllegalArgumentException("unsupported archive type");
-			Files.createDirectory(jdkExtractionDir);
+			Files.createDirectory(jdk);
+			Function<String, String> pathRewriter = name -> {
+				// appears in linux & mac archives
+				if (name.startsWith("./")) name = name.substring(2);
+				// skip top directory
+				name = name.substring(name.indexOf('/') + 1);
+				// skip path to root
+				if (name.startsWith(extension.jdkRuntimeRoot))
+					return name.substring(extension.jdkRuntimeRoot.length());
+				else return null;
+			};
 			switch (archiveType) {
-				case ZIP -> FileUtils.extractZipTo(request.body(), jdkExtractionDir);
-				case TAR_GZ -> FileUtils.extractTarGzTo(request.body(), jdkExtractionDir);
+				case ZIP -> FileUtils.extractZipTo(request.body(), jdk, pathRewriter);
+				case TAR_GZ -> FileUtils.extractTarGzTo(request.body(), jdk, pathRewriter);
 			}
 		}
-		Path jdk = Files.list(jdkExtractionDir).reduce((a, b) -> {
-			throw new IllegalArgumentException("jdk archive should only contain one directory in the top-level");
-		}).orElseThrow();
 
 		// Invoke jlink to create a runtime
 		Path runtimeOutput = getProject().getBuildDir().toPath().resolve("runtime");
