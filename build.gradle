@@ -9,7 +9,7 @@ plugins {
 apply plugin: SatergoBuildPlugin
 
 java {
-	sourceCompatibility = JavaLanguageVersion.of(17)
+	sourceCompatibility = JavaLanguageVersion.of(18)
 }
 
 group 'com.satergo'
@@ -49,7 +49,7 @@ if (project.hasProperty("platform") && project.findProperty("platform") != "auto
 	if (currentOs.isLinux() && arch == "arm32") throw new IllegalArgumentException("linux arm32 is not supported")
 }
 
-def javaFxVersion = '17'
+def javaFxVersion = '18.0.1'
 def javaFxModules = [ 'base', 'controls', 'fxml', 'swing', 'graphics' ]
 
 dependencies {
@@ -95,28 +95,28 @@ satergoRuntime {
 	switch (platform) {
 		case "linux": {
 			platformName = "linux-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_linux-x64_bin.tar.gz")
 			break
 		}
 		case "linux-aarch64": {
 			platformName = "linux-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_linux-aarch64_bin.tar.gz")
 			break
 		}
 		case "win": {
 			platformName = "windows-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_windows-x64_bin.zip")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_windows-x64_bin.zip")
 			break
 		}
 		case "mac": {
 			platformName = "mac-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_macos-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_macos-x64_bin.tar.gz")
 			jdkRuntimeRoot = "Contents/Home/"
 			break
 		}
 		case "mac-aarch64": {
 			platformName = "mac-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_macos-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_macos-aarch64_bin.tar.gz")
 			break
 		}
 		default: throw new IllegalArgumentException()
