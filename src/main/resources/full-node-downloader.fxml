@@ -12,11 +12,11 @@
 
 	<HBox alignment="CENTER_LEFT" spacing="10"><Button text="%selectCustomFolder" onAction="#selectCustomFolder"/><Label fx:id="customFolderLocation" text="%current_nodeInCurrentWorkingDirectory"/></HBox>
 
-	<HBox alignment="CENTER_LEFT"><Label text="%versionToBeDownloadedC"/><Label text=" v"/><Label fx:id="nodeVersion"/><Region prefWidth="20"/><ProgressBar fx:id="progressBar" progress="0" prefWidth="100"/></HBox>
+	<HBox alignment="CENTER_LEFT"><Label text="%versionToBeDownloadedC"/><Label text=" v"/><Label fx:id="nodeVersion" text="?.?.?"/><Region prefWidth="20"/><ProgressBar fx:id="progressBar" progress="0" prefWidth="100"/></HBox>
 
 	<HBox alignment="CENTER_LEFT"><Label text="%networkTypeC"/><Label text=" "/><ComboBox fx:id="networkType"/></HBox>
 
 	<Region prefHeight="100"/>
 
-	<HBox spacing="8"><Button fx:id="download" text="%download" onAction="#download"/><Button fx:id="continueSetup" disable="true" text="%continue" onAction="#continueSetup"/></HBox>
+	<HBox spacing="8"><Button fx:id="download" disable="true" text="%download" onAction="#download"/><Button fx:id="continueSetup" disable="true" text="%continue" onAction="#continueSetup"/></HBox>
 </VBox>

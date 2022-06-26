@@ -7,6 +7,7 @@ import com.satergo.Utils;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergo.EmbeddedNodeInfo;
 import com.satergo.extra.DownloadTask;
+import com.satergo.extra.SimpleTask;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -107,8 +108,12 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initia
 		networkType.getItems().addAll(NetworkType.values());
 		networkType.setValue(NetworkType.MAINNET);
 		networkType.valueProperty().bindBidirectional(Main.programData().nodeNetworkType);
-		version = Utils.fetchLatestNodeVersion();
-		nodeVersion.setText(version.version());
+		new SimpleTask<>(Utils::fetchLatestNodeVersion)
+				.onSuccess(v -> {
+					version = v;
+					nodeVersion.setText(v.version());
+					download.setDisable(false);
+				}).newThread();
 		if (new File("node").exists()) {
 			nodeDirectory = null;
 			customFolderLocation.setText(Main.lang("currentNone"));
