@@ -7,7 +7,6 @@ import com.grack.nanojson.JsonParserException;
 import com.satergo.Load;
 import com.satergo.Utils;
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -20,9 +19,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 
 public class ChartView extends VBox {
 
@@ -86,15 +83,18 @@ public class ChartView extends VBox {
 		private record Point(LocalDateTime time, double price) {}
 	}
 
+	private static final ZonedDateTime MAINNET_START = ZonedDateTime.of(2019, 7, 1, 10, 0, 0, 0, ZoneOffset.UTC);
+	
 	private static ChartData fetchCoinGeckoChart(CommonCurrency vs, int days) throws IOException, InterruptedException {
 		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coingecko.com/api/v3/coins/ergo/market_chart?vs_currency=" + vs.lc() + "&days=" + (days == -1 ? "max" : days))).build();
 		HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		try {
 			JsonObject o = JsonParser.object().from(response.body());
-			return new ChartData(o.getArray("prices").stream().map(a -> (JsonArray) a).map(a -> new ChartData.Point(
-					Instant.ofEpochMilli(a.getLong(0)).atZone(ZoneId.systemDefault()).toLocalDateTime(),
-					a.getDouble(1))
-			).toArray(ChartData.Point[]::new));
+			return new ChartData(o.getArray("prices").stream().map(a -> (JsonArray) a).map(a ->
+							new ChartData.Point(Instant.ofEpochMilli(a.getLong(0)).atZone(ZoneId.systemDefault()).toLocalDateTime(),  a.getDouble(1)))
+					// Drop data before 10:00 1 July 2019 UTC as that was before Ergo mainnet
+					.dropWhile(p -> p.time.atZone(ZoneId.systemDefault()).isBefore(MAINNET_START))
+					.toArray(ChartData.Point[]::new));
 		} catch (JsonParserException e) {
 			throw new RuntimeException(e);
 		}
