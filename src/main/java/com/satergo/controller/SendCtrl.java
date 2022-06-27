@@ -280,7 +280,7 @@ public class SendCtrl implements Initializable, WalletTab {
 		try {
 			change = Main.get().getWallet().publicAddress(candidates.get(0));
 		} catch (WalletKey.Failure e) {
-			// won't happen because the first address is always either cached or available
+			// won't happen because the master address is always either cached or available
 		}
 		txIdContainer.managedProperty().bind(txIdContainer.visibleProperty());
 		paymentRequestIndicator.managedProperty().bind(paymentRequestIndicator.visibleProperty());
@@ -294,5 +294,9 @@ public class SendCtrl implements Initializable, WalletTab {
 		});
 		amount.textProperty().addListener((obs, o, n) -> txIdContainer.setVisible(false));
 		fee.textProperty().addListener((obs, o, n) -> txIdContainer.setVisible(false));
+		addToken.setDisable(Main.get().getWallet().lastKnownBalance.get() == null || Main.get().getWallet().lastKnownBalance.get().confirmedTokens().isEmpty());
+		Main.get().getWallet().lastKnownBalance.addListener((obs, old, val) -> {
+			addToken.setDisable(val == null || val.confirmedTokens().isEmpty());
+		});
 	}
 }
