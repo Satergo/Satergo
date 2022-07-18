@@ -23,6 +23,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class Utils {
@@ -40,8 +41,8 @@ public class Utils {
 	}
 
 	public static String resourceStringUTF8(String location) {
-		try {
-			return new String(resourceStream(location).readAllBytes(), StandardCharsets.UTF_8);
+		try (InputStream inputStream = resourceStream(location)) {
+			return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -68,23 +69,30 @@ public class Utils {
 	}
 
 	public static void alertException(String title, String headerText, Throwable throwable) {
-		Alert alert = new Alert(Alert.AlertType.ERROR);
-		alert.initOwner(Main.get().stage());
-		alert.setTitle(title);
-		alert.setHeaderText(headerText);
-		StringWriter stringWriter = new StringWriter();
-		PrintWriter printWriter = new PrintWriter(stringWriter);
-		throwable.printStackTrace(printWriter);
-		String stackTrace = stringWriter.toString();
-		System.err.println(stackTrace);
-		TextArea textArea = new TextArea(stackTrace);
-		textArea.setEditable(false);
-		textArea.setWrapText(true);
-		textArea.setMaxWidth(Double.MAX_VALUE);
-		textArea.setMaxHeight(Double.MAX_VALUE);
-		alert.getDialogPane().setExpandableContent(textArea);
-		alert.getDialogPane().setExpanded(true);
-		alert.show();
+		try {
+			Alert alert = new Alert(Alert.AlertType.ERROR);
+			if (Main.get().stage() != null && Main.get().stage().isShowing()) {
+				alert.initOwner(Main.get().stage());
+			}
+			Main.get().applySameTheme(alert.getDialogPane().getScene());
+			alert.setTitle(title);
+			alert.setHeaderText(headerText);
+			StringWriter stringWriter = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(stringWriter);
+			throwable.printStackTrace(printWriter);
+			String stackTrace = stringWriter.toString();
+			System.err.println(stackTrace);
+			TextArea textArea = new TextArea(stackTrace);
+			textArea.setEditable(false);
+			textArea.setWrapText(true);
+			textArea.setMaxWidth(Double.MAX_VALUE);
+			textArea.setMaxHeight(Double.MAX_VALUE);
+			alert.getDialogPane().setExpandableContent(textArea);
+			alert.getDialogPane().setExpanded(true);
+			alert.show();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void textDialogWithCopy(String headerText, String contentText) {
@@ -185,28 +193,14 @@ public class Utils {
 		return Math.max(0, bigDecimal.stripTrailingZeros().scale());
 	}
 
-	public static int toInt(byte[] bytes, int offset) {
-		int ret = 0;
-		for (int i = 0; i < 4 && i + offset < bytes.length; i++) {
-			ret <<= 8;
-			ret |= (int) bytes[i] & 0xFF;
-		}
-		return ret;
-	}
+	private static final Comparator<int[]> VERSION_COMPARATOR = Comparator
+			.<int[]>comparingInt(a -> a[0])
+			.thenComparingInt(a -> a[1])
+			.thenComparingInt(a -> a[2])
+			.thenComparingInt(a -> a.length < 4 ? 0 : a[3]);
 
-	public static int versionToInt(String version) {
-		String[] versionParts = version.split("\\.");
-		byte[] versionDigits = new byte[versionParts.length];
-		for (int i = 0; i < versionParts.length; i++)
-			versionDigits[i] = Byte.parseByte(versionParts[i]);
-		return toInt(pad(versionDigits, 4), 0);
-	}
-
-	public static byte[] pad(byte[] array, int length) {
-		if (length < array.length) throw new IllegalArgumentException();
-		byte[] padded = new byte[length];
-		System.arraycopy(array, 0, padded, 0, padded.length);
-		return padded;
+	public static int compareVersion(int[] a, int[] b) {
+		return VERSION_COMPARATOR.compare(a, b);
 	}
 
 	public static Image tokenIcon32x32(ErgoId tokenId) {

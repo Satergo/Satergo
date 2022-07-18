@@ -42,7 +42,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutLanguage, Initializ
 			String last = words[words.length - 1];
 			suggestionContainer.getChildren().clear();
 			if (last.length() < 2) return;
-			List<String> matches = allMnemonicWords.stream().filter(w -> w.startsWith(last)).sorted(Comparator.comparingInt(String::length)).collect(Collectors.toList());
+			List<String> matches = allMnemonicWords.stream().filter(w -> w.startsWith(last)).sorted(Comparator.comparingInt(String::length)).toList();
 			matches.stream().limit(20).forEach(w -> {
 				Button button = new Button(w);
 				button.setOnAction(e -> {

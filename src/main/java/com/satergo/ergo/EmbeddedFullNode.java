@@ -83,7 +83,7 @@ public class EmbeddedFullNode {
 
 	private ScheduledExecutorService scheduler;
 
-	private int lastVersionUpdateAlert = 0;
+	private int[] lastVersionUpdateAlert = null;
 
 	public int apiPort() {
 		return networkType == NetworkType.MAINNET ? 9053 : 9052;
@@ -94,13 +94,14 @@ public class EmbeddedFullNode {
 	}
 
 	private static String readVersion(File file) throws IOException {
-		JarFile jar = new JarFile(file);
-		// doesn't use application.conf (4.0.10) because once that was outdated but mainnet.conf (4.0.13) was not
-		String mainnetConf = new String(new DataInputStream(jar.getInputStream(jar.getEntry("mainnet.conf"))).readAllBytes(), StandardCharsets.UTF_8);
-		Pattern pattern = Pattern.compile("nodeName\\s+=\\s+\"ergo-mainnet-([\\d.]+)\"");
-		Matcher m = pattern.matcher(mainnetConf);
-		if (!m.find()) throw new IllegalArgumentException();
-		return m.group(1);
+		try (JarFile jar = new JarFile(file)) {
+			// doesn't use application.conf (4.0.10) because once that was outdated but mainnet.conf (4.0.13) was not
+			String mainnetConf = new String(new DataInputStream(jar.getInputStream(jar.getEntry("mainnet.conf"))).readAllBytes(), StandardCharsets.UTF_8);
+			Pattern pattern = Pattern.compile("nodeName\\s+=\\s+\"ergo-mainnet-([\\d.]+)\"");
+			Matcher m = pattern.matcher(mainnetConf);
+			if (!m.find()) throw new IllegalArgumentException();
+			return m.group(1);
+		}
 	}
 
 	public String readVersion() {
@@ -146,38 +147,32 @@ public class EmbeddedFullNode {
 				});
 			} catch (Exception ignored) {} // todo
 		}, 10, 10, TimeUnit.SECONDS);
-		int versionInt;
-		try {
-			String versionRaw = readVersion();
-			String versionNormalized = versionRaw.split("\\.").length == 3 ? versionRaw + ".0" : versionRaw;
-			versionInt = Utils.versionToInt(versionNormalized);
-		} catch (NumberFormatException ignored) {
-			return;
-		}
+		int[] version = Arrays.stream(readVersion().split("\\.")).mapToInt(Integer::parseInt).toArray();
 		scheduler.scheduleAtFixedRate(() -> {
 			JsonObject latestNodeData = Utils.fetchLatestNodeData();
-			String latestVersion = latestNodeData.getString("tag_name").substring(1);
-			int latestVersionInt = Utils.versionToInt(latestVersion);
+			String latestVersionString = latestNodeData.getString("tag_name").substring(1);
+			int[] latestVersion = Arrays.stream(latestVersionString.split("\\.")).mapToInt(Integer::parseInt).toArray();
 
-			if (lastVersionUpdateAlert != latestVersionInt && versionInt < latestVersionInt) {
+			if ((lastVersionUpdateAlert == null || !Arrays.equals(lastVersionUpdateAlert, latestVersion))
+					&& Utils.compareVersion(version, latestVersion) < 0) {
 				Platform.runLater(() -> {
 					Alert alert = new Alert(Alert.AlertType.NONE);
 					alert.initOwner(Main.get().stage());
 					alert.setTitle(Main.lang("programName"));
 					alert.setHeaderText(Main.lang("aNewErgoNodeVersionHasBeenFound"));
 					alert.setContentText(Main.lang("nodeUpdateDescription").formatted(
-							latestVersion,
+							latestVersionString,
 							LocalDateTime.parse(latestNodeData.getString("published_at"), DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
 							latestNodeData.getString("body")));
 					ButtonType update = new ButtonType(Main.lang("update"), ButtonBar.ButtonData.YES);
 					ButtonType notNow = new ButtonType(Main.lang("notNow"), ButtonBar.ButtonData.CANCEL_CLOSE);
 					alert.getButtonTypes().addAll(update, notNow);
-					lastVersionUpdateAlert = latestVersionInt;
+					lastVersionUpdateAlert = latestVersion;
 					alert.showAndWait().ifPresent(t -> {
 						if (t == update) {
 							Alert updatingAlert = Utils.alert(Alert.AlertType.NONE, Main.lang("updatingErgoNode..."));
 							new Thread(() -> {
-								downloadUpdate(nodeDirectory.toPath(), latestVersion, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
+								downloadUpdate(nodeDirectory.toPath(), latestVersionString, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
 								try {
 									Files.delete(nodeJar.toPath());
 								} catch (IOException e) {
@@ -187,15 +182,17 @@ public class EmbeddedFullNode {
 									updatingAlert.getDialogPane().getButtonTypes().add(ButtonType.OK); // a window cannot be closed unless it has a button
 									updatingAlert.close();
 									try {
-										((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).logVersionUpdate(latestVersion);
-									} catch (Exception ignored) {} // could happen if user somehow logs out while it is updating, so wallet page becomes null
+										((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).logVersionUpdate(latestVersionString);
+									} catch (Exception ignored) {
+									} // could happen if user somehow logs out while it is updating, so wallet page becomes null
 									stop();
 									waitForExit();
 									Main.node = Main.get().nodeFromInfo();
 									Main.node.start();
 									try {
 										((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).transferLog();
-									} catch (Exception ignored) {}
+									} catch (Exception ignored) {
+									}
 									Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
 								});
 							}).start();

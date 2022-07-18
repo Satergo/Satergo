@@ -145,7 +145,6 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		dialog.getEditor().setPromptText(Main.lang("newApiKey"));
 		String key = dialog.showAndWait().orElse(null);
 		if (key != null) {
-			@SuppressWarnings("RedundantCast")
 			byte[] hashBytes = (byte[]) Blake2b256.hash(key);
 			String hash = HexFormat.of().formatHex(hashBytes);
 			setConfValue("scorex.restApi.apiKeyHash", hash);
@@ -218,7 +217,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 					address.setText(response.body());
 					return;
 				}
-			} catch (IOException | InterruptedException ex) {
+			} catch (IOException | InterruptedException ignored) {
 			}
 			Utils.alert(Alert.AlertType.ERROR, Main.lang("failedToFetchIPAddress"));
 		});

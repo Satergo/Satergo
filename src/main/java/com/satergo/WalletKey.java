@@ -12,7 +12,6 @@ import org.ergoplatform.wallet.secrets.ExtendedSecretKey;
 import javax.crypto.AEADBadTagException;
 import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;

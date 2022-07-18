@@ -1,6 +1,5 @@
 package com.satergo.ergo;
 
-import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonWriter;
@@ -24,11 +23,9 @@ public class ErgoNodeAccess {
 	}
 
 	public int getBlockHeight() {
-		HttpRequest request = Utils.httpRequestBuilder().uri(apiAddress.resolve("/blocks/lastHeaders/1")).build();
+		HttpRequest request = Utils.httpRequestBuilder().uri(apiAddress.resolve("/info")).build();
 		try {
-			JsonArray body = JsonParser.array().from(httpClient.send(request, ofString()).body());
-			if (body.isEmpty()) return 0;
-			return body.getObject(0).getInt("height");
+			return JsonParser.object().from(httpClient.send(request, ofString()).body()).getInt("fullHeight");
 		} catch (JsonParserException | IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}

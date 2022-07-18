@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class XDGManager implements ErgoURIManager {
 
@@ -58,9 +59,11 @@ class XDGManager implements ErgoURIManager {
 		// delete .desktop file
 		if (Files.deleteIfExists(APPLICATIONS_PATH.resolve(FILE_NAME))) {
 			// unregister it
-			ArrayList<String> lines = Files.lines(mimeappsList).collect(Collectors.toCollection(ArrayList::new));
-			lines.remove("x-scheme-handler/ergo=" + FILE_NAME);
-			Files.write(mimeappsList, lines);
+			try (Stream<String> lineStream = Files.lines(mimeappsList)) {
+				ArrayList<String> lines = lineStream.collect(Collectors.toCollection(ArrayList::new));
+				lines.remove("x-scheme-handler/ergo=" + FILE_NAME);
+				Files.write(mimeappsList, lines);
+			}
 		}
 	}
 
