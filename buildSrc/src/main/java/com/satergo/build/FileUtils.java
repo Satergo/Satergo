@@ -2,8 +2,12 @@ package com.satergo.build;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.tools.ant.util.PermissionUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,30 +15,34 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 class FileUtils {
+
 	static void deleteDirectory(Path directory) throws IOException {
-		for (Iterator<Path> iterator = Files.list(directory).iterator(); iterator.hasNext();) {
-			Path next = iterator.next();
-			if (Files.isDirectory(next)) deleteDirectory(next);
-			else Files.delete(next);
+		try (Stream<Path> pathStream = Files.list(directory)) {
+			for (Iterator<Path> iterator = pathStream.iterator(); iterator.hasNext(); ) {
+				Path next = iterator.next();
+				if (Files.isDirectory(next)) deleteDirectory(next);
+				else Files.delete(next);
+			}
+			Files.delete(directory);
 		}
-		Files.delete(directory);
 	}
 
 	static void zipContent(Path sourceDirectory, Path output) throws IOException {
-		try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(output))) {
-			for (Iterator<Path> iterator = Files.walk(sourceDirectory)
+		try (ZipArchiveOutputStream zs = new ZipArchiveOutputStream(output);
+			 Stream<Path> pathStream = Files.walk(sourceDirectory)) {
+			for (Iterator<Path> iterator = pathStream
 					.filter(path -> !Files.isDirectory(path)).iterator(); iterator.hasNext();) {
 				Path path = iterator.next();
-				ZipEntry zipEntry = new ZipEntry(sourceDirectory.relativize(path).toString());
+				ZipArchiveEntry zipEntry = new ZipArchiveEntry(path, sourceDirectory.relativize(path).toString());
+				zipEntry.setUnixMode(PermissionUtils.modeFromPermissions(Files.getPosixFilePermissions(path), PermissionUtils.FileType.of(path)));
 				try {
-					zs.putNextEntry(zipEntry);
+					zs.putArchiveEntry(zipEntry);
 					Files.copy(path, zs);
-					zs.closeEntry();
+					zs.closeArchiveEntry();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -72,13 +80,19 @@ class FileUtils {
 					}
 				}
 				Files.copy(ais, newFile);
+				// unix mode is incorrectly always 0 for ZipArchiveInputStream entries,
+				// but since the OpenJDK archives only use zip for Windows and it doesn't
+				// care about file permissions, it is not important
+				if (archiveEntry instanceof TarArchiveEntry t) {
+					Files.setPosixFilePermissions(newFile, PermissionUtils.permissionsFromMode(t.getMode()));
+				}
 			}
 			archiveEntry = ais.getNextEntry();
 		}
 		ais.close();
 	}
 
-	public enum ArchiveType {
+	enum ArchiveType {
 		ZIP, TAR_GZ
 	}
 

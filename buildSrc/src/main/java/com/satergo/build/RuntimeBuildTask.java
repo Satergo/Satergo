@@ -47,8 +47,9 @@ public class RuntimeBuildTask extends DefaultTask {
 		File proguardOutputFile = new File(getProject().getBuildDir(), "libs/" + extension.proguardOutputName);
 		if (extension.runProguard) {
 			Configuration config = new Configuration();
-			ConfigurationParser configurationParser = new ConfigurationParser(getProject().file(extension.proguardConfig), System.getProperties());
-			configurationParser.parse(config);
+			try (ConfigurationParser configurationParser = new ConfigurationParser(getProject().file(extension.proguardConfig), System.getProperties())) {
+				configurationParser.parse(config);
+			}
 
 			config.libraryJars = new ClassPath();
 			for (File jmod : Objects.requireNonNull(new File(System.getProperty("java.home") + "/jmods").listFiles())) {
@@ -62,7 +63,11 @@ public class RuntimeBuildTask extends DefaultTask {
 			config.programJars.add(new ClassPathEntry(shadowJarFile, false));
 			config.programJars.add(new ClassPathEntry(proguardOutputFile, true));
 
-			new ProGuard(config).execute();
+			try {
+				new ProGuard(config).execute();
+			} catch (Exception e) {
+				throw new RuntimeException("ProGuard exception", e);
+			}
 		}
 
 		File mainJar = extension.runProguard ? proguardOutputFile : shadowJarFile;

@@ -48,7 +48,7 @@ public class RuntimeBuildExt {
 
 	public LauncherScript launcherScript;
 
-	public void launcherScript(Closure closure) {
+	public void launcherScript(Closure<?> closure) {
 		launcherScript(ConfigureUtil.configureUsing(closure));
 	}
 
@@ -57,9 +57,9 @@ public class RuntimeBuildExt {
 		action.execute(launcherScript);
 	}
 
-	public Closure doBeforeArchival;
+	public Closure<?> doBeforeArchival;
 
-	public void doBeforeArchival(Closure closure) {
+	public void doBeforeArchival(Closure<?> closure) {
 		this.doBeforeArchival = closure;
 	}
 
