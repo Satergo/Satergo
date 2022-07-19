@@ -9,6 +9,7 @@ import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueFactory;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -36,11 +37,13 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 
 	@FXML private Label networkType;
 	@FXML private ProgressBar progress;
-	@FXML private Label blocksNodeNetwork;
+	@FXML private Label headersNote;
+	@FXML private Label heightNodeAndNetwork;
 	@FXML private ComboBox<EmbeddedFullNode.LogLevel> logLevel;
 	@FXML private TextArea log;
 	@FXML private Label logLevelNote;
 	@FXML private CheckBox pauseLog;
+	@FXML private Label peers;
 
 	@FXML private ContextMenu extra;
 
@@ -106,10 +109,15 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 			}
 		});
 		log.setWrapText(true);
-		progress.progressProperty().bind(Main.node.nodeSyncProgress);
-		blocksNodeNetwork.textProperty().bind(Bindings.concat(
+		headersNote.visibleProperty().bind(Main.node.headersSynced.not());
+		progress.progressProperty().bind(Bindings.when(Main.node.headersSynced)
+				.then(Main.node.nodeSyncProgress)
+				.otherwise(Main.node.nodeHeaderSyncProgress));
+		heightNodeAndNetwork.visibleProperty().bind(Main.node.headersSynced);
+		heightNodeAndNetwork.textProperty().bind(Bindings.concat(
 				Bindings.when(Main.node.nodeBlockHeight.lessThan(0)).then("?").otherwise(Main.node.nodeBlockHeight.asString()),
 				"/", Bindings.when(Main.node.networkBlockHeight.lessThan(0)).then("?").otherwise(Main.node.networkBlockHeight.asString())));
+		peers.textProperty().bind(Bindings.format(Main.lang("peers_d"), Main.node.peerCount));
 	}
 
 	public void logVersionUpdate(String latestVersion) {

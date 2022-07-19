@@ -9,6 +9,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.FlowPane?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" stylesheets="welcome.css" styleClass="background" fx:controller="com.satergo.controller.NodeOverviewCtrl">
 	<padding><Insets topRightBottomLeft="20"/></padding>
 	<fx:define>
@@ -22,15 +23,20 @@
 		</ContextMenu>
 	</fx:define>
 	<HBox><Label text="%networkTypeC"/><Label text=" "/><Label fx:id="networkType"/></HBox>
-	<HBox spacing="10" alignment="CENTER_LEFT">
+	<FlowPane hgap="10" vgap="10" alignment="CENTER_LEFT">
 		<Label text="%statusC"/>
 		<ProgressBar fx:id="progress" progress="0"/>
-		<Label fx:id="blocksNodeNetwork" text="0/1"/>
+		<Label fx:id="headersNote" text="[headers]" managed="${headersNote.visible}"/>
+		<Label fx:id="heightNodeAndNetwork" managed="${heightNodeAndNetwork.visible}"/>
 		<Button onAction="#restart" text="%restart"/>
 		<Button onAction="#clearLog" text="%clearLog"/>
 		<CheckBox fx:id="pauseLog" text="%pauseLog"/>
 		<Button onAction="#showExtra" text="..."/>
+		<Label fx:id="peers"/>
+	</FlowPane>
+	<HBox spacing="10" alignment="CENTER_LEFT">
+		<ComboBox fx:id="logLevel"/>
+		<Label fx:id="logLevelNote" text="%willBeChangedOnNodeRestart" visible="false" managed="${logLevelNote.visible}"/>
 	</HBox>
-	<HBox spacing="10" alignment="CENTER_LEFT"><ComboBox fx:id="logLevel"/><Label fx:id="logLevelNote" text="%willBeChangedOnNodeRestart" visible="false"/></HBox>
 	<TextArea fx:id="log" editable="false" VBox.vgrow="ALWAYS"/>
 </VBox>

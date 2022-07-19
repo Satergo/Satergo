@@ -54,7 +54,7 @@ public class WalletCtrl implements Initializable {
 	@FXML private BorderPane sidebar;
 	@FXML private Label headTitle;
 	@FXML private ProgressBar networkStatus = new ProgressBar();
-	@FXML private Label blocksLeft = new Label();
+	@FXML private Label thingLeft = new Label();
 	@FXML private ToggleGroup group;
 
 	@FXML private HBox priceBox;
@@ -108,12 +108,19 @@ public class WalletCtrl implements Initializable {
 		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
 			if (!Main.node.isRunning()) // a refresh due to language change will not stop the node (see SettingsCtrl), so check if it is running
 				Main.node.start();
-			networkStatus.progressProperty().bind(Main.node.nodeSyncProgress);
-			blocksLeft.textProperty().bind(Bindings.format(Main.lang("blocksLeft_s"),
-					Bindings.when(Main.node.nodeBlocksLeft.lessThan(0)).then("?").otherwise(Main.node.nodeBlocksLeft.asString())));
+			networkStatus.progressProperty().bind(Bindings.when(Main.node.headersSynced).then(Main.node.nodeSyncProgress).otherwise(Main.node.nodeHeaderSyncProgress));
+			thingLeft.textProperty().bind(Bindings.when(Main.node.headersSynced)
+				.then(Bindings.format(Main.lang("blocksLeft_s"),
+						Bindings.when(Main.node.nodeBlocksLeft.lessThan(0)).then("?").otherwise(Main.node.nodeBlocksLeft.asString())))
+				.otherwise(Bindings.format(Main.lang("syncingHeaders_s"),
+						Bindings.when(Main.node.nodeHeaderSyncProgress.lessThan(0)).then("?").otherwise(Bindings.createStringBinding(() -> {
+							if (Main.node.nodeHeaderHeight.get() <= 0) return "?";
+							DecimalFormat df = new DecimalFormat("0.##");
+							return df.format(Main.node.nodeHeaderSyncProgress.get() * 100);
+						}, Main.node.nodeHeaderSyncProgress)))));
 		} else {
 			networkStatus.setVisible(false);
-			blocksLeft.setText(Main.lang("remoteNode") + " - " + Main.programData().nodeNetworkType.get());
+			thingLeft.setText(Main.lang("remoteNode") + " - " + Main.programData().nodeNetworkType.get());
 		}
 		priceBox.visibleProperty().bind(Main.programData().showPrice);
 		priceBox.managedProperty().bind(Main.programData().showPrice);

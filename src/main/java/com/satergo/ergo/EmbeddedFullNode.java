@@ -7,6 +7,7 @@ import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.controller.NodeOverviewCtrl;
 import javafx.application.Platform;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.control.Alert;
@@ -43,6 +44,7 @@ public class EmbeddedFullNode {
 
 	public final File nodeDirectory;
 	private PtyProcess process;
+	private long startedTime;
 
 	private final NetworkType networkType;
 	public LogLevel logLevel;
@@ -62,7 +64,11 @@ public class EmbeddedFullNode {
 		this.info = info;
 		this.nodeAccess = new ErgoNodeAccess(URI.create(localApiHttpAddress()));
 
-		nodeSyncProgress.bind(nodeBlockHeight.divide(networkBlockHeight));
+//		nodeSyncProgress.bind(nodeBlockHeight.divide(networkBlockHeight));
+		// This just doesn't work. It stays as 0 even though header and network heights change.
+		// It is probably not an integer division issue because nodeSyncProgress works...
+		// Well, that one no longer works either.
+//		nodeHeaderSyncProgress.bind(nodeHeaderHeight.divide(networkBlockHeight));
 		nodeBlocksLeft.bind(networkBlockHeight.subtract(nodeBlockHeight));
 	}
 
@@ -76,10 +82,15 @@ public class EmbeddedFullNode {
 		}
 	}
 
+	public final SimpleIntegerProperty nodeHeaderHeight = new SimpleIntegerProperty(-1);
 	public final SimpleIntegerProperty nodeBlockHeight = new SimpleIntegerProperty(-1);
 	public final SimpleIntegerProperty networkBlockHeight = new SimpleIntegerProperty(-2);
+	public final SimpleIntegerProperty peerCount = new SimpleIntegerProperty(0);
+	public final SimpleDoubleProperty nodeHeaderSyncProgress = new SimpleDoubleProperty(0);
 	public final SimpleDoubleProperty nodeSyncProgress = new SimpleDoubleProperty(0);
 	public final SimpleIntegerProperty nodeBlocksLeft = new SimpleIntegerProperty(1);
+
+	public final BooleanExpression headersSynced = nodeHeaderHeight.isEqualTo(networkBlockHeight);
 
 	private ScheduledExecutorService scheduler;
 
@@ -130,23 +141,27 @@ public class EmbeddedFullNode {
 	private static Path findJavaBinary() {
 		Path javaInstallation = Path.of(System.getProperty("java.home"));
 		Path binDirectory = javaInstallation.resolve("bin");
-		if (Files.exists(binDirectory.resolve("java.exe"))) return binDirectory.resolve("java.exe");
+		if (Files.exists(binDirectory.resolve("java.exe")))
+			return binDirectory.resolve("java.exe");
 		return binDirectory.resolve("java");
 	}
 
 	private void scheduleRepeatingTasks() {
 		scheduler = Executors.newScheduledThreadPool(0);
 		scheduler.scheduleAtFixedRate(() -> {
-			try {
-				int nodeHeight = nodeAccess.getBlockHeight();
-				int networkHeight = ErgoInterface.getNetworkBlockHeight(networkType);
-				// not sure if needed
-				Platform.runLater(() -> {
-					nodeBlockHeight.set(nodeHeight);
-					networkBlockHeight.set(networkHeight);
-				});
-			} catch (Exception ignored) {} // todo
-		}, 10, 10, TimeUnit.SECONDS);
+			ErgoNodeAccess.Status status = nodeAccess.getStatus();
+			int networkHeight = status.networkHeight() == 0
+					? ErgoInterface.getNetworkBlockHeight(networkType)
+					: status.networkHeight();
+			Platform.runLater(() -> {
+				nodeHeaderHeight.set(status.headerHeight());
+				nodeBlockHeight.set(status.blockHeight());
+				networkBlockHeight.set(networkHeight);
+				peerCount.set(status.peerCount());
+				nodeSyncProgress.set((double) status.blockHeight() / (double) networkHeight);
+				nodeHeaderSyncProgress.set((double) status.headerHeight() / (double) networkHeight);
+			});
+		}, 10, 2, TimeUnit.SECONDS);
 		int[] version = Arrays.stream(readVersion().split("\\.")).mapToInt(Integer::parseInt).toArray();
 		scheduler.scheduleAtFixedRate(() -> {
 			JsonObject latestNodeData = Utils.fetchLatestNodeData();
@@ -235,6 +250,7 @@ public class EmbeddedFullNode {
 			System.out.println("running node with command: " + Arrays.toString(command));
 			process = new PtyProcessBuilder().setCommand(command).setDirectory(nodeDirectory.getAbsolutePath()).start();
 			scheduleRepeatingTasks();
+			startedTime = System.currentTimeMillis();
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
@@ -255,5 +271,9 @@ public class EmbeddedFullNode {
 	
 	public void waitForExit() {
 		process.onExit().join();
+	}
+
+	public long getStartedTime() {
+		return startedTime;
 	}
 }

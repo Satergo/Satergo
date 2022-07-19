@@ -37,7 +37,7 @@
 			<VBox spacing="2" pickOnBounds="false">
 				<Label text="%networkStatus"/>
 				<ProgressBar fx:id="networkStatus" progress="1"/>
-				<Label fx:id="blocksLeft"/>
+				<Label fx:id="thingLeft"/>
 			</VBox>
 		</HBox>
 	</bottom>
