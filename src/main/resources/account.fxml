@@ -4,23 +4,28 @@
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.AccountCtrl" spacing="4">
 	<padding><Insets topRightBottomLeft="20"/></padding>
 	<GridPane vgap="4">
-<!--		<Label text="%addressBook" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/>-->
-<!--		<Button fx:id="addressBook" text="%open" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.halignment="RIGHT"/>-->
+		<columnConstraints>
+			<ColumnConstraints hgrow="ALWAYS"/>
+			<ColumnConstraints halignment="RIGHT"/>
+		</columnConstraints>
 
-		<Label text="%totalBalance" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
-		<Label fx:id="totalBalance" text="0.0 ERG" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.halignment="RIGHT"/>
+<!--		<Label text="%addressBook" GridPane.columnIndex="0" GridPane.rowIndex="0"/>-->
+<!--		<Button fx:id="addressBook" text="%open" GridPane.columnIndex="0" GridPane.rowIndex="0"/>-->
 
-		<Label fx:id="mnemonicPhraseLabel" text="%mnemonicPhrase" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS"/>
-		<Button fx:id="mnemonicPhraseButton" onAction="#retrieveMnemonicPhrase" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.halignment="RIGHT"/>
+		<Label fx:id="totalBalanceLabel" managed="${totalBalanceLabel.visible}" text="%totalBalance" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+		<Label fx:id="totalBalance"  managed="${totalBalance.visible}" text="0.0 ERG" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-		<Label fx:id="mnemonicPasswordLabel" text="%mnemonicPassword" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.hgrow="ALWAYS"/>
-		<Button fx:id="mnemonicPasswordButton" onAction="#retrieveMnemonicPassword" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.halignment="RIGHT"/>
+		<Label fx:id="mnemonicPhraseLabel" text="%mnemonicPhrase" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+		<Button fx:id="mnemonicPhraseButton" onAction="#retrieveMnemonicPhrase" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-		<Label text="%walletName" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.hgrow="ALWAYS"/>
-		<Button onAction="#changeWalletName" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>
+		<Label fx:id="mnemonicPasswordLabel" text="%mnemonicPassword" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+		<Button fx:id="mnemonicPasswordButton" onAction="#retrieveMnemonicPassword" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-		<Label text="%walletPassword" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.hgrow="ALWAYS"/>
-		<Button onAction="#changeWalletPassword" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.halignment="RIGHT"/>
+		<Label text="%walletName" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+		<Button onAction="#changeWalletName" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+		<Label text="%walletPassword" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+		<Button onAction="#changeWalletPassword" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 	</GridPane>
 	<Label text="%yourAddresses"><VBox.margin><Insets top="10"/></VBox.margin></Label>
 	<VBox fx:id="addresses" spacing="2"/>

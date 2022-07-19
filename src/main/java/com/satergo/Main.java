@@ -234,6 +234,10 @@ public class Main extends Application {
 		return walletPage;
 	}
 
+	public void setWalletPageInternal(WalletCtrl walletPage) {
+		this.walletPage = walletPage;
+	}
+
 	public void handleErgoURI(ErgoURIString ergoURI) {
 		if (walletPage == null) return;
 		walletPage.openSendWithErgoURI(ergoURI);

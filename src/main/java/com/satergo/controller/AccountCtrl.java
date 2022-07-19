@@ -26,7 +26,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class AccountCtrl implements Initializable, WalletTab {
-	@FXML private Label totalBalance;
+
+	@FXML private Label totalBalanceLabel, totalBalance;
 	@FXML private Node mnemonicPhraseLabel, mnemonicPhraseButton, mnemonicPasswordLabel, mnemonicPasswordButton;
 	@FXML private VBox addresses;
 
@@ -66,7 +67,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		Dialog<Pair<String, String>> dialog = new Dialog<>();
 		dialog.initOwner(Main.get().stage());
 		dialog.setTitle(Main.lang("programName"));
-		dialog.setHeaderText("Change password");
+		dialog.setHeaderText(Main.lang("changePassword"));
 
 		// Set the button types.
 		ButtonType changeType = new ButtonType(Main.lang("change"), ButtonBar.ButtonData.OK_DONE);
@@ -198,10 +199,13 @@ public class AccountCtrl implements Initializable, WalletTab {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		totalBalanceLabel.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
+		totalBalance.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
 		DecimalFormat lossless = new DecimalFormat("0");
 		lossless.setMinimumFractionDigits(9);
 		lossless.setMaximumFractionDigits(9);
-		totalBalance.setText(lossless.format(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed())) + " ERG");
+		if (Main.get().getWallet().lastKnownBalance.get() != null)
+			totalBalance.setText(lossless.format(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed())) + " ERG");
 		// binding with a converter could be used here
 		Main.get().getWallet().lastKnownBalance.addListener((observable, oldValue, newValue) -> {
 			totalBalance.setText(lossless.format(ErgoInterface.toFullErg(newValue.confirmed())) + " ERG");

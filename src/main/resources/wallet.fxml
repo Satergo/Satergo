@@ -5,6 +5,12 @@
 	<fx:define>
 		<ToggleGroup fx:id="group"/>
 	</fx:define>
+	<top>
+		<HBox fx:id="connectionWarning" style="-fx-background-color: rgb(208, 52, 44); -fx-cursor: HAND;" alignment="CENTER" managed="${connectionWarning.visible}" onMouseClicked="#checkConnection">
+			<padding><Insets topRightBottomLeft="4"/></padding>
+			<Label text="%offlineInfo"/>
+		</HBox>
+	</top>
 	<left>
 		<BorderPane fx:id="sidebar">
 			<padding>
@@ -14,9 +20,9 @@
 				<VBox spacing="4">
 
 					<Label fx:id="headTitle" text="Ergo"/>
-					<HBox><Label text="%balanceC"/><Label text=" "/><Label fx:id="balance" text="0"/><Label text=" ERG"/></HBox>
-					<HBox fx:id="priceBox" alignment="CENTER_LEFT"><Label text="%valueC"/><Label text=" "/><Label fx:id="priceValue" text="0"/><Label text=" "/><Hyperlink fx:id="priceCurrency" onAction="#showChart" text="???" focusTraversable="false"/></HBox>
-					<ToggleButton fx:id="myTokens" text="%myTokens" toggleGroup="$group"/>
+					<HBox fx:id="balanceBox"><Label text="%balanceC"/><Label text=" "/><Label fx:id="balance" text="0"/><Label text=" ERG"/></HBox>
+					<HBox fx:id="priceBox" alignment="CENTER_LEFT" managed="${priceBox.visible}"><Label text="%valueC"/><Label text=" "/><Label fx:id="priceValue" text="0"/><Label text=" "/><Hyperlink fx:id="priceCurrency" onAction="#showChart" text="???" focusTraversable="false"/></HBox>
+					<ToggleButton fx:id="myTokens" text="%myTokens" toggleGroup="$group" managed="${myTokens.visible}"/>
 
 					<Region prefHeight="10"/>
 

@@ -42,7 +42,8 @@ public class MyTokensCtrl implements Initializable, WalletTab {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		update(Main.get().getWallet().lastKnownBalance.get().confirmedTokens());
+		if (Main.get().getWallet().lastKnownBalance.get() != null)
+			update(Main.get().getWallet().lastKnownBalance.get().confirmedTokens());
 		Main.get().getWallet().lastKnownBalance.addListener((observable, oldValue, newValue) -> update(newValue.confirmedTokens()));
 	}
 }

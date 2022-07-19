@@ -70,6 +70,12 @@ dependencies {
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 }
 
+jar {
+	manifest.attributes(
+			"Specification-Version": project.version,
+			"Satergo-Packaging-Type": "PORTABLE")
+}
+
 satergoRuntime {
 
 	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets"]

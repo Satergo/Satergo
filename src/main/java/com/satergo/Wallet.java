@@ -15,6 +15,7 @@ import org.ergoplatform.appkit.*;
 import javax.crypto.AEADBadTagException;
 import javax.crypto.SecretKey;
 import java.io.*;
+import java.net.ConnectException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,9 +94,17 @@ public final class Wallet {
 	/**
 	 * Returns the balance of all addresses combined (checking is done in parallel)
 	 */
-	public Balance totalBalance() {
-		return addressStream().parallel().map(address -> ErgoInterface.getBalance(Main.programData().nodeNetworkType.get(), address))
-				.reduce(Balance::combine).orElseThrow();
+	public Balance totalBalance() throws ConnectException {
+		try {
+			return addressStream().parallel().map(address -> ErgoInterface.getBalance(Main.programData().nodeNetworkType.get(), address))
+					.reduce(Balance::combine).orElseThrow();
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof ConnectException ce)
+				throw ce;
+			if (e.getCause().getCause() instanceof ConnectException ce)
+				throw ce;
+			throw e;
+		}
 	}
 
 	public String transact(SignedTransaction signedTx) {

@@ -8,22 +8,29 @@ import com.satergo.ergo.Balance;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergouri.ErgoURIString;
 import com.satergo.extra.ChartView;
+import com.satergo.extra.SimpleTask;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.concurrent.Task;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 import jfxtras.styles.jmetro.Style;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.ConnectException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.HashMap;
@@ -50,18 +57,22 @@ public class WalletCtrl implements Initializable {
 		this("account");
 	}
 
+	@FXML final SimpleBooleanProperty offlineMode = new SimpleBooleanProperty(false);
+	@FXML private final BooleanBinding notOfflineMode = offlineMode.not();
+
 	@FXML private BorderPane root;
+	@FXML private Node connectionWarning;
 	@FXML private BorderPane sidebar;
 	@FXML private Label headTitle;
 	@FXML private ProgressBar networkStatus = new ProgressBar();
 	@FXML private Label thingLeft = new Label();
 	@FXML private ToggleGroup group;
 
-	@FXML private HBox priceBox;
+	@FXML private HBox balanceBox, priceBox;
 	@FXML private Label balance, priceValue;
 	@FXML private Hyperlink priceCurrency;
 
-	@FXML private ToggleButton myTokens, settings, send, node;
+	@FXML private ToggleButton myTokens, account, send, transactions, node, settings;
 
 	private final HashMap<String, Pair<Pane, WalletTab>> tabs = new HashMap<>();
 
@@ -86,7 +97,7 @@ public class WalletCtrl implements Initializable {
 		else this.balance.setText(formatted);
 		myTokens.setDisable(totalBalance.confirmedTokens().isEmpty());
 		if (myTokens.isDisable() && group.getSelectedToggle() == myTokens) {
-			group.getToggles().get(1).setSelected(true);
+			account.setSelected(true);
 		}
 	}
 
@@ -100,8 +111,17 @@ public class WalletCtrl implements Initializable {
 		priceValue.setText(priceFormat.format(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed()).multiply(oneErgValue)));
 	}
 
+	private void updatePriceValue() {
+		try {
+			updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get()));
+		} catch (IOException e) {
+			offlineMode();
+		}
+	}
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		Main.get().setWalletPageInternal(this);
 		format.setMaximumFractionDigits(4);
 		format.setRoundingMode(RoundingMode.FLOOR);
 		myTokens.textProperty().bind(Bindings.when(myTokens.disabledProperty()).then(Main.lang("noTokens")).otherwise(Main.lang("myTokens")));
@@ -122,8 +142,8 @@ public class WalletCtrl implements Initializable {
 			networkStatus.setVisible(false);
 			thingLeft.setText(Main.lang("remoteNode") + " - " + Main.programData().nodeNetworkType.get());
 		}
-		priceBox.visibleProperty().bind(Main.programData().showPrice);
-		priceBox.managedProperty().bind(Main.programData().showPrice);
+		balanceBox.visibleProperty().bind(offlineMode.not());
+		priceBox.visibleProperty().bind(offlineMode.not().and(Main.programData().showPrice));
 
 		sidebar.prefWidthProperty().bind(root.widthProperty().divide(5));
 		// require a tab to be opened
@@ -141,8 +161,13 @@ public class WalletCtrl implements Initializable {
 		nameTooltip.textProperty().bind(Main.get().getWallet().name);
 		headTitle.setTooltip(nameTooltip);
 
-		updateBalance(Main.get().getWallet().totalBalance());
-		updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get()));
+		try {
+			updateBalance(Main.get().getWallet().totalBalance());
+			revertOfflineMode();
+		} catch (IOException e) {
+			offlineMode();
+		}
+		updatePriceValue();
 
 		tabs.put("myTokens", Load.fxmlNodeAndController("/my-tokens.fxml"));
 		tabs.put("account", Load.fxmlNodeAndController("/account.fxml"));
@@ -157,6 +182,11 @@ public class WalletCtrl implements Initializable {
 			((Pane) node.getParent()).getChildren().remove(node);
 			group.getToggles().remove(node);
 		}
+		// this doesn't work in FXML
+		connectionWarning.visibleProperty().bind(offlineMode);
+		send.disableProperty().bind(offlineMode);
+		transactions.disableProperty().bind(offlineMode);
+		myTokens.visibleProperty().bind(offlineMode.not());
 
 		ImageView settingsImage = new ImageView();
 		settingsImage.setPreserveRatio(true);
@@ -174,18 +204,30 @@ public class WalletCtrl implements Initializable {
 
 		((ToggleButton) root.lookup("#" + initialTab)).setSelected(true);
 
-		Main.programData().priceSource.addListener((observable, oldValue, newValue) -> updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get())));
-		Main.programData().priceCurrency.addListener((observable, oldValue, newValue) -> updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get())));
+		Main.programData().priceSource.addListener((observable, oldValue, newValue) -> updatePriceValue());
+		Main.programData().priceCurrency.addListener((observable, oldValue, newValue) -> updatePriceValue());
 		scheduler.scheduleAtFixedRate(() -> {
-			BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
-			Platform.runLater(() -> WalletCtrl.this.updatePriceValue(oneErgValue));
+			try {
+				BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
+				Platform.runLater(() -> {
+					revertOfflineMode();
+					updatePriceValue(oneErgValue);
+				});
+			} catch (IOException e) {
+				Platform.runLater(this::offlineMode);
+			}
 		}, 50, 60, TimeUnit.SECONDS);
 		scheduler.scheduleAtFixedRate(() -> {
-			Balance totalBalance = Main.get().getWallet().totalBalance();
-			Platform.runLater(() -> {
-				updateBalance(totalBalance);
-				updatePriceValue(oneErgValue);
-			});
+			try {
+				Balance totalBalance = Main.get().getWallet().totalBalance();
+				Platform.runLater(() -> {
+					revertOfflineMode();
+					updateBalance(totalBalance);
+					updatePriceValue(oneErgValue);
+				});
+			} catch (ConnectException e) {
+				Platform.runLater(this::offlineMode);
+			}
 		}, 60, 60, TimeUnit.SECONDS);
 
 		if (Main.get().getWallet().key() instanceof WalletKey.Local) {
@@ -200,24 +242,45 @@ public class WalletCtrl implements Initializable {
 		}
 	}
 
+	public void offlineMode() {
+		offlineMode.set(true);
+		priceCurrency.setDisable(true);
+		if (send.isSelected() || transactions.isSelected())
+			account.setSelected(true);
+	}
+
+	public void revertOfflineMode() {
+		if (!offlineMode.get()) return;
+		offlineMode.set(false);
+		priceCurrency.setDisable(false);
+	}
+
+	@FXML
+	public void checkConnection(MouseEvent e) {
+		if (e.getButton() != MouseButton.PRIMARY) return;
+		new SimpleTask<>(() -> {
+			Balance totalBalance = Main.get().getWallet().totalBalance();
+			BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
+			return new Pair<>(totalBalance, oneErgValue);
+		}).onSuccess(v -> {
+			updateBalance(v.getKey());
+			updatePriceValue(v.getValue());
+			revertOfflineMode();
+		}).newThread();
+	}
+
 	@FXML
 	public void showChart(ActionEvent e) {
 		Dialog<Void> dialog = new Dialog<>();
 		dialog.initOwner(Main.get().stage());
 		dialog.setTitle("Ergo ERG/" + Main.programData().priceCurrency.get().uc());
-		Task<ChartView> chartViewTask = new Task<>() {
-			@Override
-			protected ChartView call() {
-				return new ChartView(Main.programData().priceCurrency.get());
-			}
-		};
-		chartViewTask.setOnRunning(b -> priceCurrency.setDisable(true));
-		chartViewTask.setOnSucceeded(b -> {
-			priceCurrency.setDisable(false);
-			dialog.getDialogPane().setContent(chartViewTask.getValue());
-			dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
-			dialog.show();
-		});
-		new Thread(chartViewTask).start();
+		new SimpleTask<>(() -> new ChartView(Main.programData().priceCurrency.get()))
+				.onRunning(() -> priceCurrency.setDisable(true))
+				.onSuccess(v -> {
+					priceCurrency.setDisable(false);
+					dialog.getDialogPane().setContent(v);
+					dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
+					dialog.show();
+				}).newThread();
 	}
 }
