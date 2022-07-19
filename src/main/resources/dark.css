@@ -8,3 +8,24 @@
 .hyperlink.text-color {
 	-fx-text-fill: white;
 }
+
+/* dark charts */
+
+.chart-plot-background {
+	-fx-background-color: #252525;
+}
+
+.chart-series-line {
+    -fx-stroke-width: 2px;
+    -fx-effect: null;
+}
+
+.default-color0.chart-series-line,
+.default-color1.chart-series-line,
+.default-color2.chart-series-line {
+	-fx-stroke: #a3d3ff;
+}
+
+.chart-vertical-grid-lines, .chart-horizontal-grid-lines {
+	-fx-stroke: #2a2a2a;
+}
