@@ -25,8 +25,8 @@ import java.util.*;
 
 public class Main extends Application {
 
-	public static final String VERSION = "0.0.3";
-	public static final int VERSION_CODE = 3;
+	public static final String VERSION = "1.4.0";
+	public static final int VERSION_CODE = 4;
 
 	public static EmbeddedFullNode node;
 	// from command line
@@ -98,7 +98,11 @@ public class Main extends Application {
 		System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "WARN");
 
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-			Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable);
+			try {
+				Platform.runLater(() -> Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		});
 
 		if (programData.blockchainNodeKind.get() == null ||
@@ -139,7 +143,8 @@ public class Main extends Application {
 				if (UpdateChecker.isNewer(latest.versionCode())) {
 					Platform.runLater(() -> UpdateChecker.showUpdatePopup(latest));
 				}
-			} catch (IOException ignored) {}
+			} catch (IOException ignored) {
+			}
 		}).start();
 
 		programData.lightTheme.addListener((observable, oldValue, newValue) -> jMetro.setStyle(newValue ? Style.LIGHT : Style.DARK));

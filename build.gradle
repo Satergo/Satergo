@@ -13,7 +13,7 @@ java {
 }
 
 group 'com.satergo'
-version '0.0.3'
+version '1.4.0'
 
 application {
 	mainClass = "com.satergo.Launcher"
@@ -73,7 +73,7 @@ dependencies {
 jar {
 	manifest.attributes(
 			"Specification-Version": project.version,
-			"Satergo-Packaging-Type": "PORTABLE")
+			"Satergo-Package-Type": "PORTABLE")
 }
 
 satergoRuntime {

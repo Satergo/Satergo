@@ -37,7 +37,7 @@ public abstract class WalletKey {
 
 	static {
 		try {
-			Class.forName("com.satergo.WalletKey$Type");
+			Class.forName(Type.class.getName());
 		} catch (ClassNotFoundException ignored) {
 		}
 	}
