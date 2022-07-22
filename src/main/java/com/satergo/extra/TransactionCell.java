@@ -31,9 +31,10 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -198,8 +199,8 @@ public class TransactionCell extends BorderPane implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		LocalDateTime time = Instant.ofEpochMilli(tx.getTimestamp()).atZone(ZoneId.systemDefault()).toLocalDateTime();
-		dateTime.setText(time.format(DateTimeFormatter.ofPattern("HH:mm - dd MMMM, yyyy")));
+		ZonedDateTime time = Instant.ofEpochMilli(tx.getTimestamp()).atZone(ZoneId.systemDefault());
+		dateTime.setText(time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
 		long diff = totalReceived(tx, myAddresses) - totalSent(tx, myAddresses);
 		totalCoins.setText(FORMAT_TOTAL.format(ErgoInterface.toFullErg(diff)) + " ERG");
 		Map<String, List<TokenBalance>> tokensSent = totalSentTokens(tx, myAddresses).stream().collect(Collectors.groupingBy(TokenBalance::id));

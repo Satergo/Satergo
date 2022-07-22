@@ -1,5 +1,5 @@
 #!/bin/bash
-platforms=(win linux linux-aarch64 mac mac-aarch64)
+platforms=(win linux linux-aarch64 mac)
 for platform in "${platforms[@]}"; do
   rm -rf build
   ./gradlew satergoRuntime -Pplatform="$platform"

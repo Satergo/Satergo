@@ -14,6 +14,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 
 public class UpdateChecker {
 
@@ -47,7 +48,7 @@ public class UpdateChecker {
 		alert.setHeaderText(Main.lang("aNewUpdateHasBeenFound"));
 		alert.setContentText(Main.lang("updateDescription").formatted(
 				versionInfo.version,
-				versionInfo.dateReleased.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+				versionInfo.dateReleased.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
 				versionInfo.changelog));
 		alert.showAndWait().ifPresent(t -> {
 			if (t == update) {

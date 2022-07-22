@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -177,7 +178,7 @@ public class EmbeddedFullNode {
 					alert.setHeaderText(Main.lang("aNewErgoNodeVersionHasBeenFound"));
 					alert.setContentText(Main.lang("nodeUpdateDescription").formatted(
 							latestVersionString,
-							LocalDateTime.parse(latestNodeData.getString("published_at"), DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+							LocalDateTime.parse(latestNodeData.getString("published_at"), DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
 							latestNodeData.getString("body")));
 					ButtonType update = new ButtonType(Main.lang("update"), ButtonBar.ButtonData.YES);
 					ButtonType notNow = new ButtonType(Main.lang("notNow"), ButtonBar.ButtonData.CANCEL_CLOSE);
