@@ -1,6 +1,8 @@
 package com.satergo.ergo;
 
-import com.grack.nanojson.*;
+import com.grack.nanojson.JsonObject;
+import com.grack.nanojson.JsonParser;
+import com.grack.nanojson.JsonParserException;
 import com.satergo.Utils;
 import org.ergoplatform.appkit.*;
 
@@ -13,12 +15,18 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
-import static org.ergoplatform.appkit.RestApiErgoClient.getDefaultExplorerUrl;
 
 public class ErgoInterface {
 
+	public static String getExplorerUrl(NetworkType networkType) {
+		if (System.getProperties().containsKey("satergo.explorerUrl")) {
+			return System.getProperty("satergo.explorerUrl");
+		}
+		return RestApiErgoClient.getDefaultExplorerUrl(networkType);
+	}
+
 	public static ErgoClient newNodeApiClient(NetworkType networkType, String nodeApiAddress) {
-		return RestApiErgoClient.create(nodeApiAddress, networkType, "", getDefaultExplorerUrl(networkType));
+		return RestApiErgoClient.create(nodeApiAddress, networkType, "", getExplorerUrl(networkType));
 	}
 
 	public static ErgoProver newWithMnemonicProver(BlockchainContext ctx, Mnemonic mnemonic) {
@@ -34,7 +42,7 @@ public class ErgoInterface {
 	public static Balance getBalance(NetworkType networkType, Address address) {
 		// I don't want to use explorer here...
 		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getDefaultExplorerUrl(networkType)).resolve("/api/v1/addresses/" + address + "/balance/total")).build();
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getExplorerUrl(networkType)).resolve("/api/v1/addresses/" + address + "/balance/total")).build();
 		try {
 			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());
 			JsonObject confirmed = body.getObject("confirmed");
@@ -52,7 +60,7 @@ public class ErgoInterface {
 
 	public static int getNetworkBlockHeight(NetworkType networkType) {
 		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getDefaultExplorerUrl(networkType) + "/blocks?limit=1&sortBy=height&sortDirection=desc")).build();
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getExplorerUrl(networkType) + "/blocks?limit=1&sortBy=height&sortDirection=desc")).build();
 		try {
 			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());
 			return body.getArray("items").getObject(0).getInt("height");
@@ -100,7 +108,7 @@ public class ErgoInterface {
 
 	public static JsonObject getTokenItem(NetworkType networkType, ErgoId tokenId) {
 		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getDefaultExplorerUrl(networkType))
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getExplorerUrl(networkType))
 				.resolve("/api/v1/boxes/byTokenId/").resolve(tokenId.toString() + "/").resolve("?limit=1")).build();
 		try {
 			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());

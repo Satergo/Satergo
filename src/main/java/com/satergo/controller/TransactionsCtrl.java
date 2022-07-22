@@ -1,6 +1,7 @@
 package com.satergo.controller;
 
 import com.satergo.Main;
+import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.TransactionCell;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -26,7 +27,7 @@ public class TransactionsCtrl implements Initializable, WalletTab {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		DefaultApi api = new Retrofit.Builder()
-				.baseUrl(RestApiErgoClient.getDefaultExplorerUrl(Main.programData().nodeNetworkType.get()))
+				.baseUrl(ErgoInterface.getExplorerUrl(Main.programData().nodeNetworkType.get()))
 				.addConverterFactory(GsonConverterFactory.create())
 				.build().create(DefaultApi.class);
 
