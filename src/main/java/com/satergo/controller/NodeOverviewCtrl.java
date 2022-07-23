@@ -229,6 +229,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 			}
 			Utils.alert(Alert.AlertType.ERROR, Main.lang("failedToFetchIPAddress"));
 		});
+		gridPane.add(fetch, 2, 0);
 		gridPane.add(new Label(Main.lang("portC")), 0, 1);
 		gridPane.add(port, 1, 1);
 		dialog.getDialogPane().setContent(gridPane);
