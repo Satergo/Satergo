@@ -36,6 +36,7 @@ public class SendCtrl implements Initializable, WalletTab {
 	@FXML private TextField address, amount, fee;
 
 	@FXML private Button send;
+	@FXML private Label nodeSyncNotice;
 	@FXML private HBox txIdContainer;
 	@FXML private Hyperlink txLink;
 	@FXML private Button copyTxId;
@@ -298,5 +299,11 @@ public class SendCtrl implements Initializable, WalletTab {
 		Main.get().getWallet().lastKnownBalance.addListener((obs, old, val) -> {
 			addToken.setDisable(val == null || val.confirmedTokens().isEmpty());
 		});
+		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
+			Main.node.nodeBlocksLeft.addListener((observable, oldValue, newValue) -> {
+				send.setDisable((int) newValue > 150);
+				nodeSyncNotice.setVisible((int) newValue > 150);
+			});
+		}
 	}
 }

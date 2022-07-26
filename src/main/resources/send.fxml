@@ -33,12 +33,13 @@
 
 	<Region prefHeight="4"/>
 
-	<HBox spacing="4">
+	<HBox spacing="4" alignment="CENTER_LEFT">
 		<Button fx:id="send" onAction="#send" text="%send"/>
 		<Button onAction="#showOptions" disable="${send.disable}">
 			<graphic><Icon icon="settings-gear"/></graphic>
 			<tooltip><Tooltip text="%settings"/></tooltip>
 		</Button>
+		<Label fx:id="nodeSyncNotice" text="%nodeSyncNoticeSend" visible="false" managed="${nodeSyncNotice.visible}"/>
 	</HBox>
 
 	<HBox fx:id="txIdContainer" visible="false" managed="false" spacing="2" alignment="BASELINE_LEFT">
