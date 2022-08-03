@@ -33,7 +33,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithLanguage {
 	@FXML
 	public void downloadAndSetup(MouseEvent e) {
 		if (e.getButton() == MouseButton.PRIMARY) {
-			Main.get().displaySetupPage(Load.<FullNodeDownloaderCtrl>fxmlController("/full-node-downloader.fxml"));
+			Main.get().displaySetupPage(Load.<FullNodeDownloaderCtrl>fxmlController("/setup-page/full-node-download.fxml"));
 		}
 	}
 
@@ -67,7 +67,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithLanguage {
 			dialog.initOwner(Main.get().stage());
 			dialog.setTitle(Main.lang("programName"));
 			dialog.setHeaderText(Main.lang("moreInformationNeededNode"));
-			Parent root = Load.fxml("/need-more-info-existing-node.fxml");
+			Parent root = Load.fxml("/setup-page/need-more-info-existing-node.fxml");
 			ComboBox<NetworkType> networkType = (ComboBox<NetworkType>) root.lookup("#networkType");
 			networkType.getItems().addAll(NetworkType.values());
 			networkType.setValue(NetworkType.MAINNET);
@@ -106,12 +106,12 @@ public class FullNodeSourceCtrl implements SetupPage.WithLanguage {
 		Main.node = Main.get().nodeFromInfo();
 		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
 		Main.programData().nodeNetworkType.set(Main.node.info.networkType());
-		Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+		Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 	}
 
 	@Override
 	public Parent recreate() {
-		return Load.fxml("/full-node-source.fxml");
+		return Load.fxml("/setup-page/full-node-source.fxml");
 	}
 
 	@Override

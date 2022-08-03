@@ -107,19 +107,19 @@ public class Main extends Application {
 
 		if (programData.blockchainNodeKind.get() == null ||
 				(programData.blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE && !Files.isRegularFile(programData.embeddedNodeInfo.get()))) {
-			displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/blockchain-setup.fxml"));
+			displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/setup-page/blockchain.fxml"));
 		} else {
 			if (programData.blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
 				node = nodeFromInfo();
 			}
 
 			if (programData.lastWallet.get() == null || !Files.isRegularFile(programData.lastWallet.get())) {
-				displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+				displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 			} else {
 				String password = Utils.requestPassword(Main.lang("passwordOf_s").formatted(programData.lastWallet.get().getFileName()));
 				if (password == null) {
 					programData.lastWallet.set(null);
-					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 				} else try {
 					setWallet(Wallet.load(programData.lastWallet.get(), password));
 					Pair<Parent, WalletCtrl> load = Load.fxmlNodeAndController("/wallet.fxml");
@@ -130,7 +130,7 @@ public class Main extends Application {
 					displayWalletPage(load);
 				} catch (IncorrectPasswordException e) {
 					Utils.alertIncorrectPassword();
-					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 				}
 			}
 		}
@@ -170,7 +170,7 @@ public class Main extends Application {
 	private final LinkedList<Parent> pages = new LinkedList<>();
 
 	public void displaySetupPage(SetupPage setupPage) {
-		Parent holder = Load.fxmlControllerFactory("/setup-page-holder.fxml", new SetupPageHolderCtrl(setupPage));
+		Parent holder = Load.fxmlControllerFactory("/setup-page/holder.fxml", new SetupPageHolderCtrl(setupPage));
 		walletPage = null;
 		pages.add(holder);
 		scene.setRoot(holder);
@@ -179,7 +179,7 @@ public class Main extends Application {
 	public void displayTopSetupPage(SetupPage setupPage) {
 		pages.clear();
 		walletPage = null;
-		Parent parent = Load.fxmlControllerFactory("/setup-page-holder.fxml", new SetupPageHolderCtrl(setupPage));
+		Parent parent = Load.fxmlControllerFactory("/setup-page/holder.fxml", new SetupPageHolderCtrl(setupPage));
 		pages.add(parent);
 		scene.setRoot(parent);
 	}

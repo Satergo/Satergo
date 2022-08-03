@@ -1,3 +1,7 @@
+#root {
+	-fx-padding: 20px 40px 20px 40px;
+}
+
 .welcome-text {
 	-fx-font-size: 3.6em;
 	-fx-font-weight: BOLD;

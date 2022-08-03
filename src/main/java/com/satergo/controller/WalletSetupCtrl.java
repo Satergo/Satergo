@@ -36,7 +36,7 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithLanguage, S
 	@FXML
 	public void createWallet(MouseEvent e) {
 		if (e.getButton() == MouseButton.PRIMARY)
-			Main.get().displaySetupPage(Load.<CreateWalletCtrl>fxmlController("/create-wallet.fxml"));
+			Main.get().displaySetupPage(Load.<CreateWalletCtrl>fxmlController("/setup-page/create-wallet.fxml"));
 	}
 
 	@FXML
@@ -61,12 +61,12 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithLanguage, S
 	@FXML
 	public void restoreFromSeed(MouseEvent e) {
 		if (e.getButton() == MouseButton.PRIMARY)
-			Main.get().displaySetupPage(Load.<RestoreFromSeedCtrl>fxmlController("/restore-wallet-from-seed.fxml"));
+			Main.get().displaySetupPage(Load.<RestoreFromSeedCtrl>fxmlController("/setup-page/restore-wallet-from-seed.fxml"));
 	}
 
 	@Override
 	public Parent recreate() {
-		return Load.fxml("/wallet-setup.fxml");
+		return Load.fxml("/setup-page/wallet.fxml");
 	}
 
 	@Override
@@ -81,6 +81,6 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithLanguage, S
 
 	@Override
 	public void left() {
-		Main.get().displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/blockchain-setup.fxml"));
+		Main.get().displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/setup-page/blockchain.fxml"));
 	}
 }
