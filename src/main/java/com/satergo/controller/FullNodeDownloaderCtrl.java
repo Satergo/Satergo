@@ -100,7 +100,7 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initia
 		Main.node = Main.get().nodeFromInfo();
 		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
 		Main.node.firstTimeSetup();
-		Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+		Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 	}
 
 	@Override

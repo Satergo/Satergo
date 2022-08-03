@@ -30,7 +30,7 @@ public class RemoteNodeSetupCtrl implements SetupPage.WithLanguage, Initializabl
 			Main.programData().blockchainNodeKind.set(ProgramData.BlockchainNodeKind.REMOTE_NODE);
 			Main.programData().nodeNetworkType.set(networkType.getValue());
 			Main.programData().nodeAddress.set(address.getText());
-			Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+			Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 		}
 	}
 
@@ -54,7 +54,7 @@ public class RemoteNodeSetupCtrl implements SetupPage.WithLanguage, Initializabl
 
 	@Override
 	public Parent recreate() {
-		Pair<Parent, RemoteNodeSetupCtrl> load = Load.fxmlNodeAndController("/remote-node-setup.fxml");
+		Pair<Parent, RemoteNodeSetupCtrl> load = Load.fxmlNodeAndController("/setup-page/remote-node.fxml");
 		load.getValue().address.setText(address.getText());
 		load.getValue().networkType.setValue(networkType.getValue());
 		return load.getKey();

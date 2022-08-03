@@ -54,7 +54,7 @@ public class CreateWalletCtrl implements SetupPage.WithoutLanguage, Initializabl
 				walletName.getText(),
 				SecretString.create(password.getText()),
 				Mnemonic.create(SecretString.create(mnemonicPhrase), SecretString.create(mnemonicPassword.getText())));
-		Load.fxmlControllerFactory("/repeat-mnemonic.fxml", ctrl);
+		Load.fxmlControllerFactory("/setup-page/repeat-mnemonic.fxml", ctrl);
 		Main.get().displaySetupPage(ctrl);
 	}
 

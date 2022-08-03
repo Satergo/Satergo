@@ -1,9 +1,7 @@
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" stylesheets="welcome.css" styleClass="background" fx:id="root" fx:controller="com.satergo.controller.RestoreFromSeedCtrl" spacing="10">
-	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" stylesheets="@./welcome.css" styleClass="background" fx:id="root" fx:controller="com.satergo.controller.RestoreFromSeedCtrl" spacing="10">
 	<Label styleClass="welcome-text" text="%restoreWalletUsingSeed" wrapText="true"/>
 	<TextArea fx:id="mnemonicPhrase" promptText="%mnemonicPhrase12Words"/>
 	<FlowPane fx:id="suggestionContainer" hgap="6" vgap="4"/>

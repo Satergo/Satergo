@@ -23,12 +23,12 @@ public class BlockchainSetupCtrl implements Initializable, SetupPage.WithLanguag
 	public void initialize(URL location, ResourceBundle resources) {
 		localFullNode.setOnMouseClicked(e -> {
 			if (e.getButton() == MouseButton.PRIMARY) {
-				Main.get().displaySetupPage(Load.<FullNodeSourceCtrl>fxmlController("/full-node-source.fxml"));
+				Main.get().displaySetupPage(Load.<FullNodeSourceCtrl>fxmlController("/setup-page/full-node-source.fxml"));
 			}
 		});
 		remoteNode.setOnMouseClicked(e -> {
 			if (e.getButton() == MouseButton.PRIMARY) {
-				Main.get().displaySetupPage(Load.<RemoteNodeSetupCtrl>fxmlController("/remote-node-setup.fxml"));
+				Main.get().displaySetupPage(Load.<RemoteNodeSetupCtrl>fxmlController("/setup-page/remote-node.fxml"));
 			}
 		});
 	}
@@ -40,6 +40,6 @@ public class BlockchainSetupCtrl implements Initializable, SetupPage.WithLanguag
 
 	@Override
 	public Parent recreate() {
-		return Load.fxml("/blockchain-setup.fxml");
+		return Load.fxml("/setup-page/blockchain.fxml");
 	}
 }
