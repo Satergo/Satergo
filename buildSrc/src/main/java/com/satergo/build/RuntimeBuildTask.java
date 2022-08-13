@@ -115,6 +115,8 @@ public class RuntimeBuildTask extends DefaultTask {
 
 		// Invoke jlink to create a runtime
 		Path runtimeOutput = getProject().getBuildDir().toPath().resolve("runtime");
+		if (Files.exists(runtimeOutput))
+			FileUtils.deleteDirectory(runtimeOutput);
 		ArrayList<String> args = new ArrayList<>();
 
 		args.add("--module-path");
