@@ -35,10 +35,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TransactionCell extends BorderPane implements Initializable {
@@ -240,7 +237,7 @@ public class TransactionCell extends BorderPane implements Initializable {
 
 	private static List<TokenBalance> totalReceivedTokens(TransactionInfo tx, List<Address> myAddresses) {
 		return tx.getOutputs().stream().filter(info -> myAddresses.contains(getAddress(info))).flatMap(o ->
-				o.getAssets().stream().map(a -> new TokenBalance(a.getTokenId(), a.getAmount(), a.getDecimals(), a.getName()))).toList();
+				o.getAssets().stream().map(a -> new TokenBalance(a.getTokenId(), a.getAmount(), Objects.requireNonNullElse(a.getDecimals(), 0), a.getName()))).toList();
 	}
 
 	private static long totalSent(TransactionInfo tx, List<Address> myAddresses) {
@@ -249,6 +246,6 @@ public class TransactionCell extends BorderPane implements Initializable {
 
 	private static List<TokenBalance> totalSentTokens(TransactionInfo tx, List<Address> myAddresses) {
 		return tx.getInputs().stream().filter(info -> myAddresses.contains(getAddress(info))).flatMap(o ->
-				o.getAssets().stream().map(a -> new TokenBalance(a.getTokenId(), a.getAmount(), a.getDecimals(), a.getName()))).toList();
+				o.getAssets().stream().map(a -> new TokenBalance(a.getTokenId(), a.getAmount(), Objects.requireNonNullElse(a.getDecimals(), 0), a.getName()))).toList();
 	}
 }
