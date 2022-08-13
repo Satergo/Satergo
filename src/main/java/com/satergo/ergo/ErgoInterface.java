@@ -29,10 +29,6 @@ public class ErgoInterface {
 		return RestApiErgoClient.create(nodeApiAddress, networkType, "", getExplorerUrl(networkType));
 	}
 
-	public static ErgoProver newWithMnemonicProver(BlockchainContext ctx, Mnemonic mnemonic) {
-		return ctx.newProverBuilder().withMnemonic(mnemonic).withEip3Secret(0).build();
-	}
-
 	public static ErgoProver newWithMnemonicProver(BlockchainContext ctx, Mnemonic mnemonic, Iterable<Integer> derivedAddresses) {
 		ErgoProverBuilder ergoProverBuilder = ctx.newProverBuilder().withMnemonic(mnemonic);
 		derivedAddresses.forEach(ergoProverBuilder::withEip3Secret);

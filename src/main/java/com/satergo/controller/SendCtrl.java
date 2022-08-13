@@ -193,7 +193,7 @@ public class SendCtrl implements Initializable, WalletTab {
 				UnsignedTransaction unsignedTx = unsignedTxTask.getValue();
 				SignedTransaction signedTx = Utils.createErgoClient().execute(ctx -> {
 					try {
-						return wallet.key().sign(ctx, unsignedTx);
+						return wallet.key().sign(ctx, unsignedTx, candidates);
 					} catch (WalletKey.Failure ex) {
 						return null;
 					}

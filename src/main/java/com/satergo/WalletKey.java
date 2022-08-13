@@ -17,10 +17,7 @@ import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -104,7 +101,7 @@ public abstract class WalletKey {
 	 */
 	public void initCaches(ByteBuffer data) {}
 
-	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx) throws Failure;
+	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure;
 	public abstract Address derivePublicAddress(NetworkType networkType, int index) throws Failure;
 	public abstract WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure; // it would be cool to call this "recrypt" :)
 
@@ -231,8 +228,8 @@ public abstract class WalletKey {
 		}
 
 		@Override
-		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx) throws Failure {
-			return ErgoInterface.newWithMnemonicProver(ctx, getMnemonic()).sign(unsignedTx);
+		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
+			return ErgoInterface.newWithMnemonicProver(ctx, getMnemonic(), addressIndexes).sign(unsignedTx);
 		}
 
 		@Override
