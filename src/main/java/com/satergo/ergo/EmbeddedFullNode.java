@@ -188,11 +188,6 @@ public class EmbeddedFullNode {
 							DownloadTask task = createDownloadTask(nodeDirectory, latestVersionString, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
 							progress.progressProperty().bind(task.progressProperty());
 							task.setOnSucceeded(e -> {
-								try {
-									Files.delete(nodeJar.toPath());
-								} catch (IOException ex) {
-									throw new RuntimeException(ex);
-								}
 								// an alert cannot be closed unless it has a button
 								updatingAlert.getButtonTypes().add(ButtonType.OK);
 								updatingAlert.close();
@@ -202,6 +197,11 @@ public class EmbeddedFullNode {
 									nodeTab.logVersionUpdate(latestVersionString);
 								stop();
 								waitForExit();
+								try {
+									Files.delete(nodeJar.toPath());
+								} catch (IOException ex) {
+									throw new RuntimeException(ex);
+								}
 								Main.node = Main.get().nodeFromInfo();
 								Main.node.start();
 								if (nodeTab != null) {
