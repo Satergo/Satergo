@@ -22,8 +22,7 @@ import scorex.crypto.hash.Blake2b256;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -216,19 +215,19 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.APPLY);
 		GridPane gridPane = new GridPane();
 		gridPane.setHgap(4);
-		TextField address = new TextField();
+		TextField host = new TextField();
 		TextField port = new TextField(switch(Main.programData().nodeNetworkType.get()) {
 			case MAINNET -> "9030";
 			case TESTNET -> "9020";
 		});
 		gridPane.add(new Label(Main.lang("addressIPC")), 0, 0);
-		gridPane.add(address, 1, 0);
+		gridPane.add(host, 1, 0);
 		Button fetch = new Button("Fetch");
 		fetch.setOnAction(ae -> {
 			try {
 				HttpResponse<String> response = HttpClient.newHttpClient().send(Utils.httpRequestBuilder().uri(URI.create("https://icanhazip.com")).build(), HttpResponse.BodyHandlers.ofString());
 				if (response.statusCode() == 200) {
-					address.setText(response.body());
+					host.setText(response.body());
 					return;
 				}
 			} catch (IOException | InterruptedException ignored) {
@@ -250,13 +249,13 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		});
 		dialog.setResultConverter(t -> {
 			if (t == ButtonType.APPLY) {
-				return new Pair<>(address.getText(), Integer.parseInt(port.getText()));
+				return new Pair<>(host.getText(), Integer.parseInt(port.getText()));
 			}
 			return null;
 		});
 		Pair<String, Integer> result = dialog.showAndWait().orElse(null);
 		if (result != null) {
-			setConfValue("scorex.network.declaredAddress", result.getKey() + ":" + result.getValue());
+			setConfValue("scorex.network.declaredAddress", toSocketAddress(result.getKey(), result.getValue()));
 		}
 	}
 
@@ -266,5 +265,23 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 				.root().render(ConfigRenderOptions.defaults()
 						.setOriginComments(false)
 						.setJson(false)));
+	}
+
+	private static String toSocketAddress(String host, int port) {
+		try {
+			InetAddress inetAddress = InetAddress.getByName(host);
+			// If an IP address (not a domain) was supplied
+			// getHostName() cannot be used because it gets the host from the name service
+			// which converts 127.0.0.1 to localhost which is unwanted
+			// toString() uses the method that gives the host name without using the name service
+			if (inetAddress.toString().startsWith("/")) {
+				if (inetAddress instanceof Inet6Address) {
+					return "[" + inetAddress.getHostAddress() + "]:" + port;
+				} else return inetAddress.getHostAddress() + ":" + port;
+			} else return host + ":" + port;
+		} catch (UnknownHostException ex) {
+			// If this exception happens, the address is almost certainly not reachable, but the node can worry about that
+			return host + ":" + port;
+		}
 	}
 }
