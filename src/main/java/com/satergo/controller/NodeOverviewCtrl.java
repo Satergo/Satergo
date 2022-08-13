@@ -256,7 +256,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 
 	private void setConfValue(String propertyPath, Object value) throws IOException {
 		Files.writeString(Main.node.confFile.toPath(), ConfigFactory.parseFile(Main.node.confFile)
-				.withValue(propertyPath, ConfigValueFactory.fromAnyRef(propertyPath))
+				.withValue(propertyPath, ConfigValueFactory.fromAnyRef(value))
 				.root().render(ConfigRenderOptions.defaults()
 						.setOriginComments(false)
 						.setJson(false)));
