@@ -58,7 +58,7 @@ dependencies {
 		exclude group: 'org.controlsfx'
 	}
 
-	implementation 'org.ergoplatform:ergo-appkit_2.12:4.0.9'
+	implementation 'org.ergoplatform:ergo-appkit_2.12:4.0.10'
 	implementation 'com.typesafe:config:1.4.2'
 	implementation 'org.slf4j:slf4j-simple:1.7.36'
 	implementation 'com.grack:nanojson:1.7' // used for numerous HTTP APIs and ProgramData saving
