@@ -46,21 +46,23 @@ public class FullNodeSourceCtrl implements SetupPage.WithLanguage {
 		directoryChooser.setTitle(Main.lang("nodeDirectory"));
 		File nodeDirectory = directoryChooser.showDialog(Main.get().stage());
 		if (nodeDirectory == null || !nodeDirectory.exists()) return;
-		File[] files = nodeDirectory.listFiles();
-		// try to find the node jar automatically, with the ergo*.jar pattern
-		List<File> candidates = files == null ? null : Arrays.stream(files)
-				.filter(f -> f.getName().startsWith("ergo") && f.getName().endsWith(".jar")).toList();
-		File nodeJar = candidates != null && candidates.size() == 1 ? candidates.get(0) : null;
-		if (nodeJar == null) { // could not find, request from user
-			FileChooser fileChooser = new FileChooser();
-			fileChooser.setInitialDirectory(nodeDirectory);
-			fileChooser.setTitle(Main.lang("nodeJar"));
-			nodeJar = fileChooser.showOpenDialog(Main.get().stage());
-			if (nodeJar == null) return;
-		}
+		File nodeJar;
 		File nodeInfoFile = new File(nodeDirectory, EmbeddedNodeInfo.FILE_NAME);
 		// ask for required EmbeddedNodeInfo values if it doesn't exist
 		if (!nodeInfoFile.exists()) {
+			// try to find the node jar automatically, with the ergo*.jar pattern
+			File[] files = nodeDirectory.listFiles();
+			List<File> candidates = files == null ? null : Arrays.stream(files)
+					.filter(f -> f.getName().startsWith("ergo") && f.getName().endsWith(".jar")).toList();
+			nodeJar = candidates != null && candidates.size() == 1 ? candidates.get(0) : null;
+			if (nodeJar == null) { // could not find or found multiple, request from user
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setInitialDirectory(nodeDirectory);
+				fileChooser.setTitle(Main.lang("nodeJar"));
+				nodeJar = fileChooser.showOpenDialog(Main.get().stage());
+				if (nodeJar == null) return;
+			}
+
 			Dialog<Pair<NetworkType, File>> dialog = new Dialog<>();
 			dialog.initOwner(Main.get().stage());
 			dialog.setTitle(Main.lang("programName"));
