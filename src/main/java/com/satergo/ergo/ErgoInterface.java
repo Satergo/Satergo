@@ -18,10 +18,15 @@ import static java.net.http.HttpResponse.BodyHandlers.ofString;
 
 public class ErgoInterface {
 
+	private static final String
+			MAINNET_API_PROPERTY = "satergo.mainnetExplorerApi",
+			TESTNET_API_PROPERTY = "satergo.testnetExplorerApi";
+
 	public static String getExplorerUrl(NetworkType networkType) {
-		if (System.getProperties().containsKey("satergo.explorerUrl")) {
-			return System.getProperty("satergo.explorerUrl");
-		}
+		if (networkType == NetworkType.MAINNET && System.getProperties().containsKey(MAINNET_API_PROPERTY))
+			return System.getProperty(MAINNET_API_PROPERTY);
+		if (networkType == NetworkType.TESTNET && System.getProperties().containsKey(TESTNET_API_PROPERTY))
+			return System.getProperty(TESTNET_API_PROPERTY);
 		return RestApiErgoClient.getDefaultExplorerUrl(networkType);
 	}
 
