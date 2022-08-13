@@ -8,7 +8,7 @@ import com.satergo.Utils;
 import com.satergo.controller.NodeOverviewCtrl;
 import com.satergo.extra.DownloadTask;
 import javafx.application.Platform;
-import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.control.*;
@@ -86,7 +86,7 @@ public class EmbeddedFullNode {
 	public final SimpleDoubleProperty nodeSyncProgress = new SimpleDoubleProperty(0);
 	public final SimpleIntegerProperty nodeBlocksLeft = new SimpleIntegerProperty(1);
 
-	public final BooleanExpression headersSynced = nodeHeaderHeight.isEqualTo(networkBlockHeight);
+	public final SimpleBooleanProperty headersSynced = new SimpleBooleanProperty(false);
 
 	private ScheduledExecutorService scheduler;
 
@@ -156,6 +156,7 @@ public class EmbeddedFullNode {
 				peerCount.set(status.peerCount());
 				nodeSyncProgress.set((double) status.blockHeight() / (double) networkHeight);
 				nodeHeaderSyncProgress.set((double) status.headerHeight() / (double) networkHeight);
+				headersSynced.set(Math.abs(status.networkHeight() - status.headerHeight()) <= 5);
 			});
 		}, 10, 2, TimeUnit.SECONDS);
 		int[] version = Arrays.stream(readVersion().split("\\.")).mapToInt(Integer::parseInt).toArray();
