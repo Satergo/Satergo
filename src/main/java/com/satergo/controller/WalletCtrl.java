@@ -78,7 +78,7 @@ public class WalletCtrl implements Initializable {
 
 	@SuppressWarnings("unchecked")
 	public <T extends WalletTab>T getTab(String id) {
-		return (T) tabs.get(id);
+		return (T) tabs.get(id).getValue();
 	}
 
 	private final DecimalFormat format = new DecimalFormat("0");
@@ -128,16 +128,7 @@ public class WalletCtrl implements Initializable {
 		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
 			if (!Main.node.isRunning()) // a refresh due to language change will not stop the node (see SettingsCtrl), so check if it is running
 				Main.node.start();
-			networkStatus.progressProperty().bind(Bindings.when(Main.node.headersSynced).then(Main.node.nodeSyncProgress).otherwise(Main.node.nodeHeaderSyncProgress));
-			thingLeft.textProperty().bind(Bindings.when(Main.node.headersSynced)
-				.then(Bindings.format(Main.lang("blocksLeft_s"),
-						Bindings.when(Main.node.nodeBlocksLeft.lessThan(0)).then("?").otherwise(Main.node.nodeBlocksLeft.asString())))
-				.otherwise(Bindings.format(Main.lang("syncingHeaders_s"),
-						Bindings.when(Main.node.nodeHeaderSyncProgress.lessThan(0)).then("?").otherwise(Bindings.createStringBinding(() -> {
-							if (Main.node.nodeHeaderHeight.get() <= 0) return "?";
-							DecimalFormat df = new DecimalFormat("0.##");
-							return df.format(Main.node.nodeHeaderSyncProgress.get() * 100);
-						}, Main.node.nodeHeaderSyncProgress)))));
+			bindToNodeProperties();
 		} else {
 			networkStatus.setVisible(false);
 			thingLeft.setText(Main.lang("remoteNode") + " - " + Main.programData().nodeNetworkType.get());
@@ -240,6 +231,19 @@ public class WalletCtrl implements Initializable {
 				}
 			});
 		}
+	}
+
+	public void bindToNodeProperties() {
+		networkStatus.progressProperty().bind(Bindings.when(Main.node.headersSynced).then(Main.node.nodeSyncProgress).otherwise(Main.node.nodeHeaderSyncProgress));
+		thingLeft.textProperty().bind(Bindings.when(Main.node.headersSynced)
+				.then(Bindings.format(Main.lang("blocksLeft_s"),
+						Bindings.when(Main.node.nodeBlocksLeft.lessThan(0)).then("?").otherwise(Main.node.nodeBlocksLeft.asString())))
+				.otherwise(Bindings.format(Main.lang("syncingHeaders_s"),
+						Bindings.when(Main.node.nodeHeaderSyncProgress.lessThan(0)).then("?").otherwise(Bindings.createStringBinding(() -> {
+							if (Main.node.nodeHeaderHeight.get() <= 0) return "?";
+							DecimalFormat df = new DecimalFormat("0.##");
+							return df.format(Main.node.nodeHeaderSyncProgress.get() * 100);
+						}, Main.node.nodeHeaderSyncProgress)))));
 	}
 
 	public void offlineMode() {

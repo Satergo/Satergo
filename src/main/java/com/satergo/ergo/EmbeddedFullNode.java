@@ -6,23 +6,18 @@ import com.pty4j.PtyProcessBuilder;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.controller.NodeOverviewCtrl;
+import com.satergo.extra.DownloadTask;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import org.ergoplatform.appkit.NetworkType;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -186,32 +181,39 @@ public class EmbeddedFullNode {
 					lastVersionUpdateAlert = latestVersion;
 					alert.showAndWait().ifPresent(t -> {
 						if (t == update) {
-							Alert updatingAlert = Utils.alert(Alert.AlertType.NONE, Main.lang("updatingErgoNode..."));
-							new Thread(() -> {
-								downloadUpdate(nodeDirectory.toPath(), latestVersionString, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
+							Alert updatingAlert = Utils.alert(Alert.AlertType.NONE, null);
+							ProgressBar progress = new ProgressBar();
+							updatingAlert.getDialogPane().setContent(new VBox(4, new Label(Main.lang("updatingErgoNode...")), progress));
+							DownloadTask task = createDownloadTask(nodeDirectory, latestVersionString, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
+							progress.progressProperty().bind(task.progressProperty());
+							task.setOnSucceeded(e -> {
 								try {
 									Files.delete(nodeJar.toPath());
-								} catch (IOException e) {
-									throw new RuntimeException(e);
+								} catch (IOException ex) {
+									throw new RuntimeException(ex);
 								}
-								Platform.runLater(() -> {
-									updatingAlert.getDialogPane().getButtonTypes().add(ButtonType.OK); // a window cannot be closed unless it has a button
-									updatingAlert.close();
-									try {
-										((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).logVersionUpdate(latestVersionString);
-									} catch (Exception ignored) {
-									} // could happen if user somehow logs out while it is updating, so wallet page becomes null
-									stop();
-									waitForExit();
-									Main.node = Main.get().nodeFromInfo();
-									Main.node.start();
-									try {
-										((NodeOverviewCtrl) Main.get().getWalletPage().getTab("node")).transferLog();
-									} catch (Exception ignored) {
-									}
-									Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
-								});
-							}).start();
+								// an alert cannot be closed unless it has a button
+								updatingAlert.getButtonTypes().add(ButtonType.OK);
+								updatingAlert.close();
+								// could be null if user somehow logs out while it is updating, so wallet page becomes null
+								NodeOverviewCtrl nodeTab = Main.get().getWalletPage() == null ? null : Main.get().getWalletPage().getTab("node");
+								if (nodeTab != null)
+									nodeTab.logVersionUpdate(latestVersionString);
+								stop();
+								waitForExit();
+								Main.node = Main.get().nodeFromInfo();
+								Main.node.start();
+								if (nodeTab != null) {
+									nodeTab.bindToProperties();
+									nodeTab.transferLog();
+									Main.get().getWalletPage().bindToNodeProperties();
+								}
+								Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
+							});
+							task.setOnFailed(e -> {
+								Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), task.getException());
+							});
+							new Thread(task).start();
 						}
 					});
 				});
@@ -222,17 +224,25 @@ public class EmbeddedFullNode {
 	/**
 	 * downloads the jar and updates the node info file
 	 */
-	private static void downloadUpdate(Path dir, String version, URI uri) {
-		HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
-		HttpRequest request = Utils.httpRequestBuilder().uri(uri).build();
-		String jarName = "ergo-" + version + ".jar";
-		Path jar = dir.resolve(jarName);
+	private static DownloadTask createDownloadTask(File dir, String version, URI uri) {
 		try {
-			httpClient.send(request, HttpResponse.BodyHandlers.ofFile(jar));
-			EmbeddedNodeInfo newInfo = EmbeddedNodeInfo.fromJson(Files.readString(dir.resolve(EmbeddedNodeInfo.FILE_NAME)))
-					.withJarFileName(jarName);
-			Files.writeString(dir.resolve(EmbeddedNodeInfo.FILE_NAME), newInfo.toJson());
-		} catch (IOException | InterruptedException e) {
+			String jarName = "ergo-" + version + ".jar";
+			return new DownloadTask(
+					HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build(),
+					Utils.httpRequestBuilder().uri(uri).build(),
+					new FileOutputStream(new File(dir, jarName))
+			) {
+				@Override
+				protected Void call() throws Exception {
+					super.call();
+					Path infoPath = dir.toPath().resolve(EmbeddedNodeInfo.FILE_NAME);
+					EmbeddedNodeInfo newInfo = EmbeddedNodeInfo.fromJson(Files.readString(infoPath))
+							.withJarFileName(jarName);
+					Files.writeString(infoPath, newInfo.toJson());
+					return null;
+				}
+			};
+		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
 	}

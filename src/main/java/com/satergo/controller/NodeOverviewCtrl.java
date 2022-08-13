@@ -74,7 +74,9 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		appendText("\n-------- " + Main.lang("nodeWasRestartedLog") + " --------\n\n");
 		Main.node.start();
 		logLevelNote.setVisible(false);
+		bindToProperties();
 		transferLog();
+		Main.get().getWalletPage().bindToNodeProperties();
 	}
 
 	@FXML
@@ -109,6 +111,10 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 			}
 		});
 		log.setWrapText(true);
+		bindToProperties();
+	}
+
+	public void bindToProperties() {
 		headersNote.visibleProperty().bind(Main.node.headersSynced.not());
 		progress.progressProperty().bind(Bindings.when(Main.node.headersSynced)
 				.then(Main.node.nodeSyncProgress)
