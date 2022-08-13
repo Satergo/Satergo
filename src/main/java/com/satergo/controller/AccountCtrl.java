@@ -148,7 +148,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 	public void logout(ActionEvent e) {
 		Main.get().getWalletPage().cancelRepeatingTasks();
 		Main.get().setWallet(null);
-		Main.get().displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/wallet-setup.fxml"));
+		Main.get().displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE)
 			Main.node.stop();
 	}
@@ -190,7 +190,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 			try {
 				addresses.getChildren().add(new AddressLine(index, name, Main.get().getWallet().publicAddress(index),
 						() -> Main.get().getWallet().myAddresses.remove(index),
-						newName -> Main.get().getWallet().myAddresses.put(index, name), index != 0));
+						newName -> Main.get().getWallet().myAddresses.put(index, newName), index != 0));
 			} catch (WalletKey.Failure e) {
 				throw new RuntimeException(e);
 			}

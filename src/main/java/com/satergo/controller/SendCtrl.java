@@ -36,7 +36,6 @@ public class SendCtrl implements Initializable, WalletTab {
 	@FXML private TextField address, amount, fee;
 
 	@FXML private Button send;
-	@FXML private Label nodeSyncNotice;
 	@FXML private HBox txIdContainer;
 	@FXML private Hyperlink txLink;
 	@FXML private Button copyTxId;
@@ -247,7 +246,7 @@ public class SendCtrl implements Initializable, WalletTab {
 
 	@FXML
 	public void showOptions(ActionEvent e) {
-		Dialog<Pair<List<Integer>, Address>> dialog = new Dialog<>();
+		Dialog<Pair<ArrayList<Integer>, Address>> dialog = new Dialog<>();
 		dialog.initOwner(Main.get().stage());
 		dialog.setTitle(Main.lang("settings")); // TODO use a specific string
 		dialog.setHeaderText(null);
@@ -265,7 +264,7 @@ public class SendCtrl implements Initializable, WalletTab {
 			if (t == ButtonType.OK) {
 				return new Pair<>(ctrl.candidates.getChildren().stream()
 						.map(n -> (ToggleButton) n).filter(ToggleButton::isSelected)
-						.map(ToggleButton::getUserData).map(ud -> (int) ud).toList(), ctrl.changeAddress.getValue().value());
+						.map(ToggleButton::getUserData).map(ud -> (int) ud).collect(Collectors.toCollection(ArrayList::new)), ctrl.changeAddress.getValue().value());
 			}
 			return null;
 		});
@@ -299,11 +298,5 @@ public class SendCtrl implements Initializable, WalletTab {
 		Main.get().getWallet().lastKnownBalance.addListener((obs, old, val) -> {
 			addToken.setDisable(val == null || val.confirmedTokens().isEmpty());
 		});
-		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
-			Main.node.nodeBlocksLeft.addListener((observable, oldValue, newValue) -> {
-				send.setDisable((int) newValue > 150);
-				nodeSyncNotice.setVisible((int) newValue > 150);
-			});
-		}
 	}
 }
