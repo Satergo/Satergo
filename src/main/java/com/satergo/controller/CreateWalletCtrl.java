@@ -9,77 +9,97 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.VBox;
 import org.ergoplatform.appkit.Mnemonic;
 import org.ergoplatform.appkit.SecretString;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class CreateWalletCtrl implements SetupPage.WithoutLanguage, Initializable {
+public class CreateWalletCtrl implements SetupPage.WithoutExtra, SetupPage.CustomLeft, Initializable {
 	@FXML private Parent root;
-	@FXML private GridPane grid;
-	@FXML private TextArea mnemonicPhraseArea;
+
+	@FXML private Parent enterDetails;
 	@FXML private TextField walletName;
 	@FXML private PasswordField password, mnemonicPassword;
-	@FXML private Hyperlink addMnemonicPassword;
-	@FXML private Button copyMnemonicPhrase, continueWallet;
-	@FXML private Label mnemonicPasswordLabel, mnemonicPhraseLabel;
+	@FXML private Button addMnemonicPassword;
+	@FXML private Button copySeedPhrase, continueWallet;
+	@FXML private VBox mnemonicPasswordBox;
+	@FXML private Label seedPhraseLabel;
 
-	private String mnemonicPhrase;
+	@FXML private Parent viewSeed;
+	@FXML private TextArea seedPhraseArea;
+
+	private String seedPhrase;
 
 	@FXML
 	public void initializeWallet(ActionEvent e) {
 		if (walletName.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("walletNameRequired"));
 		else if (password.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("passwordRequired"));
 		else {
-			mnemonicPhrase = ErgoInterface.generateMnemonicPhrase("english");
-			mnemonicPhraseArea.setText(mnemonicPhrase);
-			mnemonicPhraseLabel.setVisible(true);
-			walletName.setDisable(true);
-			password.setDisable(true);
-			addMnemonicPassword.setDisable(true);
-			mnemonicPassword.setDisable(true);
+			seedPhrase = ErgoInterface.generateMnemonicPhrase("english");
+			seedPhraseArea.setText(seedPhrase);
+			enterDetails.setVisible(false);
+			viewSeed.setVisible(true);
 		}
 	}
 
 	@FXML
-	public void copyMnemonicPhrase(ActionEvent e) {
-		Utils.copyStringToClipboard(mnemonicPhrase);
+	public void copySeedPhrase(ActionEvent e) {
+		Utils.copyStringToClipboard(seedPhrase);
+		Utils.showTemporaryTooltip(copySeedPhrase, new Tooltip(Main.lang("copied")), 400);
 	}
 
 	@FXML
 	public void continueWallet(ActionEvent e) {
-		RepeatMnemonicCtrl ctrl = new RepeatMnemonicCtrl(
+		RepeatSeedCtrl ctrl = new RepeatSeedCtrl(
 				walletName.getText(),
 				SecretString.create(password.getText()),
-				Mnemonic.create(SecretString.create(mnemonicPhrase), SecretString.create(mnemonicPassword.getText())));
-		Load.fxmlControllerFactory("/setup-page/repeat-mnemonic.fxml", ctrl);
+				Mnemonic.create(SecretString.create(seedPhrase), SecretString.create(mnemonicPassword.getText())));
+		Load.fxmlControllerFactory("/setup-page/repeat-seed.fxml", ctrl);
 		Main.get().displaySetupPage(ctrl);
 	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		grid.prefWidthProperty().bind(Main.get().stage().widthProperty().multiply(0.8));
-		grid.maxWidthProperty().bind(grid.prefWidthProperty());
-		mnemonicPhraseLabel.managedProperty().bind(mnemonicPhraseLabel.visibleProperty());
-		copyMnemonicPhrase.managedProperty().bind(mnemonicPhraseLabel.managedProperty());
-		copyMnemonicPhrase.visibleProperty().bind(mnemonicPhraseLabel.visibleProperty());
-		mnemonicPhraseArea.managedProperty().bind(mnemonicPhraseLabel.managedProperty());
-		mnemonicPhraseArea.visibleProperty().bind(mnemonicPhraseLabel.visibleProperty());
-		continueWallet.managedProperty().bind(mnemonicPhraseLabel.managedProperty());
-		continueWallet.visibleProperty().bind(mnemonicPhraseLabel.visibleProperty());
+		mnemonicPassword.setOnKeyPressed(e -> {
+			if (e.getCode() == KeyCode.ESCAPE) {
+				root.requestFocus();
+				e.consume();
+			}
+		});
+		mnemonicPassword.focusedProperty().addListener((observable, oldValue, focused) -> {
+			if (!focused && mnemonicPassword.getText().isEmpty()) {
+				addMnemonicPassword.setVisible(true);
+				mnemonicPasswordBox.setVisible(false);
+			}
+		});
 	}
 
 	@FXML
 	public void addMnemonicPassword(ActionEvent e) {
 		addMnemonicPassword.setVisible(false);
-		mnemonicPasswordLabel.setVisible(true);
-		mnemonicPassword.setVisible(true);
+		mnemonicPasswordBox.setVisible(true);
 	}
 
 	@Override
 	public Parent content() {
 		return root;
+	}
+
+	@Override
+	public boolean hasLeft() {
+		return true;
+	}
+
+	@Override
+	public void left() {
+		if (!enterDetails.isVisible()) {
+			seedPhrase = null;
+			seedPhraseArea.clear();
+			enterDetails.setVisible(true);
+			viewSeed.setVisible(false);
+		} else Main.get().previousPage();
 	}
 }

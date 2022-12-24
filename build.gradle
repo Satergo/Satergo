@@ -9,11 +9,11 @@ plugins {
 apply plugin: SatergoBuildPlugin
 
 java {
-	sourceCompatibility = JavaLanguageVersion.of(18)
+	sourceCompatibility = JavaLanguageVersion.of(19)
 }
 
 group 'com.satergo'
-version '1.4.1'
+version '1.5.0'
 
 application {
 	mainClass = "com.satergo.Launcher"
@@ -32,8 +32,9 @@ repositories {
 	}
 }
 
+boolean platformProvided = project.hasProperty("platform")
 String platform
-if (project.hasProperty("platform") && project.findProperty("platform") != "auto") {
+if (platformProvided && project.findProperty("platform") != "auto") {
 	// for releasing
 	platform = project.findProperty("platform")
 } else {
@@ -49,23 +50,28 @@ if (project.hasProperty("platform") && project.findProperty("platform") != "auto
 	if (currentOs.isLinux() && arch == "arm32") throw new IllegalArgumentException("linux arm32 is not supported")
 }
 
-def javaFxVersion = '18.0.1'
+def javaFxVersion = '19'
 def javaFxModules = [ 'base', 'controls', 'fxml', 'swing', 'graphics' ]
 
+configurations {
+	jna
+}
+
 dependencies {
-	implementation ('org.jfxtras:jmetro:11.6.15') {
+	implementation ('com.pixelduke:FXSkins:1.0.0') {
 		exclude group: 'org.openjfx'
 		exclude group: 'org.controlsfx'
 	}
 
-	implementation 'org.ergoplatform:ergo-appkit_2.12:4.0.10'
+	implementation 'org.ergoplatform:ergo-appkit_2.12:5.0.0'
 	implementation 'com.typesafe:config:1.4.2'
 	implementation 'org.slf4j:slf4j-simple:1.7.36'
 	implementation 'com.grack:nanojson:1.7' // used for numerous HTTP APIs and ProgramData saving
 	implementation 'org.jetbrains.pty4j:pty4j:0.12.7' // for running node
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
 	implementation 'com.google.zxing:core:3.5.0' // used for qr codes
-	implementation 'net.java.dev.jna:jna:5.11.0' // used for running the registration of ergo uri with admin privileges on Windows
+	jna 'net.java.dev.jna:jna:5.11.0' // used for running the registration of ergo uri with admin privileges on Windows
+	implementation configurations.jna.dependencies
 	implementation 'net.java.dev.jna:jna-platform:5.11.0' // used for running the registration of ergo uri with admin privileges on Windows
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 }
@@ -101,28 +107,28 @@ satergoRuntime {
 	switch (platform) {
 		case "linux": {
 			platformName = "linux-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_linux-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk19.0.1/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-19.0.1_linux-x64_bin.tar.gz")
 			break
 		}
 		case "linux-aarch64": {
 			platformName = "linux-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_linux-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk19.0.1/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-19.0.1_linux-aarch64_bin.tar.gz")
 			break
 		}
 		case "win": {
 			platformName = "windows-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_windows-x64_bin.zip")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk19.0.1/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-19.0.1_windows-x64_bin.zip")
 			break
 		}
 		case "mac": {
 			platformName = "mac-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_macos-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk19.0.1/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-19.0.1_macos-x64_bin.tar.gz")
 			jdkRuntimeRoot = "Contents/Home/"
 			break
 		}
 		case "mac-aarch64": {
 			platformName = "mac-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_macos-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk19.0.1/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-19.0.1_macos-aarch64_bin.tar.gz")
 			break
 		}
 		default: throw new IllegalArgumentException()
@@ -135,22 +141,48 @@ satergoRuntime {
 	doBeforeArchival {
 		if (platform == "win") {
 			def runFile = file("${buildDir}/${runtimeDirectoryName}/run.bat")
-			runFile.write("@start %~dp0\\bin\\${project.name}.bat %*")
+			runFile.write('@start /min "" "%~dp0\\bin\\' + project.name + '.bat" %*')
 		} else {
 			def runFile = file("${buildDir}/${runtimeDirectoryName}/run.${platform.startsWith("mac") ? "command" : "sh"}")
 			runFile.write('#!/bin/sh\n' +
-					'eval "\\"$(dirname $0)/bin/' + project.name + '\\" $*"')
+					'eval "\\"$(dirname "$0")/bin/' + project.name + '\\" $*"')
 			runFile.setExecutable(true)
 		}
 	}
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 }
 
 // Make builds reproducible
-tasks.withType(AbstractArchiveTask) {
+tasks.withType(AbstractArchiveTask).configureEach {
 	preserveFileTimestamps = false
 	reproducibleFileOrder = true
+}
+
+shadowJar {
+	if (platformProvided) {
+		String jnaPlatform = (!platform.contains("-") ? platform + "-x86-64" : platform)
+				.replaceFirst("^mac-", "darwin-")
+				.replaceFirst("^win-", "win32-")
+		List<String> platformList = jnaPlatformList()
+		if (!platformList.contains(jnaPlatform))
+			throw new RuntimeException("could not find jna platform " + jnaPlatform + " (from " + platform + ")")
+		platformList.remove(jnaPlatform)
+		platformList.forEach {
+			exclude "com/sun/jna/${it}/**"
+		}
+	}
+	doFirst {
+		if (!platformProvided)
+			println "Desired platform was not provided. Extra JNA platforms will not be filtered out from the final JAR."
+	}
+}
+
+ArrayList<String> jnaPlatformList() {
+	return new java.util.jar.JarFile(configurations.jna.files.first()).stream()
+			.filter({ it.name.startsWith("com/sun/jna/") && it.name.count("/") == 4 && it.directory && it.name.contains('-') })
+			.map({ it.name.split("/").last() })
+			.collect(java.util.stream.Collectors.toCollection(ArrayList::new))
 }

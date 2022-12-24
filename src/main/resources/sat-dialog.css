@@ -1,0 +1,34 @@
+.root {
+	-fx-background-color: transparent;
+	-fx-base: #161719;
+}
+
+.sat-dialog-background {
+	-fx-background-color: -sat-dialog-bg-1, -sat-dialog-bg-2;
+	-fx-background-radius: 10px;
+	-fx-border-color: -sat-dialog-border-color-1, -sat-dialog-border-color-2;
+	-fx-border-width: 0.5px;
+	-fx-border-radius: 10px;
+}
+
+.sat-dialog-x {
+	-fx-background-color: transparent;
+	-fx-cursor: HAND;
+	-fx-content-display: GRAPHIC_ONLY;
+}
+
+.sat-dialog-background, .sat-dialog-container {
+	-fx-padding: 20px;
+}
+
+.sat-dialog-header {
+	-fx-font-size: 1.1em;
+	-fx-max-width: Infinity;
+	-fx-alignment: CENTER;
+	-fx-text-alignment: CENTER;
+}
+
+.button-bar > .container > Region {
+	visibility: hidden;
+	-fx-managed: false;
+}

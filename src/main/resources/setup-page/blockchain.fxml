@@ -1,29 +1,9 @@
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" stylesheets="@./welcome.css" styleClass="background" fx:id="root" fx:controller="com.satergo.controller.BlockchainSetupCtrl">
+<?import com.satergo.extra.SetupOption?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" stylesheets="@./welcome.css" fx:id="root" fx:controller="com.satergo.controller.BlockchainSetupCtrl">
 	<Label styleClass="welcome-text" text="%welcome"/>
 	<Label text="%blockchainSetupInfo"/>
-	<AnchorPane fx:id="localFullNode" styleClass="welcome-option">
-		<ImageView AnchorPane.leftAnchor="24" AnchorPane.topAnchor="16">
-			<Image url="@/m-images/local-node-full.png"/>
-		</ImageView>
-		<VBox AnchorPane.leftAnchor="70" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="20">
-			<Label styleClass="option-title" text="%localFullNode"/>
-			<Label text="%localFullNodeInfo"/>
-		</VBox>
-	</AnchorPane>
-	<AnchorPane fx:id="remoteNode" styleClass="welcome-option">
-		<ImageView AnchorPane.leftAnchor="14" AnchorPane.topAnchor="16">
-			<Image url="@/m-images/remote-node.png"/>
-		</ImageView>
-		<VBox AnchorPane.leftAnchor="70" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="20">
-			<Label styleClass="option-title" GridPane.columnIndex="1" text="%remoteNode"/>
-			<Label text="%remoteNodeInfo"/>
-		</VBox>
-	</AnchorPane>
-
-	<Region VBox.vgrow="ALWAYS"/>
-	<Label fx:id="_version" alignment="BASELINE_RIGHT" maxWidth="Infinity"/>
+	<SetupOption onAction="#localFullNode" title="%localFullNode" description="%localFullNodeInfo"/>
+	<SetupOption onAction="#remoteNode" title="%remoteNode" description="%remoteNodeInfo"/>
 </VBox>

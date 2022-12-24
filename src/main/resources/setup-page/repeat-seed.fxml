@@ -1,0 +1,21 @@
+<?import javafx.scene.control.*?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<HBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" alignment="TOP_CENTER" stylesheets="@./welcome.css, @repeat-seed.css" fx:id="root" fx:controller="com.satergo.controller.RepeatSeedCtrl">
+	<VBox spacing="12.5" alignment="TOP_CENTER">
+		<Label styleClass="welcome-text" text="%repeatSeedPhrase"/>
+
+		<Label text="%selectWordsInCorrectOrder"/>
+
+		<Label fx:id="seedPhraseProgress" alignment="BASELINE_LEFT" maxWidth="Infinity"/>
+
+		<Group fx:id="verifyHolder"/>
+
+		<Label fx:id="mnemonicPasswordLabel" text="%mnemonicPassword"/>
+
+		<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword"/>
+
+		<Button styleClass="large" onAction="#createWallet" text="%createWallet"/>
+	</VBox>
+</HBox>

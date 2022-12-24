@@ -1,9 +1,18 @@
+.tx-cell {
+	-fx-background-radius: 5px;
+	-fx-padding: 4px 2px 4px 2px;
+
+	-fx-border-radius: 5px;
+	-fx-border-width: 0.25px;
+	-fx-border-color: linear-gradient(to bottom right, white, rgb(20, 20, 20));
+}
+
 .green {
-	-fx-background-color: rgba(0, 255, 0, 0.1);
+	-fx-background-color: linear-gradient(to bottom right, rgba(148, 255, 185, 0.3), rgba(0, 183, 51, 0.3));
 }
 
 .red {
-	-fx-background-color: rgba(255, 0, 0, 0.1);
+	-fx-background-color: linear-gradient(to bottom right, rgba(255, 134, 134, 0.3), rgba(233, 1, 1, 0.3));
 }
 
 .arrow-button {

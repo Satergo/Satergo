@@ -4,7 +4,7 @@
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
-<fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" stylesheets="welcome.css" styleClass="background" type="VBox">
+<fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" stylesheets="chart-view.css" styleClass="background" type="VBox">
 	<fx:define>
 		<ToggleGroup fx:id="time"/>
 	</fx:define>

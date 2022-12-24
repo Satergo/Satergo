@@ -7,7 +7,6 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.VBox;
-import org.ergoplatform.appkit.RestApiErgoClient;
 import org.ergoplatform.explorer.client.DefaultApi;
 import org.ergoplatform.explorer.client.model.TransactionInfo;
 import retrofit2.Retrofit;

@@ -1,33 +1,63 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.AccountCtrl" spacing="4">
+<?import com.satergo.Icon?>
+<?import javafx.scene.image.ImageView?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.AccountCtrl" spacing="20">
 	<padding><Insets topRightBottomLeft="20"/></padding>
-	<GridPane vgap="4">
-		<columnConstraints>
-			<ColumnConstraints hgrow="ALWAYS"/>
-			<ColumnConstraints halignment="RIGHT"/>
-		</columnConstraints>
 
-<!--		<Label text="%addressBook" GridPane.columnIndex="0" GridPane.rowIndex="0"/>-->
-<!--		<Button fx:id="addressBook" text="%open" GridPane.columnIndex="0" GridPane.rowIndex="0"/>-->
+	<HBox alignment="CENTER_LEFT">
+		<Label text="%wallet"/>
+		<Label text=": "/>
+		<Label fx:id="walletName"/>
+		<Button text="%logout" onAction="#logout">
+			<HBox.margin><Insets left="10"/></HBox.margin>
+		</Button>
+	</HBox>
 
-		<Label fx:id="totalBalanceLabel" managed="${totalBalanceLabel.visible}" text="%totalBalance" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-		<Label fx:id="totalBalance"  managed="${totalBalance.visible}" text="0.0 ERG" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+	<ScrollPane fitToWidth="true" fitToHeight="true" vbarPolicy="NEVER" hbarPolicy="NEVER">
+		<GridPane vgap="4" hgap="8">
+			<columnConstraints>
+				<ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+				<ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+			</columnConstraints>
 
-		<Label fx:id="mnemonicPhraseLabel" text="%mnemonicPhrase" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-		<Button fx:id="mnemonicPhraseButton" onAction="#retrieveMnemonicPhrase" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+			<VBox id="account-total-balance" styleClass="section" GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="4">
+				<Label fx:id="totalBalanceLabel" text="%totalBalance" textAlignment="CENTER" maxWidth="Infinity" alignment="CENTER" style="-fx-font-size: 11px;"/>
+				<BorderPane>
+					<left>
+						<Label BorderPane.alignment="CENTER_LEFT" fx:id="totalBalance" text="0.0 ERG" style="-fx-font-size: 18px;"/>
+					</left>
+					<right>
+						<Button BorderPane.alignment="CENTER_RIGHT" text="%settings" onAction="#openSettingsDialog" contentDisplay="RIGHT" graphicTextGap="16" styleClass="transparent" style="-fx-cursor: HAND;">
+							<graphic><Icon icon="gear" height="12" style="-fill: white;"/></graphic>
+						</Button>
+					</right>
+				</BorderPane>
+			</VBox>
 
-		<Label fx:id="mnemonicPasswordLabel" text="%mnemonicPassword" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-		<Button fx:id="mnemonicPasswordButton" onAction="#retrieveMnemonicPassword" text="%retrieve" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+			<VBox GridPane.columnIndex="0" GridPane.rowIndex="1" fx:id="tokens" spacing="5" managed="${tokens.visible}"/>
 
-		<Label text="%walletName" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-		<Button onAction="#changeWalletName" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+			<VBox GridPane.columnIndex="0" GridPane.rowIndex="2">
+				<HBox alignment="CENTER_LEFT">
+					<Label text="%yourAddresses"/>
+					<Hyperlink text="+" onAction="#addAddress">
+						<tooltip><Tooltip text="%addAddress"/></tooltip>
+					</Hyperlink>
+				</HBox>
+				<VBox fx:id="addresses" spacing="2"/>
+			</VBox>
 
-		<Label text="%walletPassword" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-		<Button onAction="#changeWalletPassword" text="%change" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-	</GridPane>
-	<Label text="%yourAddresses"><VBox.margin><Insets top="10"/></VBox.margin></Label>
-	<VBox fx:id="addresses" spacing="2"/>
-	<HBox spacing="8" alignment="CENTER_RIGHT"><Button onAction="#addAddress" text="%addAddress"/><Button onAction="#logout" text="%logout" alignment="CENTER_RIGHT"/></HBox>
+
+			<VBox styleClass="section" alignment="TOP_CENTER" spacing="14" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.rowSpan="3">
+				<Label text="%receive"/>
+
+				<ImageView fx:id="qrCodeImage"/>
+
+				<Hyperlink fx:id="saveQrCode" text="%saveQrCode"/>
+
+				<ComboBox fx:id="qrCodeAddress"/>
+			</VBox>
+		</GridPane>
+	</ScrollPane>
 </VBox>

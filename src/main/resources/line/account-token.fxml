@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import com.satergo.extra.IconButton?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" type="BorderPane" styleClass="account-token-line, section" minHeight="66" prefHeight="66" maxHeight="66">
+	<left>
+		<HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT" spacing="8">
+			<ImageView fx:id="icon"/>
+			<VBox>
+				<Label fx:id="name"/>
+<!--				<Label fx:id="symbol"/>--><!-- TODO -->
+			</VBox>
+		</HBox>
+	</left>
+
+	<right>
+		<HBox alignment="CENTER_RIGHT" BorderPane.alignment="CENTER_RIGHT">
+			<Label fx:id="amount"/>
+			<IconButton fx:id="copyId" icon="copy-regular" onAction="#copyId" tooltip="%copyTokenId"/>
+		</HBox>
+	</right>
+</fx:root>

@@ -5,14 +5,14 @@ import com.satergo.Main;
 import com.satergo.ProgramData;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergo.EmbeddedNodeInfo;
+import com.satergo.extra.dialog.MoveStyle;
+import com.satergo.extra.dialog.SatPromptDialog;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.util.Pair;
@@ -25,22 +25,19 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-public class FullNodeSourceCtrl implements SetupPage.WithLanguage {
+public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 	@FXML private Parent root;
 
 	private File existingNodeConfFile;
 
 	@FXML
-	public void downloadAndSetup(MouseEvent e) {
-		if (e.getButton() == MouseButton.PRIMARY) {
-			Main.get().displaySetupPage(Load.<FullNodeDownloaderCtrl>fxmlController("/setup-page/full-node-download.fxml"));
-		}
+	public void downloadAndSetup(ActionEvent e) {
+		Main.get().displaySetupPage(Load.<FullNodeDownloaderCtrl>fxmlController("/setup-page/full-node-download.fxml"));
 	}
 
 	@SuppressWarnings("unchecked")
 	@FXML
-	public void useExisting(MouseEvent e) {
-		if (e.getButton() != MouseButton.PRIMARY) return;
+	public void useExisting(ActionEvent e) {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
 		directoryChooser.setTitle(Main.lang("nodeDirectory"));
@@ -63,8 +60,10 @@ public class FullNodeSourceCtrl implements SetupPage.WithLanguage {
 				if (nodeJar == null) return;
 			}
 
-			Dialog<Pair<NetworkType, File>> dialog = new Dialog<>();
+			SatPromptDialog<Pair<NetworkType, File>> dialog = new SatPromptDialog<>();
 			dialog.initOwner(Main.get().stage());
+			dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+			Main.get().applySameTheme(dialog.getScene());
 			dialog.setTitle(Main.lang("programName"));
 			dialog.setHeaderText(Main.lang("moreInformationNeededNode"));
 			Parent root = Load.fxml("/setup-page/need-more-info-existing-node.fxml");
@@ -89,7 +88,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithLanguage {
 				}
 				return null;
 			});
-			Pair<NetworkType, File> moreInfo = dialog.showAndWait().orElse(null);
+			Pair<NetworkType, File> moreInfo = dialog.showForResult().orElse(null);
 			if (moreInfo == null) return;
 			EmbeddedNodeInfo info = new EmbeddedNodeInfo(moreInfo.getKey(), nodeJar.getName(), EmbeddedFullNode.LogLevel.WARN, moreInfo.getValue().getName());
 			try {

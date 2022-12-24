@@ -1,11 +1,56 @@
+#sidebar {
+	-fx-background-color: -w-sidebar-bg;
+	-fx-border-width: 0 0.5px 0 0;
+	-fx-border-color: -w-sidebar-border-color;
+	-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0.1, 2, 0);
+}
+
+.section, .account-address-line {
+	-fx-border-radius: 10px;
+	-fx-background-radius: 10px;
+	-fx-background-color: -w-section-bg-1, -w-section-bg-2;
+	-fx-padding: 1em;
+	-fx-border-style: none, solid;
+	-fx-border-color: -w-section-border-color-1, -w-section-border-color-2;
+	-fx-border-width: 0.5, 0.5;
+}
+
 #sidebar, #settings {
 }
 
-#sidebar .toggle-button:selected, #settings:selected {
-	-fx-background-color: DIMGRAY;
+#sidebar .toggle-button {
+	-fx-padding: 6px 2em 6px 1em;
+	-fx-alignment: CENTER_LEFT;
+	-fx-text-fill: -w-sidebar-button-text-fill;
+	-fx-border-width: 0;
+	-fx-border-radius: 4px;
 }
 
-.text-field.error {
-  -fx-text-box-border: red;
-  -fx-focus-color: red;
+#sidebar .toggle-button:hover {
+	-fx-background-color: -w-sidebar-button-hover;
+}
+
+#sidebar .toggle-button:selected {
+	-fx-text-fill: -w-sidebar-button-selected;
+}
+
+.root {
+	-fx-background-size: contain;
+	-fx-background-repeat: no-repeat;
+	-fx-background-position: right;
+}
+
+#account-total-balance {
+	-fx-background-color: linear-gradient(from 30% 10% to 70% 90%, -c-blue-gradient-start, -c-blue-gradient-end);
+	-fx-padding: 0.5em 2em 1.8em 2em;
+}
+
+.account-token-line {
+	-fx-border-width: 2px;
+	-fx-border-color: linear-gradient(from 30% 10% to 70% 90%, -c-blue-gradient-start, -c-blue-gradient-end);
+	-fx-background-color: TRANSPARENT;
+}
+
+.account-address-line {
+	-fx-border-color: -w-account-address-border-color;
 }

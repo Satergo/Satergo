@@ -25,4 +25,317 @@
 .root {
 	/* TODO use system's default size */
 	-fx-font: 13px "DejaVu Sans";
+
+	-c-blue-gradient-start: #7B7DFF;
+	-c-blue-gradient-end: #3F41F6;
+	-c-button-hover: linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC);
+	-c-button-pressed: linear-gradient(from 16% 0% to 140% 0%, #282BF8, #000146);
 }
+
+.icon { -fill: -sat-icon; }
+
+/* INPUT */
+
+.text-area .content {
+	-fx-background-color: transparent;
+}
+
+.text-input {
+	-fx-background-color: transparent;
+	-fx-text-fill: -sat-input-text-fill;
+	-fx-border-width: 1px;
+	-fx-border-color: -sat-input-border-color;
+	-fx-padding: 7px 9px 7px 9px;
+	-fx-border-radius: 8px;
+}
+
+.text-input:focused {
+	-fx-border-color: -sat-input-focused-border-color;
+}
+
+.fieldLabel {
+	-fx-padding: 0 0 2px 8px;
+}
+
+.text-input.small {
+	-fx-border-radius: 8px;
+	-fx-padding: 4px;
+}
+
+/* Keep prompt text shown when input is focused */
+.text-input, .text-input:focused {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
+.tooltip {
+	/* Decrease tooltip show delay. Default is 1000ms */
+    -fx-show-delay: 500ms;
+	/* Make it so tooltips are shown until the cursor is moved away. Default is to hide after 5000ms */
+    -fx-show-duration: INDEFINITE;
+}
+
+/* BUTTON */
+
+.button {
+	-fx-background-color: TRANSPARENT;
+	-fx-border-color: -sat-button-border-color;
+	-fx-border-width: 0.5px;
+	-fx-border-radius: 4px;
+	-fx-padding: 3.9px 9.9px 3.9px 9.9px;
+}
+
+.button.large {
+	-fx-padding: 8px 14px 8px 14px;
+}
+
+.button:hover, .button:pressed {
+	-fx-background-color: -c-button-hover;
+	-fx-text-fill: -sat-button-hover-text-fill;
+	-fx-padding: 4px 10px 4px 10px;
+	-fx-border-width: 0;
+}
+
+.button.large:hover, .button.large:pressed {
+	-fx-padding: 8.5px 14.5px 8.5px 14.5px;
+}
+
+.button:pressed {
+	-fx-background-color: -c-button-pressed;
+}
+
+.button.transparent {
+	-fx-background-color: TRANSPARENT;
+}
+
+.button.transparent:hover, .button.transparent:pressed {
+	-fx-border-width: 0.49px;
+	-fx-border-color: white;
+}
+
+.button.borderless {
+	-fx-padding: 4px 10px 4px 10px;
+	-fx-border-width: 0;
+}
+
+.button.transparent.borderless:hover,
+.button.transparent.borderless:pressed {
+	-fx-border-width: 0;
+	-fx-text-fill: -fx-text-base-color;
+}
+
+.button.less-wide {
+	-fx-padding: 3.9px 9.9px 3.9px 9.9px;
+}
+
+.button.less-wide.borderless {
+	-fx-padding: 4px 6px 4px 6px;
+	-fx-border-width: 0;
+}
+
+.button.iconbutton { -fx-background-color: transparent; }
+
+.iconbutton > .icon { -fill: -sat-iconbutton; }
+.iconbutton:hover > .icon { -fill: -sat-iconbutton-hover; }
+.iconbutton:pressed > .icon { -fill: -sat-iconbutton-pressed; }
+.iconbutton:disabled { -fx-opacity: 0.2; }
+
+/* PROGRESS BAR */
+
+.progress-bar {
+	-fx-skin: "com.satergo.extra.ProgressBarSkin";
+	-fx-border-color: -sat-progress-bar-border-color;
+	-fx-border-width: 1;
+	-fx-border-radius: 4;
+    -fx-indeterminate-bar-length: 30;
+    -fx-indeterminate-bar-escape: true;
+    -fx-indeterminate-bar-flip: false;
+    -fx-indeterminate-bar-animation-time: 2;
+}
+
+.progress-bar .bar {
+    -fx-background-color:
+        linear-gradient(to right, -c-blue-gradient-start, -c-blue-gradient-end);
+    -fx-background-insets: 0;
+    -fx-background-radius: 4;
+    -fx-padding: 0.516667em;
+}
+
+.progress-bar:indeterminate .bar {
+    -fx-background-color: linear-gradient(to left, transparent, -fx-accent);
+}
+
+.progress-bar .track {
+	background_base_color: rgb(0, 150, 201, 0.1);
+    -fx-background-color:
+     	transparent,
+     	transparent;
+   -fx-background-insets: 0, 1;
+}
+
+.progress-bar:zero .track {
+	background_base_color: rgb(0, 150, 201, 0.1);
+	-fx-background-color:
+		transparent,
+		linear-gradient(
+			from 0px .75em to .75em 0px,
+			repeat,
+			background_base_color 0%,
+			background_base_color 49%,
+			derive(background_base_color, 30%) 50%,
+			derive(background_base_color, 30%) 99%
+		);
+}
+
+.progress-bar:disabled {
+    -fx-opacity: -fx-disabled-opacity;
+}
+
+/* COMBO BOX */
+
+.combo-box {
+	-fx-background-color: transparent;
+	-fx-border-width: 1;
+	-fx-border-color: -sat-border-inactive;
+	-fx-border-radius: 5px;
+}
+
+.combo-box:hover {
+	-fx-border-color: -sat-border-hover;
+}
+
+.combo-box:showing {
+	-fx-border-radius: 5px 5px 0 0;
+	-fx-border-color: -sat-border-active -sat-border-active transparent -sat-border-active;
+}
+
+.combo-box-popup {
+	-fx-border-radius: 5px;
+}
+
+.combo-box-popup > .list-view {
+    -fx-effect: null;
+
+	-fx-background-insets: 0, 0 1 1 1;
+    -fx-background-radius: 0 0 5px 5px;
+    -fx-background-color: -sat-border-active, -sat-cell-inactive-bg;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-font-size: 1em;
+    -fx-padding: 0.333333em 0 0.333333em 0.666667em;
+
+    -fx-background-color: transparent;
+
+    -fx-text-fill: -sat-border-inactive;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:hover {
+    -fx-background-color: -sat-cell-hover-bg;
+    -fx-text-fill: -sat-cell-hover-text;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -sat-cell-active-bg;
+    -fx-text-fill: -sat-cell-active-text;
+}
+
+/* CONTEXT MENU */
+
+.context-menu {
+	-fx-background-color: -sat-context-menu-bg-1, -sat-context-menu-bg-2;
+	-fx-border-color: -sat-context-menu-border-color-1, -sat-context-menu-border-color-2;
+	-fx-border-width: 0.5, 0.5;
+	-fx-border-radius: 7.5px, 7.5px;
+	-fx-background-radius: 7.5px, 7.5px;
+}
+
+/* SCROLL */
+
+/* no backgrounds on scroll panes */
+.scroll-pane, .scroll-pane > .viewport {
+   -fx-background-color: transparent;
+}
+
+/* remove borders */
+.scroll-pane {
+
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+.scroll-pane > .scroll-bar {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-bar, .scroll-bar:horizontal, .scroll-bar:vertical, ScrollBar, ScrollBar:horizontal, ScrollBar:vertical {
+	-fx-background: TRANSPARENT, TRANSPARENT;
+}
+
+/* hide bar buttons */
+.scroll-bar > .increment-button,
+.scroll-bar > .decrement-button {
+    -fx-padding: 0;
+}
+
+/* TOGGLE SWITCH */
+
+.toggle-switch .thumb {
+	-fx-inner-border: white;
+	-fx-body-color: white;
+	-fx-background-insets: 2, 2, 2;
+}
+
+.toggle-switch .thumb-area {
+	-fx-padding: 0.75em 1.666666em 0.75em 1.666666em;
+	-fx-background-color: #4F4F4F;
+}
+
+.toggle-switch:selected .thumb-area {
+	-fx-background-color: linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC), linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC);
+}
+
+/* HYPERLINK */
+
+.hyperlink {
+	-fx-text-fill: -sat-hyperlink-color;
+	-fx-underline: true;
+	-fx-border-color: transparent;
+}
+
+.hyperlink.text-color {
+	-fx-text-fill: -fx-text-base-color !important;
+}
+
+/* TOGGLE BUTTON */
+
+.toggle-button {
+	-fx-background-color: TRANSPARENT;
+	base_color: -sat-toggle-button-unselected;
+	-fx-border-color: base_color;
+	-fx-text-fill: base_color;
+	-fx-border-width: 1px;
+	-fx-border-radius: 5px;
+	-fx-background-radius: 5px;
+	-fx-padding: 0.4em 1.6em 0.4em 1.6em;
+}
+
+.toggle-button:hover, .toggle-button:armed, .toggle-button:focus-visible  {
+	base_color: -sat-toggle-button-hover;
+}
+
+.toggle-button:selected {
+	base_color: -sat-toggle-button-selected;
+}
+
+.toggle-button, .toggle-button:hover, .toggle-button:armed,
+.toggle-button:selected, .toggle-button:selected:focused {
+	-fx-background-insets: 0;
+}
+
+/* Disable features of FXSkins. Enabled features: text-field, password-field. */
+.button { -fx-skin: "javafx.scene.control.skin.ButtonSkin"; }
+.toggle-button { -fx-skin: "javafx.scene.control.skin.ToggleButtonSkin"; }
+.slider { -fx-skin: "javafx.scene.control.skin.SliderSkin"; }
+.scroll-pane { -fx-skin: "javafx.scene.control.skin.ScrollPaneSkin"; }
+.toggle-switch { -fx-skin: "com.satergo.extra.ToggleSwitchSkin"; }
+/* .progress-bar skin is overridden above */

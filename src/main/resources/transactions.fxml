@@ -1,15 +1,21 @@
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.TransactionsCtrl">
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.TransactionsCtrl">
 	<padding><Insets topRightBottomLeft="20"/></padding>
+	<center>
+		<ScrollPane  fitToWidth="true" fitToHeight="true" vbarPolicy="NEVER">
+			<!--Label text="Pending"/>
 
-	<!--Label text="Pending"/>
+			<VBox fx:id="pending"/>
 
-	<VBox fx:id="pending"/>
+			<Label text="Finished"/-->
 
-	<Label text="Finished"/-->
+			<VBox fx:id="finished" spacing="10"/>
 
-	<VBox fx:id="finished"/>
+		</ScrollPane>
+	</center>
+</BorderPane>
 
-</VBox>
 

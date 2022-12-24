@@ -1,0 +1,11 @@
+.toggle-button {
+	-fx-background-color: TRANSPARENT;
+	base_color: #4F4F4F;
+	-fx-border-color: base_color;
+	-fx-text-fill: base_color;
+	-fx-border-width: 1px;
+}
+
+.toggle-button:selected {
+	base_color: white;
+}

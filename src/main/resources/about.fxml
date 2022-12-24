@@ -2,14 +2,18 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Button?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" styleClass="background" fx:controller="com.satergo.controller.AboutCtrl">
-	<padding><Insets topRightBottomLeft="20"/></padding>
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.control.Hyperlink?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="26" fx:controller="com.satergo.controller.AboutCtrl" alignment="CENTER_LEFT">
+	<padding><Insets top="20" right="20" bottom="200" left="40"/></padding>
 
 	<Label fx:id="version"/>
 
 	<Label text="%madeByAberg"/>
 
-	<Label fx:id="translatedBy"/>
+	<TextFlow><Label text="%visualDesignBy"/><Hyperlink styleClass="text-color" onAction="#showDesigner" text="Nadi"/></TextFlow>
+
+	<Label fx:id="translatedBy" managed="${translatedBy.visible}"/>
 
 	<Button onAction="#donate" text="%donateToAuthor"/>
 </VBox>

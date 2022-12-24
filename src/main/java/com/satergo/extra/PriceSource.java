@@ -88,7 +88,7 @@ public enum PriceSource {
 			if (!supportedCurrencies.contains(CommonCurrency.BTC)) throw new IllegalArgumentException("unsupported common currency");
 			return fetchPriceInternal(CommonCurrency.BTC).movePointRight(8);
 		}
-		if (!supportedCurrencies.contains(commonCurrency)) throw new IllegalArgumentException("unsupported common currency");
+		if (!supportedCurrencies.contains(commonCurrency)) throw new IllegalArgumentException("unsupported common currency " + commonCurrency + " " + this);
 		return fetchPriceInternal(commonCurrency);
 	}
 }

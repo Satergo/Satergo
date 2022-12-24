@@ -1,0 +1,16 @@
+#amount {
+	-fx-background-radius: 5 0 0 5;
+	-fx-border-radius: 5 0 0 5;
+}
+
+#remove {
+	-fx-background-radius: 0 5 5 0;
+	-fx-border-radius: 0 5 5 0;
+	-fx-border-color: #BDBDBD;
+	-fx-border-width: 1 1 1 0;
+}
+
+.token-line.error #amount,
+.token-line.error #remove {
+	-fx-border-color: crimson;
+}

@@ -1,32 +1,33 @@
 package com.satergo;
 
+import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergouri.ErgoURIString;
 import com.satergo.extra.IncorrectPasswordException;
+import com.satergo.extra.ThemeStyle;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Pair;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
 public class Main extends Application {
 
-	public static final String VERSION = "1.4.1";
-	public static final int VERSION_CODE = 5;
+	public static final String VERSION = "1.5.0";
+	public static final int VERSION_CODE = 6;
 
 	public static EmbeddedFullNode node;
 	// from command line
@@ -36,6 +37,9 @@ public class Main extends Application {
 
 	public final Translations translations = new Translations("lang.Lang");
 
+	// The current value of 1 ERG, in the user's chosen currency.
+	public final SimpleObjectProperty<BigDecimal> lastOneErgValue = new SimpleObjectProperty<>();
+
 	public static Main get() {
 		return INSTANCE;
 	}
@@ -43,24 +47,40 @@ public class Main extends Application {
 	private Stage stage;
 	private Scene scene;
 
-	private final JMetro jMetro = new JMetro();
+	private final SimpleObjectProperty<ThemeStyle> themeStyle = new SimpleObjectProperty<>();
+	private static final Path CUSTOM_STYLESHEET = Path.of("custom.css");
 
 	private Wallet wallet;
 	private ProgramData programData;
 
 	public void applySameTheme(Scene scene) {
-		JMetro copy = new JMetro();
-		copy.setScene(scene);
-		copy.styleProperty().bind(jMetro.styleProperty());
-		copy.getOverridingStylesheets().addAll(jMetro.getOverridingStylesheets());
+		scene.getStylesheets().add(FXSkins.getStylesheetURL());
+		scene.getStylesheets().add(Utils.resourcePath("/global.css"));
+		scene.getStylesheets().add(themeStyle.get() == ThemeStyle.DARK ? "/dark.css" : "/light.css");
+		if (Files.isRegularFile(CUSTOM_STYLESHEET)) {
+			try {
+				scene.getStylesheets().add(CUSTOM_STYLESHEET.toUri().toURL().toExternalForm());
+			} catch (MalformedURLException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
-	public ObjectProperty<Style> themeStyleProperty() {
-		return jMetro.styleProperty();
+	public ObjectProperty<ThemeStyle> themeStyleProperty() {
+		return themeStyle;
 	}
 
 	@Override
-	public void start(Stage primaryStage) {
+	public void start(Stage primaryStage) throws Exception {
+		try {
+			startInternal(primaryStage);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
+
+	private void startInternal(Stage primaryStage) {
 		INSTANCE = this;
 		stage = primaryStage;
 
@@ -75,23 +95,17 @@ public class Main extends Application {
 		Load.resourceBundle = translations.getBundle();
 		primaryStage.setTitle(lang("programName"));
 
-		scene = new Scene(new Group(), 1000, 600);
+		scene = new Scene(new Group(), 1030, 600);
 		primaryStage.setScene(scene);
 		primaryStage.setMinWidth(304);
-		jMetro.setScene(scene);
-		jMetro.setStyle(programData.lightTheme.get() ? Style.LIGHT : Style.DARK);
-		Runnable updateOverrides = () -> {
-			jMetro.getOverridingStylesheets().clear();
-			jMetro.getOverridingStylesheets().add(Utils.resourcePath(jMetro.getStyle() == Style.DARK ? "/dark.css" : "/light.css"));
-			jMetro.getOverridingStylesheets().add(Utils.resourcePath("/global.css"));
-		};
-		updateOverrides.run();
-		jMetro.styleProperty().addListener((observable, oldValue, newValue) -> updateOverrides.run());
+
+		themeStyle.addListener((observable, oldValue, newValue) -> {
+			scene.getStylesheets().clear();
+			applySameTheme(scene);
+		});
+		themeStyle.set(programData.lightTheme.get() ? ThemeStyle.LIGHT : ThemeStyle.DARK);
 
 		Icon.icons = ResourceBundle.getBundle("icons");
-		Icon.defaultColor.bind(Bindings.when(themeStyleProperty().isEqualTo(Style.DARK))
-				.then(Color.rgb(255, 255, 255))
-				.otherwise(Color.rgb(41, 41, 41)));
 		Icon.defaultHeight = 16;
 
 		// For Pty4J
@@ -105,6 +119,9 @@ public class Main extends Application {
 			}
 		});
 
+		primaryStage.getIcons().add(new Image(Utils.resourcePath("/images/window-logo.png")));
+		primaryStage.show();
+
 		if (programData.blockchainNodeKind.get() == null ||
 				(programData.blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE && !Files.isRegularFile(programData.embeddedNodeInfo.get()))) {
 			displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/setup-page/blockchain.fxml"));
@@ -116,6 +133,7 @@ public class Main extends Application {
 			if (programData.lastWallet.get() == null || !Files.isRegularFile(programData.lastWallet.get())) {
 				displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 			} else {
+				displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 				String password = Utils.requestPassword(Main.lang("passwordOf_s").formatted(programData.lastWallet.get().getFileName()));
 				if (password == null) {
 					programData.lastWallet.set(null);
@@ -125,7 +143,8 @@ public class Main extends Application {
 					Pair<Parent, WalletCtrl> load = Load.fxmlNodeAndController("/wallet.fxml");
 					walletPage = load.getValue();
 					if (initErgoURI != null) {
-						load.getValue().openSendWithErgoURI(initErgoURI);
+						throw new UnsupportedOperationException("Ergo URI handling is not implemented");
+//						load.getValue().openSendWithErgoURI(initErgoURI);
 					}
 					displayWalletPage(load);
 				} catch (IncorrectPasswordException e) {
@@ -134,8 +153,6 @@ public class Main extends Application {
 				}
 			}
 		}
-		primaryStage.getIcons().add(new Image(Utils.resourcePath("/images/logo.jpg")));
-		primaryStage.show();
 
 		new Thread(() -> {
 			try {
@@ -147,7 +164,7 @@ public class Main extends Application {
 			}
 		}).start();
 
-		programData.lightTheme.addListener((observable, oldValue, newValue) -> jMetro.setStyle(newValue ? Style.LIGHT : Style.DARK));
+		programData.lightTheme.addListener((observable, oldValue, newValue) -> themeStyle.set(newValue ? ThemeStyle.LIGHT : ThemeStyle.DARK));
 	}
 
 	@Override
@@ -244,8 +261,9 @@ public class Main extends Application {
 	}
 
 	public void handleErgoURI(ErgoURIString ergoURI) {
-		if (walletPage == null) return;
-		walletPage.openSendWithErgoURI(ergoURI);
-		stage.toFront();
+		throw new UnsupportedOperationException("Ergo URI handling is not implemented");
+//		if (walletPage == null) return;
+//		walletPage.openSendWithErgoURI(ergoURI);
+//		stage.toFront();
 	}
 }

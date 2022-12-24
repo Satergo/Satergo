@@ -5,12 +5,15 @@ import com.satergo.Utils;
 import com.satergo.Wallet;
 import com.satergo.WalletKey;
 import com.satergo.ergo.ErgoInterface;
+import com.satergo.extra.dialog.MoveStyle;
+import com.satergo.extra.dialog.SatPromptDialog;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import org.ergoplatform.appkit.Address;
 import org.ergoplatform.appkit.NetworkType;
@@ -28,6 +31,9 @@ public class AboutCtrl implements Initializable, WalletTab {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		version.setText("Satergo v" + Main.VERSION);
+		if (Main.get().translations.getEntries().get(0).equals(Main.get().translations.getEntry())) {
+			translatedBy.setVisible(false);
+		}
 		translatedBy.setText(Main.lang("translatedIntoThisLanguageBy_s").formatted(Main.get().translations.getEntry().credit()));
 	}
 
@@ -38,16 +44,19 @@ public class AboutCtrl implements Initializable, WalletTab {
 			return;
 		}
 
-		Dialog<BigDecimal> dialog = new Dialog<>();
+		SatPromptDialog<BigDecimal> dialog = new SatPromptDialog<>();
 		dialog.initOwner(Main.get().stage());
+		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
 		Main.get().applySameTheme(dialog.getDialogPane().getScene());
 		dialog.setTitle(Main.lang("donate"));
+		dialog.setHeaderText(Main.lang("donate"));
 
 		TextField amount = new TextField();
 
 		Label infoLabel = new Label(Main.lang("donationInfo").formatted(DONATION_ADDRESS.toString()));
 		infoLabel.setWrapText(true);
 		infoLabel.setMaxWidth(Screen.getPrimary().getBounds().getWidth() / 3.5);
+		infoLabel.setTextAlignment(TextAlignment.CENTER);
 
 		VBox root = new VBox(
 				infoLabel,
@@ -72,7 +81,7 @@ public class AboutCtrl implements Initializable, WalletTab {
 			return null;
 		});
 
-		BigDecimal amountFullErg = dialog.showAndWait().orElse(null);
+		BigDecimal amountFullErg = dialog.showForResult().orElse(null);
 		if (amountFullErg == null) return;
 		try {
 			Wallet wallet = Main.get().getWallet();
@@ -90,5 +99,12 @@ public class AboutCtrl implements Initializable, WalletTab {
 		} catch (WalletKey.Failure ignored) {
 			// user already informed
 		}
+	}
+
+	@FXML
+	public void showDesigner(ActionEvent e) {
+		// This is to prevent web crawlers from sending spam to the address
+		String url = new String(new char[] { 109, 97, 105, 108, 116, 111, 58, 99, 111, 100, 101, 112, 101, 110, 100, 101, 110, 99, 121, 111, 110, 97, 114, 116, 64, 103, 109, 97, 105, 108, 46, 99, 111, 109 });
+		Main.get().getHostServices().showDocument(url);
 	}
 }

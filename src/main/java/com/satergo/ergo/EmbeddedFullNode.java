@@ -1,12 +1,12 @@
 package com.satergo.ergo;
 
 import com.grack.nanojson.JsonObject;
-import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.controller.NodeOverviewCtrl;
 import com.satergo.extra.DownloadTask;
+import com.satergo.extra.dialog.SatVoidDialog;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -39,7 +39,7 @@ public class EmbeddedFullNode {
 	public enum LogLevel { ERROR, WARN, INFO, DEBUG, TRACE, OFF }
 
 	public final File nodeDirectory;
-	private PtyProcess process;
+	private Process process;
 	private long startedTime;
 
 	private final NetworkType networkType;
@@ -100,29 +100,16 @@ public class EmbeddedFullNode {
 		return "http://127.0.0.1:" + apiPort();
 	}
 
-	private static String readVersion(File file) throws IOException {
-		try (JarFile jar = new JarFile(file)) {
-			// doesn't use application.conf (4.0.10) because once that was outdated but mainnet.conf (4.0.13) was not
-			String mainnetConf = new String(new DataInputStream(jar.getInputStream(jar.getEntry("mainnet.conf"))).readAllBytes(), StandardCharsets.UTF_8);
-			Pattern pattern = Pattern.compile("nodeName\\s+=\\s+\"ergo-mainnet-([\\d.]+)\"");
-			Matcher m = pattern.matcher(mainnetConf);
+	public String readVersion() {
+		try (JarFile jar = new JarFile(nodeJar)) {
+			String applicationConf = new String(new DataInputStream(jar.getInputStream(jar.getEntry("application.conf"))).readAllBytes(), StandardCharsets.UTF_8);
+			Pattern pattern = Pattern.compile("appVersion\\s+=\\s+([\\d.]+)");
+			Matcher m = pattern.matcher(applicationConf);
 			if (!m.find()) throw new IllegalArgumentException();
 			return m.group(1);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-	}
-
-	public String readVersion() {
-		// Unfortunately many ergo node releases don't update the version in the relevant files, so we have to use the filename...
-		Matcher matcher = Pattern.compile(".*?(\\d\\.+\\d+\\.\\d+(?:\\.\\d+)?).*?").matcher(nodeJar.getName());
-		// Fallback to the probably wrong version in the conf file
-		if (!matcher.matches()) {
-			try {
-				return readVersion(nodeJar);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return matcher.group(1);
 	}
 
 	public void firstTimeSetup() {
@@ -159,15 +146,19 @@ public class EmbeddedFullNode {
 				headersSynced.set(Math.abs(status.networkHeight() - status.headerHeight()) <= 5);
 			});
 		}, 10, 2, TimeUnit.SECONDS);
-		int[] version = Arrays.stream(readVersion().split("\\.")).mapToInt(Integer::parseInt).toArray();
-		scheduler.scheduleAtFixedRate(() -> {
-			JsonObject latestNodeData = Utils.fetchLatestNodeData();
-			String latestVersionString = latestNodeData.getString("tag_name").substring(1);
-			int[] latestVersion = Arrays.stream(latestVersionString.split("\\.")).mapToInt(Integer::parseInt).toArray();
+		scheduler.scheduleAtFixedRate(this::checkForUpdate, 5, Duration.ofHours(4).toSeconds(), TimeUnit.SECONDS);
+	}
 
-			if ((lastVersionUpdateAlert == null || !Arrays.equals(lastVersionUpdateAlert, latestVersion))
-					&& Utils.compareVersion(version, latestVersion) < 0) {
-				Platform.runLater(() -> {
+	public void checkForUpdate() {
+		int[] version = Arrays.stream(readVersion().split("\\.")).mapToInt(Integer::parseInt).toArray();
+		JsonObject latestNodeData = Utils.fetchLatestNodeData();
+		String latestVersionString = latestNodeData.getString("tag_name").substring(1);
+		int[] latestVersion = Arrays.stream(latestVersionString.split("\\.")).mapToInt(Integer::parseInt).toArray();
+
+		if ((lastVersionUpdateAlert == null || !Arrays.equals(lastVersionUpdateAlert, latestVersion))
+				&& Utils.compareVersion(version, latestVersion) < 0) {
+			Platform.runLater(() -> {
+				if (!info.autoUpdate()) {
 					Alert alert = new Alert(Alert.AlertType.NONE);
 					alert.initOwner(Main.get().stage());
 					alert.setTitle(Main.lang("programName"));
@@ -180,46 +171,48 @@ public class EmbeddedFullNode {
 					ButtonType notNow = new ButtonType(Main.lang("notNow"), ButtonBar.ButtonData.CANCEL_CLOSE);
 					alert.getButtonTypes().addAll(update, notNow);
 					lastVersionUpdateAlert = latestVersion;
-					alert.showAndWait().ifPresent(t -> {
-						if (t == update) {
-							Alert updatingAlert = Utils.alert(Alert.AlertType.NONE, null);
-							ProgressBar progress = new ProgressBar();
-							updatingAlert.getDialogPane().setContent(new VBox(4, new Label(Main.lang("updatingErgoNode...")), progress));
-							DownloadTask task = createDownloadTask(nodeDirectory, latestVersionString, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
-							progress.progressProperty().bind(task.progressProperty());
-							task.setOnSucceeded(e -> {
-								// an alert cannot be closed unless it has a button
-								updatingAlert.getButtonTypes().add(ButtonType.OK);
-								updatingAlert.close();
-								// could be null if user somehow logs out while it is updating, so wallet page becomes null
-								NodeOverviewCtrl nodeTab = Main.get().getWalletPage() == null ? null : Main.get().getWalletPage().getTab("node");
-								if (nodeTab != null)
-									nodeTab.logVersionUpdate(latestVersionString);
-								stop();
-								waitForExit();
-								try {
-									Files.delete(nodeJar.toPath());
-								} catch (IOException ex) {
-									throw new RuntimeException(ex);
-								}
-								Main.node = Main.get().nodeFromInfo();
-								Main.node.start();
-								if (nodeTab != null) {
-									nodeTab.bindToProperties();
-									nodeTab.transferLog();
-									Main.get().getWalletPage().bindToNodeProperties();
-								}
-								Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
-							});
-							task.setOnFailed(e -> {
-								Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), task.getException());
-							});
-							new Thread(task).start();
-						}
-					});
+					ButtonType result = alert.showAndWait().orElse(null);
+					if (result != update) {
+						return;
+					}
+				}
+				ProgressBar progress = new ProgressBar();
+				SatVoidDialog updatingAlert = Utils.alert(Alert.AlertType.NONE, new VBox(
+						4,
+						new Label(Main.lang("updatingErgoNode...")),
+						progress
+				));
+				DownloadTask task = createDownloadTask(nodeDirectory, latestVersionString, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
+				progress.progressProperty().bind(task.progressProperty());
+				task.setOnSucceeded(e -> {
+					updatingAlert.close();
+					// could be null if user somehow logs out while it is updating, so wallet page becomes null
+					NodeOverviewCtrl nodeTab = Main.get().getWalletPage() == null ? null : Main.get().getWalletPage().getTab("node");
+					if (nodeTab != null)
+						nodeTab.logVersionUpdate(latestVersionString);
+					stop();
+					waitForExit();
+					try {
+						Files.delete(nodeJar.toPath());
+					} catch (IOException ex) {
+						throw new RuntimeException(ex);
+					}
+					Main.node = Main.get().nodeFromInfo();
+					Main.node.start();
+					if (nodeTab != null) {
+						nodeTab.bindToProperties();
+						nodeTab.transferLog();
+						Main.get().getWalletPage().bindToNodeProperties();
+					}
+					Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
 				});
-			}
-		}, 5, Duration.ofHours(4).toSeconds(), TimeUnit.SECONDS);
+				task.setOnFailed(e -> {
+					Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), task.getException());
+				});
+				new Thread(task).start();
+
+			});
+		}
 	}
 
 	/**

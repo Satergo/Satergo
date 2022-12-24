@@ -11,14 +11,18 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 import org.ergoplatform.appkit.NetworkType;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class RemoteNodeSetupCtrl implements SetupPage.WithLanguage, Initializable {
-	@FXML private Parent root;
+public class RemoteNodeSetupCtrl implements SetupPage.WithExtra, Initializable {
+	@FXML private Pane root;
+	// Container of address and networkType
+	@FXML private VBox vbox;
 	@FXML private TextField address;
 	@FXML private ComboBox<NetworkType> networkType;
 
@@ -38,6 +42,7 @@ public class RemoteNodeSetupCtrl implements SetupPage.WithLanguage, Initializabl
 	public void initialize(URL location, ResourceBundle resources) {
 		networkType.getItems().addAll(NetworkType.values());
 		networkType.setValue(NetworkType.MAINNET);
+		vbox.maxWidthProperty().bind(root.widthProperty().divide(2));
 	}
 
 	@FXML

@@ -1,32 +1,53 @@
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.control.Label?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.SettingsCtrl" vgap="4">
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import com.satergo.extra.ToggleSwitch?>
+<?import com.satergo.extra.SettingNode?>
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.SettingsCtrl" fx:id="root" stylesheets="settings.css">
 	<padding><Insets topRightBottomLeft="20"/></padding>
-	<columnConstraints>
-		<ColumnConstraints hgrow="ALWAYS"/>
-		<ColumnConstraints halignment="RIGHT"/>
-	</columnConstraints>
 
-	<Label text="%showPrice" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-	<CheckBox fx:id="showPrice" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+	<left>
+		<ScrollPane fitToWidth="true" fitToHeight="true">
+			<VBox spacing="20" prefWidth="${root.width / 2}">
+				<Label text="%settings"/>
 
-	<Label text="%priceSource" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-	<ComboBox fx:id="priceSource" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+				<SettingNode styleClass="section" text="%showPrice">
+					<image><Image url="@/images/settings/price.png"/></image>
+					<control><ToggleSwitch fx:id="showPrice"/></control>
+				</SettingNode>
 
-	<Label text="%priceCurrency" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-	<ComboBox fx:id="priceCurrency" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+				<SettingNode styleClass="section" text="%priceSource">
+					<image><Image url="@/images/settings/source.png"/></image>
+					<control><ComboBox fx:id="priceSource"/></control>
+				</SettingNode>
 
-	<Label text="%lightTheme" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-	<CheckBox fx:id="lightTheme" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+				<SettingNode styleClass="section" text="%priceCurrency">
+					<image><Image url="@/images/settings/currency.png"/></image>
+					<control><ComboBox BorderPane.alignment="CENTER_RIGHT" fx:id="priceCurrency"/></control>
+				</SettingNode>
 
-	<Label text="%language" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-	<ComboBox fx:id="language" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+				<SettingNode styleClass="section" text="%language">
+					<image><Image url="@/images/settings/language.png"/></image>
+					<control><ComboBox fx:id="language"/></control>
+				</SettingNode>
 
-	<Label text="%requirePasswordForSending" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-	<CheckBox fx:id="requirePasswordForSending" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+				<SettingNode styleClass="section" text="%requirePasswordForSending">
+					<image><Image url="@/images/settings/lock.png"/></image>
+					<control><ToggleSwitch fx:id="requirePasswordForSending"/></control>
+				</SettingNode>
+			</VBox>
+		</ScrollPane>
+	</left>
 
-</GridPane>
+	<right>
+		<VBox>
+			<VBox fx:id="themeBox" alignment="TOP_CENTER">
+				<ImageView fx:id="themeImage"/>
+				<Label fx:id="themeLabel"/>
+			</VBox>
+		</VBox>
+	</right>
+
+</BorderPane>

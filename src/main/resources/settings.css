@@ -1,0 +1,12 @@
+.setting {
+	-fx-alignment: CENTER_LEFT;
+	-fx-spacing: 14px;
+	-fx-padding: 1.4em 2em;
+	-fx-background-color: -w-setting-bg;
+	-fx-border-color: -w-setting-border-color-1, -w-setting-border-color-2;
+	-fx-border-width: 0.25;
+}
+
+#themeBox {
+	-fx-cursor: HAND;
+}
