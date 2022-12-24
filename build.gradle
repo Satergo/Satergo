@@ -13,7 +13,7 @@ java {
 }
 
 group 'com.satergo'
-version '1.5.0'
+version '1.5.1'
 
 application {
 	mainClass = "com.satergo.Launcher"
