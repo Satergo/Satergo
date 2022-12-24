@@ -79,7 +79,7 @@ public class ProgramData {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static ProgramData load(Path path) {
 		try {
 			JsonObject jo = JsonParser.object().from(Files.readString(path));

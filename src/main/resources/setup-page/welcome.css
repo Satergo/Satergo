@@ -1,17 +1,53 @@
 #root {
+	-fx-background-color: none;
+	-fx-alignment: TOP_CENTER;
+	-fx-spacing: 30px;
 	-fx-padding: 20px 40px 20px 40px;
 }
 
 .welcome-text {
-	-fx-font-size: 3.6em;
-	-fx-font-weight: BOLD;
+	-fx-font-size: 3em;
 }
+
+/* SETUP OPTION */
 
 .welcome-option {
 	-fx-cursor: hand;
-	-fx-border-color: DIMGRAY;
+	-fx-border-color: #BDBDBD;
+	-fx-border-radius: 5px;
+	-fx-background-radius: 5px;
+	-fx-padding: 10px;
+	-fx-alignment: CENTER;
+	-fx-spacing: 4px;
 }
 
-.option-title {
-	-fx-font-size: 2.6em;
+.welcome-option > .title {
+	-fx-font-size: 1.3em;
+}
+
+.welcome-option:hover, .welcome-option:focus-visible {
+	-fx-background-color: -c-button-hover;
+}
+
+.welcome-option:hover > .title, .welcome-option:pressed > .title, .welcome-option:focus-visible > .title,
+.welcome-option:hover > .description, .welcome-option:pressed > .description, .welcome-option:focus-visible > .description {
+	-fx-text-fill: -sat-button-hover-text-fill;
+}
+
+.welcome-option:pressed {
+	-fx-background-color: -c-button-pressed;
+}
+
+/* PAGE-SPECIFIC CHANGES */
+
+.wallet-setup .welcome-option {
+	-fx-padding: 14px;
+}
+
+.wallet-setup .welcome-option > .title, .full-node-source .welcome-option > .title {
+	-fx-font-size: 1.2em;
+}
+
+.full-node-source .welcome-option {
+	-fx-padding: 14px 4em;
 }

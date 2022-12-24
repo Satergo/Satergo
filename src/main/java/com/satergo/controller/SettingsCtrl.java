@@ -5,10 +5,15 @@ import com.satergo.Main;
 import com.satergo.Translations;
 import com.satergo.extra.CommonCurrency;
 import com.satergo.extra.PriceSource;
+import com.satergo.extra.ToggleSwitch;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 
 import java.net.URL;
@@ -16,12 +21,15 @@ import java.util.ResourceBundle;
 
 public class SettingsCtrl implements Initializable, WalletTab {
 
-	@FXML private CheckBox showPrice;
+	@FXML private ToggleSwitch showPrice;
 	@FXML private ComboBox<PriceSource> priceSource;
 	@FXML private ComboBox<CommonCurrency> priceCurrency;
-	@FXML private CheckBox lightTheme;
 	@FXML private ComboBox<Translations.Entry> language;
-	@FXML private CheckBox requirePasswordForSending;
+	@FXML private ToggleSwitch requirePasswordForSending;
+
+	@FXML private VBox themeBox;
+	@FXML private ImageView themeImage;
+	@FXML private Label themeLabel;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -42,7 +50,16 @@ public class SettingsCtrl implements Initializable, WalletTab {
 			Main.programData().priceCurrency.set(newValue);
 		});
 		priceCurrency.valueProperty().bindBidirectional(Main.programData().priceCurrency);
-		lightTheme.selectedProperty().bindBidirectional(Main.programData().lightTheme);
+		themeImage.imageProperty().bind(Bindings.when(Main.programData().lightTheme)
+				.then(Load.image("/images/settings/sun.png"))
+				.otherwise(Load.image("/images/settings/moon.png")));
+		themeLabel.textProperty().bind(Bindings.when(Main.programData().lightTheme)
+				.then(Main.lang("darkTheme"))
+				.otherwise(Main.lang("lightTheme")));
+		themeBox.setOnMouseClicked(e -> {
+			if (e.getButton() == MouseButton.PRIMARY)
+				Main.programData().lightTheme.set(!Main.programData().lightTheme.get());
+		});
 		language.getItems().addAll(Main.get().translations.getEntries());
 		language.setValue(Main.get().translations.getEntry(Main.programData().language.get()));
 		language.valueProperty().addListener((observable, oldValue, newValue) -> {

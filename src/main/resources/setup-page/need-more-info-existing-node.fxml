@@ -6,9 +6,9 @@
 <GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" hgap="300">
 	<padding><Insets topRightBottomLeft="20"/></padding>
 
-	<Label text="Network type" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+	<Label text="%networkType" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
 	<ComboBox fx:id="networkType" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-	<Label text="Conf file" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+	<Label text="%confFile" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
 	<Button fx:id="confFile" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 </GridPane>

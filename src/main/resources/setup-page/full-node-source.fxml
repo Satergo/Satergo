@@ -1,16 +1,10 @@
-<?import javafx.geometry.Insets?>
+<?import com.satergo.extra.SetupOption?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.FullNodeSourceCtrl" styleClass="background" stylesheets="@./welcome.css" fx:id="root" spacing="10">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.FullNodeSourceCtrl" styleClass="background, full-node-source" stylesheets="@./welcome.css" fx:id="root" fillWidth="false">
 	<Label text="%fullNodeSource" styleClass="welcome-text"/>
-
-	<HBox styleClass="welcome-option" onMouseClicked="#downloadAndSetup">
-		<padding><Insets topRightBottomLeft="20"/></padding>
-		<Label text="%downloadAndSetup" styleClass="option-title"/>
-	</HBox>
-	<HBox styleClass="welcome-option" onMouseClicked="#useExisting">
-		<padding><Insets topRightBottomLeft="20"/></padding>
-		<Label text="%useExistingFromDirectory" styleClass="option-title"/>
-	</HBox>
+	<VBox spacing="30">
+		<SetupOption title="%downloadAndSetup" onAction="#downloadAndSetup"/>
+		<SetupOption title="%useExistingFromDirectory" onAction="#useExisting"/>
+	</VBox>
 </VBox>

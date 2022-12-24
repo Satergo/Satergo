@@ -1,0 +1,12 @@
+.seed-phrase-tiles {
+	-fx-hgap: 8;
+	-fx-vgap: 8;
+}
+
+.seed-phrase-word {
+	-fx-max-width: Infinity;
+	-fx-max-height: Infinity;
+	-fx-font-size: 16px;
+	-fx-padding: 0.6em 1.6em 0.6em 1.6em;
+	-fx-background-color: -sat-seed-phrase-word-bg;
+}

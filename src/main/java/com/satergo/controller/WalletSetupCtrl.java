@@ -2,19 +2,18 @@ package com.satergo.controller;
 
 import com.satergo.*;
 import com.satergo.extra.IncorrectPasswordException;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class WalletSetupCtrl implements Initializable, SetupPage.WithLanguage, SetupPage.CustomLeft {
+public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, SetupPage.CustomLeft {
 
 	@FXML private Label nodeConfigurationInfo;
 	@FXML private Parent root;
@@ -34,14 +33,12 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithLanguage, S
 	}
 
 	@FXML
-	public void createWallet(MouseEvent e) {
-		if (e.getButton() == MouseButton.PRIMARY)
-			Main.get().displaySetupPage(Load.<CreateWalletCtrl>fxmlController("/setup-page/create-wallet.fxml"));
+	public void createWallet(ActionEvent e) {
+		Main.get().displaySetupPage(Load.<CreateWalletCtrl>fxmlController("/setup-page/create-wallet.fxml"));
 	}
 
 	@FXML
-	public void openWalletFile(MouseEvent e) {
-		if (e.getButton() != MouseButton.PRIMARY) return;
+	public void openWalletFile(ActionEvent e) {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle(Main.lang("walletFile"));
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(Main.lang("wallet"), "*." + Wallet.FILE_EXTENSION));
@@ -59,9 +56,8 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithLanguage, S
 	}
 
 	@FXML
-	public void restoreFromSeed(MouseEvent e) {
-		if (e.getButton() == MouseButton.PRIMARY)
-			Main.get().displaySetupPage(Load.<RestoreFromSeedCtrl>fxmlController("/setup-page/restore-wallet-from-seed.fxml"));
+	public void restoreFromSeed(ActionEvent e) {
+		Main.get().displaySetupPage(Load.<RestoreFromSeedCtrl>fxmlController("/setup-page/restore-wallet-from-seed.fxml"));
 	}
 
 	@Override

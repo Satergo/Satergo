@@ -5,16 +5,25 @@ import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.PasswordInputDialog;
+import com.satergo.extra.dialog.MoveStyle;
+import com.satergo.extra.dialog.SatPasswordInputDialog;
+import com.satergo.extra.dialog.SatVoidDialog;
+import com.sun.management.OperatingSystemMXBean;
+import javafx.application.Platform;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import org.ergoplatform.appkit.ErgoClient;
 import org.ergoplatform.appkit.ErgoId;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URL;
@@ -49,23 +58,36 @@ public class Utils {
 	}
 
 	public static void alert(Alert.AlertType type, String headerText, String contentText) {
-		Alert alert = new Alert(type);
+		SatVoidDialog alert = new SatVoidDialog();
 		alert.initOwner(Main.get().stage());
+		Main.get().applySameTheme(alert.getScene());
 		alert.setTitle(Main.lang("programName"));
 		alert.setHeaderText(headerText);
-		alert.setContentText(contentText);
+		alert.getDialogPane().setContent(new Label(contentText));
+		if (type != Alert.AlertType.NONE) {
+			alert.getDialogPane().getButtonTypes().add(ButtonType.OK);
+		}
 		alert.show();
 	}
 
-	public static Alert alert(Alert.AlertType type, String contentText) {
-		Alert alert = new Alert(type);
+	public static SatVoidDialog alert(Alert.AlertType type, Node content) {
+		SatVoidDialog alert = new SatVoidDialog();
 		alert.initOwner(Main.get().stage());
+		Main.get().applySameTheme(alert.getScene());
 		alert.setTitle(Main.lang("programName"));
-		alert.setGraphic(null);
 		alert.setHeaderText(null);
-		alert.setContentText(contentText);
+		alert.getDialogPane().setContent(content);
+		if (type != Alert.AlertType.NONE) {
+			alert.getDialogPane().getButtonTypes().add(ButtonType.OK);
+		}
 		alert.show();
 		return alert;
+	}
+
+	public static SatVoidDialog alert(Alert.AlertType type, String contentText) {
+		Label label = new Label(contentText);
+		label.setWrapText(true);
+		return alert(type, label);
 	}
 
 	public static void alertException(String title, String headerText, Throwable throwable) {
@@ -96,15 +118,17 @@ public class Utils {
 	}
 
 	public static void textDialogWithCopy(String headerText, String contentText) {
-		Alert alert = new Alert(Alert.AlertType.NONE);
+		SatVoidDialog alert = new SatVoidDialog();
 		alert.initOwner(Main.get().stage());
+		alert.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+		Main.get().applySameTheme(alert.getScene());
 		alert.setHeaderText(headerText);
 		Label label = new Label(contentText);
 		label.setWrapText(true);
 		alert.getDialogPane().setContent(label);
 		ButtonType copy = new ButtonType(Main.lang("copy"), ButtonBar.ButtonData.OK_DONE);
-		alert.getButtonTypes().add(copy);
-		alert.showAndWait().ifPresent(t -> {
+		alert.getDialogPane().getButtonTypes().add(copy);
+		alert.showForResult().ifPresent(t -> {
 			if (t == copy) copyStringToClipboard(contentText);
 		});
 	}
@@ -162,14 +186,11 @@ public class Utils {
 	}
 
 	public static String requestPassword(String dialogTitle) {
-		PasswordInputDialog dialog = new PasswordInputDialog();
-		// the "open last wallet" popup is opened before the program stage is shown
-		if (Main.get().stage() != null && Main.get().stage().isShowing()) {
-			dialog.initOwner(Main.get().stage());
-		}
-		Main.get().applySameTheme(dialog.getDialogPane().getScene());
-		dialog.setTitle(dialogTitle);
-		return dialog.showAndWait().orElse(null);
+		SatPasswordInputDialog dialog = new SatPasswordInputDialog();
+		dialog.setHeaderText(dialogTitle);
+		dialog.initOwner(Main.get().stage());
+		Main.get().applySameTheme(dialog.getScene());
+		return dialog.showForResult().orElse(null);
 	}
 
 	public static void alertIncorrectPassword() {
@@ -209,5 +230,31 @@ public class Utils {
 
 	public static Image tokenIcon36x36(ErgoId tokenId) {
 		return new Image("https://raw.githubusercontent.com/Satergo/Resources/master/token-icons-36x36/" + tokenId + ".png", true);
+	}
+
+	public static long getTotalSystemMemory() {
+		return ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getTotalMemorySize();
+	}
+
+	public static void showTemporaryTooltip(Node node, Tooltip tooltip, long ms) {
+		Bounds bounds = node.localToScreen(node.getLayoutBounds());
+		tooltip.setOpacity(0);
+		tooltip.setOnShown(event -> {
+			tooltip.setOpacity(1);
+			tooltip.setAnchorX(bounds.getCenterX() - tooltip.getWidth() / 2 + 10);
+			Utils.fxRunDelayed(tooltip::hide, 600);
+		});
+		tooltip.show(node, bounds.getCenterX() - tooltip.getWidth() / 2, bounds.getMaxY());
+	}
+
+	public static void fxRunDelayed(Runnable runnable, long ms) {
+		new Thread(() -> {
+			try {
+				Thread.sleep(ms);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			Platform.runLater(runnable);
+		}).start();
 	}
 }

@@ -1,12 +1,57 @@
-.text-input {
-	text_input_background_color: #2B2B2B;
-	background_hover_color: #2B2B2B;
-	background_focused_color: #2B2B2B;
-	text_focused_color: #FFFFFF;
-}
-
+/*
 .hyperlink.text-color {
 	-fx-text-fill: white;
+} */
+
+/* COLOR DEFINITIONS */
+
+.root {
+	-sat-input-text-fill: white;
+	-sat-input-border-color: #BDBDBD;
+	-sat-input-focused-border-color: white;
+
+	-sat-hyperlink-color: linear-gradient(from 16% 0% to 140% 130%, -c-blue-gradient-start, -c-blue-gradient-end);
+
+	-sat-button-border-color: white;
+	-sat-button-hover-text-fill: -fx-text-base-color;
+
+	-sat-toggle-button-unselected: #747474;
+	-sat-toggle-button-hover: derive(-sat-toggle-button-unselected, 50%);
+	-sat-toggle-button-selected: white;
+
+	-sat-icon: white;
+	-sat-iconbutton: #828282;
+	-sat-iconbutton-hover: derive(-sat-iconbutton, 60%);
+	-sat-iconbutton-pressed: white;
+
+	-sat-progress-bar-border-color: white;
+
+	-sat-seed-phrase-word-bg: rgba(21, 23, 25, 0.8);
+
+	-sat-dialog-bg-1: rgba(21, 23, 25, 0.95);
+	-sat-dialog-bg-2: transparent;
+	-sat-dialog-border-color-1: linear-gradient(to bottom right, white, black);
+	-sat-dialog-border-color-2: transparent;
+
+	-sat-context-menu-bg-1: #151719;
+	-sat-context-menu-bg-2: linear-gradient(to bottom right, rgba(131, 131, 131, 0.3), rgba(43, 43, 43, 0.3));
+	-sat-context-menu-border-color-1: linear-gradient(from 0% 0% to 30% 100%, white, rgb(30, 30, 30));
+	-sat-context-menu-border-color-2: transparent;
+
+	/* WALLET COLORS */
+	-w-sidebar-bg: linear-gradient(from 0% 0% to 100% 0%, #2d2e30, #212224);
+	-w-sidebar-border-color: linear-gradient(from 0 22.2609px to 311.582px 48.963px, rgba(255, 255, 255, 0.3), rgba(20, 20, 20, 0.3));
+	-w-sidebar-button-hover: #333333;
+	-w-sidebar-button-selected: linear-gradient(from 34px 0px to 247.453px 135.278px, #6163FF, #0003CC);
+	-w-sidebar-button-text-fill: white;
+	-w-section-bg-1: rgba(21, 23, 25, 0.83);
+	-w-section-bg-2: linear-gradient(to bottom right, rgba(131, 131, 131, 0.3), rgba(43, 43, 43, 0.3));
+	-w-section-border-color-1: transparent;
+	-w-section-border-color-2: linear-gradient(to bottom right, #FFFFFF, #141414);
+	-w-account-address-border-color: linear-gradient(from 0% 10% to 40% 400%, #FFFFFF, #141414);
+	-w-setting-bg: linear-gradient(to bottom right, rgba(131, 131, 131, 0.3), rgba(43, 43, 43, 0.3));
+	-w-setting-border-color-1: linear-gradient(from 0px 3px to 207px 394.37px, #FFFFFF, #141414);
+	-w-setting-border-color-2: transparent;
 }
 
 /* dark charts */
@@ -28,4 +73,80 @@
 
 .chart-vertical-grid-lines, .chart-horizontal-grid-lines {
 	-fx-stroke: #2a2a2a;
+}
+
+.background {
+	-fx-background-color: #161719;
+}
+
+.background, .dialog-pane {
+	-fx-base: #161719;
+}
+
+/* COMBO BOX */
+
+.combo-box {
+	-sat-border-inactive: #828282;
+	-sat-border-active: white;
+	-sat-border-hover: -sat-border-active;
+	-sat-cell-inactive-bg: #151719;
+	-sat-cell-hover-bg: -sat-cell-inactive-bg;
+	-sat-cell-hover-text: white;
+	-sat-cell-active-bg: linear-gradient(from 72.9474 9.20834 to 172.89 28.3195, #7B7DFF, #3F41F7);
+	-sat-cell-active-text: white;
+}
+
+/* FXSKINS */
+
+.text-field > .right-button > .right-button-graphic {
+	-fx-background-color: gray;
+}
+
+.text-field > .right-button > .right-button-graphic:hover {
+	-fx-background-color: linear-gradient(to bottom right, -c-blue-gradient-start, -c-blue-gradient-end);
+}
+
+/* FX DIALOG */
+
+.dialog-pane > .button-bar > .container > .button:default {
+	-fx-text-fill: white;
+	-fx-background-color: derive(#37393D, -30%);
+}
+
+.dialog-pane > .button-bar > .container > .button:default {
+	-fx-text-fill: white;
+	-fx-background-color: derive(#37393D, -30%);
+}
+
+.dialog-pane > .button-bar > .container > .button:default:hover {
+	-fx-background-color: linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC);
+}
+
+.dialog-pane > .button-bar > .container > .button:default:pressed {
+	-fx-background-color: linear-gradient(from 16% 0% to 140% 0%, #282BF8, #000146);
+}
+
+/* SAT DIALOG */
+
+.sat-dialog-container .button-bar > .container > .button:default {
+	-fx-text-fill: white;
+	-fx-background-color: derive(rgb(21, 23, 25), -30%);
+}
+
+.sat-dialog-container .button-bar > .container > .button:default:hover {
+	-fx-background-color: linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC);
+}
+
+.sat-dialog-container .button-bar > .container > .button:default:pressed {
+	-fx-background-color: linear-gradient(from 16% 0% to 140% 0%, #282BF8, #000146);
+}
+
+/* IMAGES */
+
+.imageLogo {
+	-fx-image: url("/images/logo-with-text-dark.png");
+}
+
+#setupPageHolder, #walletRoot {
+	-fx-background-image: url("/images/background-dark.png");
 }

@@ -24,21 +24,21 @@ import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.util.ResourceBundle;
 
-public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initializable {
+public class FullNodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializable {
 	private Utils.NodeVersion version;
 
 	@FXML private Parent root;
 	@FXML private ProgressBar progressBar;
 	@FXML private Label nodeVersion;
-	@FXML private Button download, continueSetup;
-	@FXML private Label customFolderLocation;
+	@FXML private Button selectCustomDirectory, download, continueSetup;
+	@FXML private Label customDirectoryLocation;
 	@FXML private ComboBox<NetworkType> networkType;
 
 	private File nodeDirectory;
 	private File nodeJar;
 
 	@FXML
-	public void selectCustomFolder(ActionEvent e) {
+	public void selectCustomDirectory(ActionEvent e) {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
 		directoryChooser.setTitle(Main.lang("nodeDirectory"));
@@ -50,7 +50,7 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initia
 			return;
 		}
 		this.nodeDirectory = nodeDirectory;
-		customFolderLocation.setText(Main.lang("current_s").formatted(nodeDirectory.getAbsolutePath()));
+		customDirectoryLocation.setText(Main.lang("current_s").formatted(nodeDirectory.getAbsolutePath()));
 	}
 
 	@FXML
@@ -75,10 +75,12 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initia
 					continueSetup.setDisable(false);
 				});
 				download.setDisable(true);
+				selectCustomDirectory.setDisable(true);
 				new Thread(downloadTask).start();
 			} else {
 				nodeJar = file;
 				download.setDisable(true);
+				selectCustomDirectory.setDisable(true);
 				continueSetup.setDisable(false);
 			}
 		} catch (IOException ex) {
@@ -90,7 +92,7 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initia
 	public void continueSetup(ActionEvent e) {
 		if (Main.node != null && Main.node.isRunning()) return;
 		Main.programData().blockchainNodeKind.set(ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE);
-		EmbeddedNodeInfo info = new EmbeddedNodeInfo(networkType.getValue(), nodeJar.getName(), EmbeddedFullNode.LogLevel.WARN, "ergo.conf");
+		EmbeddedNodeInfo info = new EmbeddedNodeInfo(networkType.getValue(), nodeJar.getName(), EmbeddedFullNode.LogLevel.ERROR, "ergo.conf");
 		Main.programData().embeddedNodeInfo.set(nodeDirectory.toPath().resolve(EmbeddedNodeInfo.FILE_NAME));
 		try {
 			Files.writeString(Main.programData().embeddedNodeInfo.get(), info.toJson());
@@ -116,7 +118,7 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutLanguage, Initia
 				}).newThread();
 		if (new File("node").exists()) {
 			nodeDirectory = null;
-			customFolderLocation.setText(Main.lang("currentNone"));
+			customDirectoryLocation.setText(Main.lang("currentNone"));
 		} else nodeDirectory = new File("node");
 	}
 

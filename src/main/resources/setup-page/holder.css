@@ -1,0 +1,28 @@
+.root {
+	-fx-background-size: contain;
+	-fx-background-repeat: no-repeat;
+	-fx-background-position: right;
+
+	-fx-padding: 40px;
+}
+
+.combo-box {
+	-fx-border-color: #FFFFFF;
+}
+
+.combo-box > .arrow-button {
+/*	-fx-border-color: white;
+	-fx-border-width: 1px;
+	-fx-border-opacity: 1;*/
+}
+
+.combo-box-base > .arrow-button > .arrow {
+	-fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
+	-fx-fill: TRANSPARENT;
+	-fx-stroke: black;
+}
+
+#left {
+	-fx-graphic-text-gap: 10px;
+	-fx-cursor: hand;
+}

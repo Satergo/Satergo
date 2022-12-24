@@ -1,3 +1,108 @@
 .hyperlink.text-color {
 	-fx-text-fill: white;
 }
+
+/* COLOR DEFINITIONS */
+
+.root {
+	-fx-base: white;
+
+	-sat-input-text-fill: #4F4F4F;
+	-sat-input-border-color: derive(#4F4F4F, 70%);
+	-sat-input-focused-border-color: derive(-sat-input-border-color, -40%);
+
+/*	-sat-hyperlink-color: linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC); */
+	-sat-hyperlink-color: linear-gradient(from 16% 0% to 140% 130%, -c-blue-gradient-start, -c-blue-gradient-end);
+
+	-sat-button-border-color: #828282;
+	-sat-button-hover-text-fill: white;
+
+	-sat-toggle-button-unselected: #828282;
+	-sat-toggle-button-hover: derive(-sat-toggle-button-unselected, -35%);
+	-sat-toggle-button-selected: -fx-text-base-color;
+
+	-sat-icon: rgb(41, 41, 41);
+	-sat-iconbutton: #828282;
+	-sat-iconbutton-hover: derive(-sat-iconbutton, -30%);
+	-sat-iconbutton-pressed: derive(-sat-iconbutton, -60%);
+
+	-sat-progress-bar-border-color: #BDBDBD;
+
+	-sat-seed-phrase-word-bg: transparent;
+
+	light-border-1: rgb(0, 0, 0, 0.4);
+	light-border-2: linear-gradient(to bottom right, rgb(111, 111, 247, 0.5), rgb(0, 3, 233, 0.5));
+
+	-sat-dialog-bg-1: rgba(255, 255, 255, 0.95);
+	-sat-dialog-bg-2: linear-gradient(from 0% 0% to 100% 0%, rgb(255, 255, 255, 0.3), rgba(170, 171, 253, 0.3));
+	-sat-dialog-border-color-1: light-border-1;
+	-sat-dialog-border-color-2: light-border-2;
+
+	-sat-context-menu-bg-1: -sat-dialog-bg-1;
+	-sat-context-menu-bg-2: -sat-dialog-bg-2;
+	-sat-context-menu-border-color-1: light-border-1;
+	-sat-context-menu-border-color-2: light-border-2;
+
+	/* WALLET COLORS */
+	-w-sidebar-bg: linear-gradient(from 0% 0% to 100% 0%, rgb(255, 255, 255, 0.3), rgb(170, 171, 253, 0.3));
+	-w-sidebar-border-color: linear-gradient(from 0 22.2609px to 311.582px 48.963px, rgba(255, 255, 255, 0.3), rgba(20, 20, 20, 0.3));
+	-w-sidebar-button-hover: white;
+	-w-sidebar-button-selected: linear-gradient(from 34px 0px to 247.453px 135.278px, #6163FF, #0003CC);
+	-w-sidebar-button-text-fill: #4F4F4F;
+	-w-section-bg-1: rgb(255, 255, 255, 0.5);
+	-w-section-bg-2: linear-gradient(from 0% 0% to 100% 100%, rgb(255, 255, 255, 0.3), rgb(170, 171, 253, 0.3));
+	-w-section-border-color-1: light-border-1;
+	-w-section-border-color-2: light-border-2;
+	-w-account-address-border-color: light-border-1;
+	-w-setting-bg: -w-section-bg-2;
+	-w-setting-border-color-1: light-border-1;
+	-w-setting-border-color-2: light-border-2;
+}
+
+/* COMBO BOX */
+
+.combo-box {
+	-sat-border-inactive: #828282;
+	-sat-border-active: black;
+	-sat-border-hover: -sat-border-active;
+	-sat-cell-inactive-bg: #151719;
+	-sat-cell-hover-bg: #515151;
+	-sat-cell-hover-text: white;
+	-sat-cell-active-bg: linear-gradient(from 72.9474 9.20834 to 172.89 28.3195, #7B7DFF, #3F41F7);
+	-sat-cell-active-text: white;
+}
+
+.background {
+	-fx-background-color: white;
+}
+
+/* SAT DIALOG */
+
+.sat-dialog-container .button-bar > .container > .button:default {
+	-fx-text-fill: white;
+	-fx-background-color: derive(rgb(21, 23, 25), -30%);
+}
+
+.sat-dialog-container .button-bar > .container > .button:default:hover {
+	-fx-background-color: linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC);
+}
+
+.sat-dialog-container .button-bar > .container > .button:default:pressed {
+	-fx-background-color: linear-gradient(from 16% 0% to 140% 0%, #282BF8, #000146);
+}
+
+/* CHANGES */
+
+#account-total-balance {
+	-fx-base: black;
+}
+
+/* IMAGES */
+
+.imageLogo {
+	-fx-image: url("/images/logo-with-text-light.png");
+}
+
+#setupPageHolder, #walletRoot {
+	-fx-background-image: url("/images/background-light.png");
+}

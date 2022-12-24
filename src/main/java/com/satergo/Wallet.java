@@ -143,6 +143,9 @@ public final class Wallet {
 		return wallet;
 	}
 
+	public static Wallet create(Path path, Mnemonic mnemonic, String name, char[] password) {
+		return create(path, mnemonic, name, password, false);
+	}
 
 	// ENCRYPTION, SERIALIZATION & STORING
 
@@ -198,7 +201,7 @@ public final class Wallet {
 		try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
 			if (formatVersion == 0) {
 				String name = in.readUTF();
-				SecretString mnemonicPhrase = SecretString.create(in.readUTF());
+				SecretString seedPhrase = SecretString.create(in.readUTF());
 				SecretString mnemonicPassword = SecretString.create(in.readUTF());
 				int myAddressesSize = in.readInt();
 				TreeMap<Integer, String> myAddresses = new TreeMap<>();
@@ -212,7 +215,7 @@ public final class Wallet {
 				}
 				// nonstandardDerivation is always true because the bug in the ergo-wallet cryptography library
 				// was not discovered yet when formatVersion 0 was created
-				Wallet wallet = Wallet.create(path, Mnemonic.create(mnemonicPhrase, mnemonicPassword), name, password, true);
+				Wallet wallet = Wallet.create(path, Mnemonic.create(seedPhrase, mnemonicPassword), name, password, true);
 				wallet.myAddresses.putAll(myAddresses);
 				wallet.addressBook.putAll(addressBook);
 				// Upgrade wallet file right away

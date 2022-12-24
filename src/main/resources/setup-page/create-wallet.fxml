@@ -1,30 +1,47 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<HBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" alignment="BASELINE_CENTER" styleClass="background" stylesheets="@./welcome.css" fx:id="root" fx:controller="com.satergo.controller.CreateWalletCtrl">
-	<GridPane fx:id="grid" vgap="6" alignment="BASELINE_CENTER">
-		<Label styleClass="welcome-text" text="%createNewWallet" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
-			<GridPane.margin><Insets bottom="60"/></GridPane.margin>
-		</Label>
+<HBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" alignment="BASELINE_CENTER" stylesheets="@./welcome.css" fx:id="root" fx:controller="com.satergo.controller.CreateWalletCtrl">
+	<VBox spacing="12.5" alignment="TOP_CENTER">
+		<Label styleClass="welcome-text" text="%createNewWallet"/>
 
-		<Label GridPane.columnIndex="0" GridPane.rowIndex="1" text="%walletName" GridPane.hgrow="ALWAYS"/>
-		<TextField fx:id="walletName" promptText="%enterWalletName" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="300"/>
+		<VBox spacing="12.5" alignment="TOP_CENTER" fx:id="enterDetails" managed="${enterDetails.visible}">
+			<VBox>
+				<Label text="%walletName" styleClass="fieldLabel"/>
+				<TextField fx:id="walletName" promptText="%enterWalletName" prefWidth="300"/>
+			</VBox>
 
-		<Label GridPane.columnIndex="0" GridPane.rowIndex="2" text="%password" GridPane.hgrow="ALWAYS"/>
-		<PasswordField fx:id="password" promptText="%enterWalletPassword" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="300"/>
+			<VBox>
+				<Label text="%password" styleClass="fieldLabel"/>
+				<PasswordField fx:id="password" promptText="%enterWalletPassword" prefWidth="300"/>
+			</VBox>
 
-		<Hyperlink fx:id="addMnemonicPassword" text="%addMnemonicPasswordOptional" onAction="#addMnemonicPassword" styleClass="text-color" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3"/>
+			<Button fx:id="addMnemonicPassword" managed="${addMnemonicPassword.visible}" text="%addMnemonicPasswordOptional" onAction="#addMnemonicPassword" maxWidth="Infinity">
+				<VBox.margin><Insets top="8"/></VBox.margin>
+			</Button>
 
-		<Label fx:id="mnemonicPasswordLabel" GridPane.columnIndex="0" GridPane.rowIndex="3" text="%mnemonicPassword" visible="false" GridPane.hgrow="ALWAYS"/>
-		<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword" GridPane.columnIndex="1" GridPane.rowIndex="3" visible="false" prefWidth="300"/>
+			<VBox fx:id="mnemonicPasswordBox" visible="false" managed="${mnemonicPasswordBox.visible}">
+				<Label text="%mnemonicPassword" styleClass="fieldLabel"/>
+				<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword" prefWidth="300"/>
+			</VBox>
 
-		<Button onAction="#initializeWallet" text="%initializeWallet" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.halignment="RIGHT"/>
+			<Button styleClass="large" onAction="#initializeWallet" text="%initializeWallet">
+				<VBox.margin><Insets top="10"/></VBox.margin>
+			</Button>
+		</VBox>
 
-		<Label fx:id="mnemonicPhraseLabel" text="%mnemonicPhraseC" visible="false" managed="false" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.hgrow="ALWAYS"/>
-		<Button fx:id="copyMnemonicPhrase" onAction="#copyMnemonicPhrase" text="%copy" visible="false" managed="false" GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.halignment="RIGHT"/>
+		<VBox spacing="12.5" alignment="TOP_CENTER" fx:id="viewSeed" visible="false" managed="${viewSeed.visible}">
+			<Label fx:id="seedPhraseLabel" text="%seedPhraseC"/>
 
-		<TextArea fx:id="mnemonicPhraseArea" visible="false" managed="false" editable="false" wrapText="true" GridPane.columnIndex="0" GridPane.rowIndex="7" GridPane.columnSpan="2"/>
+			<VBox spacing="4" alignment="TOP_RIGHT">
+				<TextArea fx:id="seedPhraseArea" editable="false" wrapText="true"/>
 
-		<Button fx:id="continueWallet" onAction="#continueWallet" text="%continue" GridPane.columnIndex="1" GridPane.rowIndex="8" GridPane.halignment="RIGHT"/>
-	</GridPane>
+				<Button fx:id="copySeedPhrase" onAction="#copySeedPhrase" text="%copy"/>
+			</VBox>
+
+			<Button styleClass="large" fx:id="continueWallet" onAction="#continueWallet" text="%continue">
+				<VBox.margin><Insets top="6"/></VBox.margin>
+			</Button>
+		</VBox>
+	</VBox>
 </HBox>

@@ -1,0 +1,22 @@
+.section {
+	-fx-padding: 1em 3em 1em 3em;
+}
+
+.sectionTitle {
+	-fx-font-size: 14px;
+	-fx-font-weight: BOLD;
+}
+
+.feeLabel {
+	-fx-padding: 0 0 2px 6px;
+}
+
+#sendAmount {
+	-fx-background-radius: 8 0 0 8;
+	-fx-border-radius: 8 0 0 8;
+}
+
+#sendFee {
+	-fx-background-radius: 0 8 8 0;
+	-fx-border-radius: 0 8 8 0;
+}

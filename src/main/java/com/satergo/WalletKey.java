@@ -2,6 +2,7 @@ package com.satergo;
 
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
+import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.P2PKAddress;
 import org.ergoplatform.appkit.*;
@@ -68,7 +69,7 @@ public abstract class WalletKey {
 			return constructor.get();
 		}
 
-		@Override public boolean equals(Object obj) { return obj instanceof Type t && name.equals(t.name); }
+		@Override public boolean equals(Object obj) { return obj instanceof Type<?> t && name.equals(t.name); }
 		@Override public int hashCode() { return Objects.hash(name); }
 		@Override public String toString() { return name; }
 	}
@@ -132,22 +133,29 @@ public abstract class WalletKey {
 			super(Type.LOCAL);
 		}
 
+		private static void checkFormat(Mnemonic mnemonic) {
+			if (!String.join(" ", mnemonic.getPhrase().toStringUnsecure().split(" ")).equals(mnemonic.getPhrase().toStringUnsecure())) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("invalidSeedFormatAlert"));
+			}
+		}
+
 		@Override
 		public void initCaches(ByteBuffer data) {
 			nonstandard = data.get() == 1;
-			if (!nonstandard) throw new IllegalArgumentException();
-			initParentExtPubKey(readMnemonic(data));
+			Mnemonic mnemonic = readMnemonic(data);
+			checkFormat(mnemonic);
+			initParentExtPubKey(mnemonic);
 		}
 
 		private void initParentExtPubKey(Mnemonic mnemonic) {
-			ExtendedSecretKey rootSecret = ExtendedSecretKey.deriveMasterKey(mnemonic.toSeed());
+			ExtendedSecretKey rootSecret = ExtendedSecretKey.deriveMasterKey(mnemonic.toSeed(), nonstandard);
 			parentExtPubKey = ((ExtendedSecretKey) rootSecret.derive(DerivationPath.fromEncoded("m/44'/429'/0'/0").get())).publicKey();
 		}
 
 		public static Local create(boolean nonstandard, Mnemonic mnemonic, char[] password) {
 			try {
+				checkFormat(mnemonic);
 				Local key = new Local();
-				if (!nonstandard) throw new IllegalArgumentException();
 				key.nonstandard = nonstandard;
 				byte[] iv = AESEncryption.generateNonce12();
 				// StandardCharsets.UTF_8.encode(CharBuffer.wrap(mnemonic.getPhrase().getData())) is not used because
@@ -229,7 +237,7 @@ public abstract class WalletKey {
 
 		@Override
 		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
-			return ErgoInterface.newWithMnemonicProver(ctx, getMnemonic(), addressIndexes).sign(unsignedTx);
+			return ErgoInterface.newWithMnemonicProver(ctx, nonstandard, getMnemonic(), addressIndexes).sign(unsignedTx);
 		}
 
 		@Override

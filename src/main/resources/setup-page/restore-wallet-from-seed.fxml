@@ -1,13 +1,38 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" stylesheets="@./welcome.css" styleClass="background" fx:id="root" fx:controller="com.satergo.controller.RestoreFromSeedCtrl" spacing="10">
-	<Label styleClass="welcome-text" text="%restoreWalletUsingSeed" wrapText="true"/>
-	<TextArea fx:id="mnemonicPhrase" promptText="%mnemonicPhrase12Words"/>
-	<FlowPane fx:id="suggestionContainer" hgap="6" vgap="4"/>
-	<TextField fx:id="walletName" promptText="%walletName"/>
-	<Hyperlink fx:id="showMnemonicPassword" onAction="#showMnemonicPassword" text="%clickHereToShowMnemonicPasswordRestore" styleClass="text-color"/>
-	<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword" visible="false" managed="false"/>
-	<PasswordField fx:id="walletPassword" promptText="%newWalletPassword"/>
-	<Button text="%restore" onAction="#restore" alignment="BASELINE_RIGHT"/>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.Region?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="root" fx:controller="com.satergo.controller.RestoreFromSeedCtrl" spacing="10" alignment="TOP_CENTER" stylesheets="@./restore-wallet-from-seed.css">
+	<padding>
+		<Insets left="40" right="40"/>
+	</padding>
+	<Label style="-fx-font-size: 2.4em" text="%restoreWalletUsingSeed" wrapText="true"/>
+
+	<Region prefHeight="6"/>
+
+	<TextArea fx:id="seedPhrase" promptText="%seedPhrase" prefRowCount="6"/>
+	<FlowPane fx:id="suggestionContainer" hgap="6" vgap="4" visible="false" managed="${suggestionContainer.visible}"/>
+	<Hyperlink fx:id="showMnemonicPassword" onAction="#showMnemonicPassword" text="%clickHereToShowMnemonicPasswordRestore" styleClass="text-color" managed="${showMnemonicPassword.visible}"/>
+	<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword" visible="false" managed="${mnemonicPassword.visible}"/>
+
+	<Region prefHeight="10"/>
+
+	<VBox maxWidth="${root.width * 0.5}">
+		<Label text="%walletName" styleClass="fieldLabel">
+			<labelFor><TextField fx:id="walletName" promptText="%enterWalletName"/></labelFor>
+		</Label>
+		<fx:reference source="walletName"/>
+	</VBox>
+
+	<VBox maxWidth="${root.width * 0.5}">
+		<Label text="%newWalletPassword" styleClass="fieldLabel">
+			<labelFor><PasswordField fx:id="walletPassword" promptText="%newWalletPassword"/></labelFor>
+		</Label>
+		<fx:reference source="walletPassword"/>
+	</VBox>
+
+	<Region prefHeight="10"/>
+
+	<Button styleClass="large" text="%restore" onAction="#restore" alignment="BASELINE_RIGHT" defaultButton="true"/>
 </VBox>

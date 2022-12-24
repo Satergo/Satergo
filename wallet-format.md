@@ -30,13 +30,13 @@ Encrypted wallet private key data: `(short) wallet key type id` followed by the 
 
 `LOCAL` structure:
 
-| Data type          | Value                                                                                                       |
-|--------------------|-------------------------------------------------------------------------------------------------------------|
-| boolean            | [non-standard address derivation](https://github.com/ergoplatform/ergo/issues/1627), currently must be true |
-| short              | byte length of next field                                                                                   |
-| utf-8 string bytes | mnemonic phrase                                                                                             |
-| short              | byte length of next field                                                                                   |
-| utf-8 string bytes | mnemonic password                                                                                           |
+| Data type          | Value                                                                               |
+|--------------------|-------------------------------------------------------------------------------------|
+| boolean            | [non-standard address derivation](https://github.com/ergoplatform/ergo/issues/1627) |
+| short              | byte length of next field                                                           |
+| utf-8 string bytes | seed phrase                                                                         |
+| short              | byte length of next field                                                           |
+| utf-8 string bytes | mnemonic password                                                                   |
 
 Encrypted wallet details data:
 
@@ -49,10 +49,12 @@ Encrypted wallet details data:
 | int                                                 | address book size                   |
 | [address book entry](#address-book-entry-0)[]       | address book entry                  |
 
-# OLD FORMAT
+# OLD FORMAT (DO NOT IMPLEMENT)
 
 ## formatVersion 0
-**Note: This version contains an unnecessary header. To get to the data, skip 6 bytes. This has been removed in later versions and future readers should not implement reading/writing it.**
+**This version should not be implemented.**
+
+**Note: This version contains an unnecessary header. To get to the data, skip 6 bytes.**
 
 Encrypted data: (everything is encrypted in this version, even the version number)
 
@@ -65,7 +67,7 @@ Encrypted data: (everything is encrypted in this version, even the version numbe
 | short                                               | byte length of next field |
 | utf-8 string bytes                                  | wallet name               |
 | short                                               | byte length of next field |
-| utf-8 string bytes                                  | mnemonic phrase           |
+| utf-8 string bytes                                  | seed phrase               |
 | short                                               | byte length of next field |
 | utf-8 string bytes                                  | mnemonic password         |
 | int                                                 | amount of derived address |

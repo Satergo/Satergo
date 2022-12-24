@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import com.satergo.extra.IconButton?>
+<?import com.satergo.Icon?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+		  fx:controller="com.satergo.controller.HomeCtrl" stylesheets="home.css" hgap="20" vgap="20">
+	<padding><Insets topRightBottomLeft="20"/></padding>
+	<columnConstraints>
+		<ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+		<ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+	</columnConstraints>
+	<rowConstraints>
+		<RowConstraints/>
+		<RowConstraints vgrow="ALWAYS"/>
+	</rowConstraints>
+
+	<BorderPane GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2" styleClass="section">
+		<left>
+			<Label fx:id="headTitle" BorderPane.alignment="CENTER_LEFT"/>
+		</left>
+		<right>
+			<Button onAction="#logout" text="%logout" BorderPane.alignment="CENTER_RIGHT"/>
+		</right>
+	</BorderPane>
+
+	<BorderPane fx:id="infoSection" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="section" GridPane.hgrow="ALWAYS" maxWidth="Infinity">
+		<center>
+			<GridPane hgap="${infoSection.width * 0.2}" vgap="20" maxWidth="-Infinity" maxHeight="-Infinity" fx:id="info" managed="${info.visible}" style="-fx-font-size: 20px;">
+				<Label text="%balanceC" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+				<Label fx:id="balance" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+				<Label text="%valueC" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+				<Label fx:id="value" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+			</GridPane>
+		</center>
+	</BorderPane>
+
+	<BorderPane GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="section">
+		<top>
+			<StackPane>
+				<Label text="%send" styleClass="sectionTitle" StackPane.alignment="CENTER"/>
+				<IconButton icon="gear" onAction="#showSendOptions" StackPane.alignment="CENTER_RIGHT"/>
+			</StackPane>
+		</top>
+		<center>
+			<VBox spacing="10">
+				<BorderPane.margin><Insets top="27.5"/></BorderPane.margin>
+				<VBox>
+					<Label text="%address" styleClass="fieldLabel">
+						<labelFor><TextField fx:id="sendAddress"/></labelFor>
+					</Label>
+					<fx:reference source="sendAddress"/>
+				</VBox>
+
+				<GridPane>
+					<Label text="%amount" styleClass="fieldLabel" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
+						<labelFor><TextField fx:id="sendAmount" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS"/></labelFor>
+					</Label>
+					<fx:reference source="sendAmount"/>
+
+					<Label text="%fee" styleClass="feeLabel" GridPane.rowIndex="0" GridPane.columnIndex="1">
+						<labelFor><TextField fx:id="sendFee" GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="100"/></labelFor>
+					</Label>
+					<fx:reference source="sendFee"/>
+					<Label text="%defaultMinimum" styleClass="feeLabel" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-font-size: 10px;"/>
+				</GridPane>
+
+				<Hyperlink fx:id="addToken" text="%addToken" contentDisplay="RIGHT" onAction="#addToken">
+					<graphic>
+						<Icon icon="plus" height="10"/>
+					</graphic>
+				</Hyperlink>
+
+				<ScrollPane prefHeight="120" fitToWidth="true">
+					<VBox fx:id="tokenList" spacing="2"/>
+				</ScrollPane>
+			</VBox>
+		</center>
+		<bottom>
+			<VBox spacing="4">
+				<Label fx:id="nodeSyncNotice" text="%nodeSyncNoticeSend" visible="false" managed="${nodeSyncNotice.visible}"/>
+				<HBox fx:id="txIdContainer" visible="false" managed="${txIdContainer.visible}" spacing="2" alignment="BASELINE_LEFT">
+					<VBox.margin><Insets top="4"/></VBox.margin>
+
+					<Label text="%transactionIdC" minWidth="-Infinity"/> <Hyperlink fx:id="txLink" textOverrun="CENTER_ELLIPSIS"/> <Button fx:id="copyTxId" text="%copy" minWidth="-Infinity"/>
+				</HBox>
+				<HBox alignment="CENTER" spacing="60">
+					<Button onAction="#clearAll" text="%clearAll"/>
+					<Button text="%send" fx:id="send" onAction="#send"/>
+				</HBox>
+			</VBox>
+		</bottom>
+	</BorderPane>
+</GridPane>

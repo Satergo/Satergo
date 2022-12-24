@@ -9,16 +9,16 @@ public interface SetupPage {
 		void left();
 	}
 
-	interface WithoutLanguage extends SetupPage {
+	interface WithoutExtra extends SetupPage {
 		default Parent recreate() { return null; }
-		default boolean showLanguageSelector() { return false; }
+		default boolean showExtra() { return false; }
 	}
 
-	interface WithLanguage extends SetupPage {
-		default boolean showLanguageSelector() { return true; }
+	interface WithExtra extends SetupPage {
+		default boolean showExtra() { return true; }
 	}
 
 	Parent recreate();
 	Parent content();
-	boolean showLanguageSelector();
+	boolean showExtra();
 }

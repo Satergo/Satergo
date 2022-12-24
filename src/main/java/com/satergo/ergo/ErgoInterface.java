@@ -3,6 +3,7 @@ package com.satergo.ergo;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
+import com.satergo.SystemProperties;
 import com.satergo.Utils;
 import org.ergoplatform.appkit.*;
 
@@ -18,15 +19,11 @@ import static java.net.http.HttpResponse.BodyHandlers.ofString;
 
 public class ErgoInterface {
 
-	private static final String
-			MAINNET_API_PROPERTY = "satergo.mainnetExplorerApi",
-			TESTNET_API_PROPERTY = "satergo.testnetExplorerApi";
-
 	public static String getExplorerUrl(NetworkType networkType) {
-		if (networkType == NetworkType.MAINNET && System.getProperties().containsKey(MAINNET_API_PROPERTY))
-			return System.getProperty(MAINNET_API_PROPERTY);
-		if (networkType == NetworkType.TESTNET && System.getProperties().containsKey(TESTNET_API_PROPERTY))
-			return System.getProperty(TESTNET_API_PROPERTY);
+		if (networkType == NetworkType.MAINNET && SystemProperties.mainnetExplorerApi().isPresent())
+			return SystemProperties.mainnetExplorerApi().get();
+		if (networkType == NetworkType.TESTNET && SystemProperties.testnetExplorerApi().isPresent())
+			return SystemProperties.mainnetExplorerApi().get();
 		return RestApiErgoClient.getDefaultExplorerUrl(networkType);
 	}
 
@@ -34,8 +31,8 @@ public class ErgoInterface {
 		return RestApiErgoClient.create(nodeApiAddress, networkType, "", getExplorerUrl(networkType));
 	}
 
-	public static ErgoProver newWithMnemonicProver(BlockchainContext ctx, Mnemonic mnemonic, Iterable<Integer> derivedAddresses) {
-		ErgoProverBuilder ergoProverBuilder = ctx.newProverBuilder().withMnemonic(mnemonic);
+	public static ErgoProver newWithMnemonicProver(BlockchainContext ctx, boolean nonstandard, Mnemonic mnemonic, Iterable<Integer> derivedAddresses) {
+		ErgoProverBuilder ergoProverBuilder = ctx.newProverBuilder().withMnemonic(mnemonic, nonstandard);
 		derivedAddresses.forEach(ergoProverBuilder::withEip3Secret);
 		return ergoProverBuilder.build();
 	}
@@ -87,8 +84,11 @@ public class ErgoInterface {
 			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
 		}
 		return ergoClient.execute(ctx -> {
-			List<InputBox> unspent = addresses.parallelStream().flatMap(address -> ctx.getUnspentBoxesFor(address, 0, 20).stream()).toList();
-			List<InputBox> boxesToSpend = BoxSelectorsJavaHelpers.selectBoxes(unspent, amountToSend + feeAmount, List.of(tokensToSend));
+			List<InputBox> boxesToSpend = BoxOperations.createForSenders(addresses, ctx)
+					.withAmountToSpend(amountToSend)
+					.withFeeAmount(feeAmount)
+					.withTokensToSpend(List.of(tokensToSend))
+					.loadTop();
 			UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
 			OutBoxBuilder newBoxBuilder = txBuilder.outBoxBuilder();
 			newBoxBuilder.value(amountToSend);
@@ -100,9 +100,9 @@ public class ErgoInterface {
 					.build(), "{ recipientPk }")).build();
 			OutBox newBox = newBoxBuilder.build();
 			return txBuilder
-					.boxesToSpend(boxesToSpend).outputs(newBox)
+					.addInputs(boxesToSpend.toArray(new InputBox[0])).addOutputs(newBox)
 					.fee(feeAmount)
-					.sendChangeTo(changeAddress.asP2PK())
+					.sendChangeTo(changeAddress)
 					.build();
 		});
 	}
@@ -126,8 +126,8 @@ public class ErgoInterface {
 	/**
 	 * @param index 0 is the master address
 	 */
-	public static Address getPublicEip3Address(NetworkType networkType, Mnemonic mnemonic, int index) {
-		return Address.createEip3Address(index, networkType, mnemonic.getPhrase(), mnemonic.getPassword());
+	public static Address getPublicEip3Address(NetworkType networkType, boolean nonstandard, Mnemonic mnemonic, int index) {
+		return Address.createEip3Address(index, networkType, mnemonic.getPhrase(), mnemonic.getPassword(), nonstandard);
 	}
 
 

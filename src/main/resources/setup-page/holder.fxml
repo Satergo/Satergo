@@ -2,15 +2,25 @@
 <?import com.satergo.Icon?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="root" styleClass="background" fx:controller="com.satergo.controller.SetupPageHolderCtrl">
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="setupPageHolder" styleClass="background" fx:controller="com.satergo.controller.SetupPageHolderCtrl" stylesheets="@./holder.css">
+	<BorderPane>
+		<left>
+			<HBox spacing="40">
+				<ImageView styleClass="imageLogo"/>
+				<Button fx:id="left" styleClass="transparent, borderless" onAction="#left" disable="true" focusTraversable="false" text="%back">
+					<graphic><Icon icon="left" height="12"/></graphic>
+				</Button>
+			</HBox>
+		</left>
+		<right>
+			<ComboBox fx:id="language" focusTraversable="false" visible="false"/>
+		</right>
+	</BorderPane>
 
-	<HBox>
-		<Button fx:id="left" onAction="#left" disable="true" focusTraversable="false">
-			<graphic><Icon icon="arrow-left-solid"/></graphic>
-		</Button>
-		<ComboBox fx:id="language" focusTraversable="false"/>
-	</HBox>
+	<VBox fx:id="content" VBox.vgrow="ALWAYS"/>
 
+	<Label fx:id="version" alignment="BASELINE_RIGHT" maxWidth="Infinity"/>
 </VBox>

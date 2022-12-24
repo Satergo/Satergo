@@ -1,0 +1,26 @@
+<?import com.satergo.extra.IconButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<fx:root type="GridPane" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" styleClass="account-address-line">
+
+	<columnConstraints>
+		<ColumnConstraints/>
+		<ColumnConstraints hgrow="ALWAYS"/>
+		<ColumnConstraints halignment="RIGHT"/>
+	</columnConstraints>
+
+	<Label fx:id="index" opacity="0.5" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+
+	<Label fx:id="name" GridPane.columnIndex="1" GridPane.rowIndex="0">
+		<GridPane.margin><Insets left="4"/></GridPane.margin>
+	</Label>
+
+	<Label fx:id="address" textOverrun="CENTER_ELLIPSIS" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"/>
+
+	<HBox spacing="3" alignment="CENTER_RIGHT" GridPane.columnIndex="2" GridPane.rowIndex="1">
+		<IconButton fx:id="copy" icon="copy-regular" tooltip="%copy"/>
+		<IconButton fx:id="rename" icon="pen-solid" tooltip="%rename"/>
+		<IconButton fx:id="remove" icon="trash-alt" tooltip="%remove"/>
+	</HBox>
+</fx:root>
