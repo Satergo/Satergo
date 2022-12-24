@@ -65,7 +65,6 @@ public class AboutCtrl implements Initializable, WalletTab {
 						amount
 				));
 		root.setSpacing(10);
-		root.getStyleClass().add("background");
 
 		dialog.getDialogPane().setContent(root);
 		ButtonType sendDonationType = new ButtonType(Main.lang("sendDonation"), ButtonBar.ButtonData.OK_DONE);

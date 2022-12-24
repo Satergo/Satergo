@@ -6,10 +6,6 @@
 	-fx-padding: 40px;
 }
 
-.combo-box {
-	-fx-border-color: #FFFFFF;
-}
-
 .combo-box > .arrow-button {
 /*	-fx-border-color: white;
 	-fx-border-width: 1px;

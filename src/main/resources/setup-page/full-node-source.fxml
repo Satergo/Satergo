@@ -1,7 +1,7 @@
 <?import com.satergo.extra.SetupOption?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.FullNodeSourceCtrl" styleClass="background, full-node-source" stylesheets="@./welcome.css" fx:id="root" fillWidth="false">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.FullNodeSourceCtrl" styleClass="full-node-source" stylesheets="@./welcome.css" fx:id="root" fillWidth="false">
 	<Label text="%fullNodeSource" styleClass="welcome-text"/>
 	<VBox spacing="30">
 		<SetupOption title="%downloadAndSetup" onAction="#downloadAndSetup"/>

@@ -3,9 +3,10 @@ package com.satergo;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
-import javafx.scene.control.Alert;
+import com.satergo.extra.dialog.SatPromptDialog;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 
 import java.io.IOException;
 import java.net.URI;
@@ -39,18 +40,21 @@ public class UpdateChecker {
 	public static void showUpdatePopup(VersionInfo versionInfo) {
 		if (!isNewer(versionInfo.versionCode)) throw new IllegalArgumentException();
 		if (Main.programData().skippedUpdate.get() == versionInfo.versionCode) return;
-		Alert alert = new Alert(Alert.AlertType.NONE);
-		alert.initOwner(Main.get().stage());
+		SatPromptDialog<ButtonType> dialog = new SatPromptDialog<>();
+		dialog.initOwner(Main.get().stage());
+		Main.get().applySameTheme(dialog.getScene());
 		ButtonType update = new ButtonType(Main.lang("update"), ButtonBar.ButtonData.YES);
 		ButtonType skip = new ButtonType(Main.lang("skip"), ButtonBar.ButtonData.NO);
 		ButtonType notNow = new ButtonType(Main.lang("notNow"), ButtonBar.ButtonData.CANCEL_CLOSE);
-		alert.getButtonTypes().addAll(update, skip, notNow);
-		alert.setHeaderText(Main.lang("aNewUpdateHasBeenFound"));
-		alert.setContentText(Main.lang("updateDescription").formatted(
+		dialog.getDialogPane().getButtonTypes().addAll(update, skip, notNow);
+		dialog.setHeaderText(Main.lang("aNewUpdateHasBeenFound"));
+		Label label = new Label(Main.lang("updateDescription").formatted(
 				versionInfo.version,
 				versionInfo.dateReleased.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
 				versionInfo.changelog));
-		alert.showAndWait().ifPresent(t -> {
+		label.setWrapText(true);
+		dialog.getDialogPane().setContent(label);
+		dialog.showForResult().ifPresent(t -> {
 			if (t == update) {
 				// TODO implement updating & verifying functionality into the program
 				Main.get().getHostServices().showDocument("https://satergo.com/#downloads");

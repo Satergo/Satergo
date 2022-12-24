@@ -1,11 +1,9 @@
-/*
-.hyperlink.text-color {
-	-fx-text-fill: white;
-} */
-
 /* COLOR DEFINITIONS */
 
 .root {
+	-fx-base: #161719;
+	-sat-background-color: #161719;
+
 	-sat-input-text-fill: white;
 	-sat-input-border-color: #BDBDBD;
 	-sat-input-focused-border-color: white;
@@ -48,13 +46,27 @@
 	-w-section-bg-2: linear-gradient(to bottom right, rgba(131, 131, 131, 0.3), rgba(43, 43, 43, 0.3));
 	-w-section-border-color-1: transparent;
 	-w-section-border-color-2: linear-gradient(to bottom right, #FFFFFF, #141414);
-	-w-account-address-border-color: linear-gradient(from 0% 10% to 40% 400%, #FFFFFF, #141414);
+	-w-account-address-border-color-1: linear-gradient(from 0% 10% to 40% 400%, #FFFFFF, #141414);
+	-w-account-address-border-color-2: transparent;
 	-w-setting-bg: linear-gradient(to bottom right, rgba(131, 131, 131, 0.3), rgba(43, 43, 43, 0.3));
 	-w-setting-border-color-1: linear-gradient(from 0px 3px to 207px 394.37px, #FFFFFF, #141414);
 	-w-setting-border-color-2: transparent;
 }
 
-/* dark charts */
+/* COMBO BOX */
+
+.combo-box {
+	-sat-border-inactive: #828282;
+	-sat-border-active: white;
+	-sat-border-hover: -sat-border-active;
+	-sat-cell-inactive-bg: #151719;
+	-sat-cell-hover-bg: -sat-cell-inactive-bg;
+	-sat-cell-hover-text: white;
+	-sat-cell-active-bg: linear-gradient(from 72.9474 9.20834 to 172.89 28.3195, #7B7DFF, #3F41F7);
+	-sat-cell-active-text: white;
+}
+
+/* DARK CHARTS */
 
 .chart-plot-background {
 	-fx-background-color: #252525;
@@ -73,27 +85,6 @@
 
 .chart-vertical-grid-lines, .chart-horizontal-grid-lines {
 	-fx-stroke: #2a2a2a;
-}
-
-.background {
-	-fx-background-color: #161719;
-}
-
-.background, .dialog-pane {
-	-fx-base: #161719;
-}
-
-/* COMBO BOX */
-
-.combo-box {
-	-sat-border-inactive: #828282;
-	-sat-border-active: white;
-	-sat-border-hover: -sat-border-active;
-	-sat-cell-inactive-bg: #151719;
-	-sat-cell-hover-bg: -sat-cell-inactive-bg;
-	-sat-cell-hover-text: white;
-	-sat-cell-active-bg: linear-gradient(from 72.9474 9.20834 to 172.89 28.3195, #7B7DFF, #3F41F7);
-	-sat-cell-active-text: white;
 }
 
 /* FXSKINS */
@@ -139,6 +130,12 @@
 
 .sat-dialog-container .button-bar > .container > .button:default:pressed {
 	-fx-background-color: linear-gradient(from 16% 0% to 140% 0%, #282BF8, #000146);
+}
+
+/* CHANGES */
+
+#setupPageHolder #language {
+	-fx-border-color: white;
 }
 
 /* IMAGES */

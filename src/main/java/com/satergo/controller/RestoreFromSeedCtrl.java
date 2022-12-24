@@ -11,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -70,6 +71,12 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 			if (matches.size() > 20) suggestionContainer.getChildren().add(new Label(Main.lang("dddAndMore")));
 		});
 		showMnemonicPassword.visibleProperty().bind(mnemonicPassword.visibleProperty().not());
+		mnemonicPassword.setOnKeyPressed(e -> {
+			if (e.getCode() == KeyCode.ESCAPE) {
+				root.requestFocus();
+				e.consume();
+			}
+		});
 		mnemonicPassword.focusedProperty().addListener((observable, oldValue, newValue) -> {
 			if (!newValue && mnemonicPassword.getText().isEmpty())
 				mnemonicPassword.setVisible(false);
@@ -93,7 +100,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 				return;
 			}
 		}
-		SecretString phrase = SecretString.create(SystemProperties.rawSeedPhrase() ? seedPhrase.getText() : String.join(" ", seedPhrase.getText()));
+		SecretString phrase = SecretString.create(SystemProperties.rawSeedPhrase() ? seedPhrase.getText() : String.join(" ", words));
 		Mnemonic mnemonic = Mnemonic.create(phrase, SecretString.create(mnemonicPassword.getText()));
 		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 		if (path == null) return;
@@ -112,8 +119,8 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 			nonstandardDerivation = true;
 		} else if (!masterStandard.equals(masterNonstandard)) {
 			try {
-				boolean standardHas = false && api.getApiV1AddressesP1Transactions(masterStandard.toString(), 0, 1, true).execute().body().getTotal() > 0;
-				boolean nonstandardHas = true || api.getApiV1AddressesP1Transactions(masterNonstandard.toString(), 0, 1, true).execute().body().getTotal() > 0;
+				boolean standardHas = api.getApiV1AddressesP1Transactions(masterStandard.toString(), 0, 1, true).execute().body().getTotal() > 0;
+				boolean nonstandardHas = api.getApiV1AddressesP1Transactions(masterNonstandard.toString(), 0, 1, true).execute().body().getTotal() > 0;
 				if (standardHas && nonstandardHas) {
 					SatPromptDialog<Boolean> prompt = new SatPromptDialog<>();
 					prompt.initOwner(root.getScene().getWindow());

@@ -1,11 +1,8 @@
-.hyperlink.text-color {
-	-fx-text-fill: white;
-}
-
 /* COLOR DEFINITIONS */
 
 .root {
 	-fx-base: white;
+	-sat-background-color: white;
 
 	-sat-input-text-fill: #4F4F4F;
 	-sat-input-border-color: derive(#4F4F4F, 70%);
@@ -53,7 +50,8 @@
 	-w-section-bg-2: linear-gradient(from 0% 0% to 100% 100%, rgb(255, 255, 255, 0.3), rgb(170, 171, 253, 0.3));
 	-w-section-border-color-1: light-border-1;
 	-w-section-border-color-2: light-border-2;
-	-w-account-address-border-color: light-border-1;
+	-w-account-address-border-color-1: light-border-1;
+	-w-account-address-border-color-2: light-border-2;
 	-w-setting-bg: -w-section-bg-2;
 	-w-setting-border-color-1: light-border-1;
 	-w-setting-border-color-2: light-border-2;
@@ -63,17 +61,13 @@
 
 .combo-box {
 	-sat-border-inactive: #828282;
-	-sat-border-active: black;
+	-sat-border-active: derive(-sat-border-inactive, -70%);
 	-sat-border-hover: -sat-border-active;
-	-sat-cell-inactive-bg: #151719;
+	-sat-cell-inactive-bg: white;
 	-sat-cell-hover-bg: #515151;
 	-sat-cell-hover-text: white;
 	-sat-cell-active-bg: linear-gradient(from 72.9474 9.20834 to 172.89 28.3195, #7B7DFF, #3F41F7);
 	-sat-cell-active-text: white;
-}
-
-.background {
-	-fx-background-color: white;
 }
 
 /* SAT DIALOG */

@@ -1,7 +1,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.RemoteNodeSetupCtrl" styleClass="background" stylesheets="@./welcome.css" fx:id="root">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.RemoteNodeSetupCtrl" stylesheets="@./welcome.css" fx:id="root">
 	<Label text="%remoteNode" styleClass="welcome-text"/>
 
 	<HBox spacing="8" alignment="CENTER"><Label text="%dontUnderstandThis"/> <Button onAction="#useKnownPublicNode" text="%clickHereToUseKnownMainnetNode"/></HBox>

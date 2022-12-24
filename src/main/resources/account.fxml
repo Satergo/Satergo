@@ -38,12 +38,10 @@
 
 			<VBox GridPane.columnIndex="0" GridPane.rowIndex="1" fx:id="tokens" spacing="5" managed="${tokens.visible}"/>
 
-			<VBox GridPane.columnIndex="0" GridPane.rowIndex="2">
-				<HBox alignment="CENTER_LEFT">
+			<VBox GridPane.columnIndex="0" GridPane.rowIndex="2" spacing="4">
+				<HBox alignment="CENTER_LEFT" spacing="4">
 					<Label text="%yourAddresses"/>
-					<Hyperlink text="+" onAction="#addAddress">
-						<tooltip><Tooltip text="%addAddress"/></tooltip>
-					</Hyperlink>
+					<Button onAction="#addAddress" styleClass="small" text="%plus_Add"/>
 				</HBox>
 				<VBox fx:id="addresses" spacing="2"/>
 			</VBox>

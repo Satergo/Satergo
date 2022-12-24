@@ -52,5 +52,5 @@
 }
 
 .account-address-line {
-	-fx-border-color: -w-account-address-border-color;
+	-fx-border-color: -w-account-address-border-color-1, -w-account-address-border-color-2;
 }
