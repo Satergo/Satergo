@@ -20,11 +20,10 @@ import static java.net.http.HttpResponse.BodyHandlers.ofString;
 public class ErgoInterface {
 
 	public static String getExplorerUrl(NetworkType networkType) {
-		if (networkType == NetworkType.MAINNET && SystemProperties.mainnetExplorerApi().isPresent())
-			return SystemProperties.mainnetExplorerApi().get();
-		if (networkType == NetworkType.TESTNET && SystemProperties.testnetExplorerApi().isPresent())
-			return SystemProperties.mainnetExplorerApi().get();
-		return RestApiErgoClient.getDefaultExplorerUrl(networkType);
+		return switch (networkType) {
+			case MAINNET -> SystemProperties.mainnetExplorerApi().orElse("https://api.ergoplatform.com");
+			case TESTNET -> SystemProperties.testnetExplorerApi().orElse("https://tn-ergo-explorer-api.anetabtc.io");
+		};
 	}
 
 	public static ErgoClient newNodeApiClient(NetworkType networkType, String nodeApiAddress) {
