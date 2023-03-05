@@ -47,21 +47,17 @@ public class EmbeddedFullNode {
 	private Process process;
 	private long startedTime;
 
-	private final NetworkType networkType;
-	public LogLevel logLevel;
 	public final File nodeJar;
 	public final File confFile;
 	public final File infoFile;
 	public EmbeddedNodeInfo info;
 	public final ErgoNodeAccess nodeAccess;
 
-	private EmbeddedFullNode(File nodeDirectory, EmbeddedNodeInfo info) {
+	private EmbeddedFullNode(File nodeDirectory, File infoFile, EmbeddedNodeInfo info) {
 		this.nodeDirectory = nodeDirectory;
-		this.networkType = info.networkType();
-		this.logLevel = info.logLevel();
 		this.nodeJar = new File(nodeDirectory, info.jarFileName());
 		this.confFile = new File(nodeDirectory, info.confFileName());
-		infoFile = new File(nodeDirectory, EmbeddedNodeInfo.FILE_NAME);
+		this.infoFile = infoFile;
 		this.info = info;
 		this.nodeAccess = new ErgoNodeAccess(URI.create(localApiHttpAddress()));
 
@@ -73,10 +69,14 @@ public class EmbeddedFullNode {
 		nodeBlocksLeft.bind(networkBlockHeight.subtract(nodeBlockHeight));
 	}
 
+	public LogLevel logLevel() {
+		return info.logLevel();
+	}
+
 	public static EmbeddedFullNode fromLocalNodeInfo(File infoFile) {
 		try {
 			File root = infoFile.getParentFile();
-			return new EmbeddedFullNode(root, EmbeddedNodeInfo.fromJson(Files.readString(infoFile.toPath())));
+			return new EmbeddedFullNode(root, infoFile, EmbeddedNodeInfo.fromJson(Files.readString(infoFile.toPath())));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -95,7 +95,7 @@ public class EmbeddedFullNode {
 	private ScheduledExecutorService scheduler;
 
 	public int apiPort() {
-		return networkType == NetworkType.MAINNET ? 9053 : 9052;
+		return info.networkType() == NetworkType.MAINNET ? 9053 : 9052;
 	}
 
 	public String localApiHttpAddress() {
@@ -133,7 +133,7 @@ public class EmbeddedFullNode {
 		scheduler.scheduleAtFixedRate(() -> {
 			ErgoNodeAccess.Status status = nodeAccess.getStatus();
 			int networkHeight = status.networkHeight() == 0
-					? ErgoInterface.getNetworkBlockHeight(networkType)
+					? ErgoInterface.getNetworkBlockHeight(info.networkType())
 					: status.networkHeight();
 			Platform.runLater(() -> {
 				nodeHeaderHeight.set(status.headerHeight());
@@ -246,16 +246,20 @@ public class EmbeddedFullNode {
 		if (isRunning()) throw new IllegalStateException("this node is already running");
 		try {
 			Optional<Object> prop = getConfValue("scorex.logging.level");
-			if (prop.isEmpty() || !prop.get().equals(logLevel.toString())) {
-				setConfValue("scorex.logging.level", logLevel.toString());
+			if (prop.isEmpty() || !prop.get().equals(logLevel().toString())) {
+				setConfValue("scorex.logging.level", logLevel().toString());
 			}
-			String[] command = new String[6];
+			String[] command = new String[6 + info.vmArguments().size()];
 			command[0] = findJavaBinary().toString();
-			command[1] = "-jar";
-			command[2] = nodeJar.getAbsolutePath();
-			command[3] = "--" + networkType.toString().toLowerCase(Locale.ROOT);
-			command[4] = "-c";
-			command[5] = confFile.getName();
+			int i = 1;
+			for (; (i - 1) < info.vmArguments().size(); i++) {
+				command[i] = info.vmArguments().get(i - 1);
+			}
+			command[i++] = "-jar";
+			command[i++] = nodeJar.getAbsolutePath();
+			command[i++] = "--" + info.networkType().toString().toLowerCase(Locale.ROOT);
+			command[i++] = "-c";
+			command[i] = confFile.getName();
 			System.out.println("running node with command: " + Arrays.toString(command));
 			process = new PtyProcessBuilder().setCommand(command).setDirectory(nodeDirectory.getAbsolutePath()).start();
 			scheduleRepeatingTasks();
@@ -280,7 +284,11 @@ public class EmbeddedFullNode {
 						.setJson(false)));
 	}
 
-	public InputStream getStandardOutput() {
+	public void writeInfo() throws IOException {
+		Files.writeString(infoFile.toPath(), info.toJson());
+	}
+
+	public InputStream standardOutput() {
 		return process.getInputStream();
 	}
 
@@ -297,7 +305,7 @@ public class EmbeddedFullNode {
 		process.onExit().join();
 	}
 
-	public long getStartedTime() {
+	public long startedTime() {
 		return startedTime;
 	}
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.*?>
+<fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="10" vgap="4">
+
+	<columnConstraints>
+		<ColumnConstraints hgrow="ALWAYS"/>
+	</columnConstraints>
+
+	<CheckBox fx:id="limitRam" text="%limitRamUsage" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+	<TextField fx:id="maxRam" disable="${!limitRam.selected}" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+	<Label text="%result" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"/>
+	<TextField fx:id="free" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2"/>
+
+</fx:root>

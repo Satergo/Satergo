@@ -1,16 +1,20 @@
 package com.satergo.controller;
 
 import com.satergo.Icon;
+import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergo.ErgoNodeAccess;
+import com.satergo.extra.VMArguments;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatTextInputDialog;
+import com.satergo.extra.dialog.SatVoidDialog;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -27,10 +31,7 @@ import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.HexFormat;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class NodeOverviewCtrl implements Initializable, WalletTab {
 	private static final int LOG_LENGTH_LIMIT = 1_000_000;
@@ -39,9 +40,8 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@FXML private ProgressBar progress;
 	@FXML private Label headersNote;
 	@FXML private Label heightNodeAndNetwork;
-	@FXML private ComboBox<EmbeddedFullNode.LogLevel> logLevel;
 	@FXML private TextArea log;
-	@FXML private Label logLevelNote;
+	@FXML private Label restartNeededNote;
 	@FXML private Button toggleLogPaused;
 	@FXML private Label peers;
 	@FXML private CheckBox autoUpdateOption;
@@ -49,11 +49,12 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	private final SimpleBooleanProperty logPaused = new SimpleBooleanProperty(false);
 
 	@FXML private ContextMenu extra;
+	@FXML private Menu logLevelMenu;
 
 	public void transferLog() {
 		new Thread(() -> {
 			try {
-				InputStream inputStream = Main.node.getStandardOutput();
+				InputStream inputStream = Main.node.standardOutput();
 				byte[] buffer = new byte[8192];
 				int read;
 				while ((read = inputStream.read(buffer, 0, 8192)) >= 0) {
@@ -71,12 +72,11 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 
 	@FXML
 	public void restart(ActionEvent e) {
-		Main.node.logLevel = logLevel.getValue();
 		Main.node.stop();
 		Main.node.waitForExit();
 		appendText("\n-------- " + Main.lang("nodeWasRestartedLog") + " --------\n\n");
 		Main.node.start();
-		logLevelNote.setVisible(false);
+		restartNeededNote.setVisible(false);
 		bindToProperties();
 		transferLog();
 		Main.get().getWalletPage().bindToNodeProperties();
@@ -91,16 +91,23 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	public void initialize(URL location, ResourceBundle resources) {
 		transferLog();
 		networkType.textProperty().bind(Main.programData().nodeNetworkType.asString());
-		logLevel.setValue(Main.node.logLevel);
-		logLevel.getItems().addAll(EmbeddedFullNode.LogLevel.values());
-		logLevel.valueProperty().addListener((observable, oldValue, newValue) -> {
+		ToggleGroup logLevelGroup = new ToggleGroup();
+		for (EmbeddedFullNode.LogLevel value : EmbeddedFullNode.LogLevel.values()) {
+			RadioMenuItem item = new RadioMenuItem(value.toString());
+			item.setToggleGroup(logLevelGroup);
+			item.setSelected(value == Main.node.logLevel());
+			item.setUserData(value);
+			logLevelMenu.getItems().add(item);
+		}
+		logLevelGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
 			try {
-				Main.node.info = Main.node.info.withLogLevel(newValue);
-				Files.writeString(Main.node.infoFile.toPath(), Main.node.info.toJson());
-			} catch (IOException ex) {
-				throw new RuntimeException(ex);
+				EmbeddedFullNode.LogLevel level = (EmbeddedFullNode.LogLevel) newValue.getUserData();
+				restartNeededNote.setVisible(level != Main.node.logLevel());
+				Main.node.info = Main.node.info.withLogLevel(level);
+				Main.node.writeInfo();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
-			logLevelNote.setVisible(newValue != Main.node.logLevel);
 		});
 		toggleLogPaused.graphicProperty().bind(Bindings.when(logPaused).then(new Icon("resume")).otherwise(new Icon("pause", 12)));
 		toggleLogPaused.textProperty().bind(Bindings.when(logPaused).then(Main.lang("resumeLog")).otherwise(Main.lang("pauseLog")));
@@ -174,12 +181,8 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	}
 
 	@FXML
-	public void openConf(ActionEvent e) throws IOException {
-		try {
-			java.awt.Desktop.getDesktop().edit(Main.node.confFile);
-		} catch (UnsupportedOperationException ex) {
-			Main.get().getHostServices().showDocument(Main.node.confFile.getAbsolutePath());
-		}
+	public void openConf(ActionEvent e) {
+		Main.get().getHostServices().showDocument(Main.node.confFile.getAbsolutePath());
 	}
 
 	@FXML
@@ -280,7 +283,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		boolean sel = autoUpdateOption.isSelected();
 		new Thread(() -> {
 			try {
-				Files.writeString(Main.node.infoFile.toPath(), Main.node.info.toJson());
+				Main.node.writeInfo();
 			} catch (IOException ex) {
 				throw new RuntimeException(ex);
 			}
@@ -291,6 +294,79 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@FXML
 	public void toggleLogPaused(ActionEvent e) {
 		logPaused.set(!logPaused.get());
+	}
+
+	@FXML
+	public void vmArguments(ActionEvent e) {
+		var d = new GridPane() {
+			{ Load.thisFxml(this, "/dialog/vm-arguments.fxml"); }
+
+			@FXML CheckBox limitRam;
+			@FXML TextField maxRam, free;
+		};
+
+		VMArguments args = new VMArguments(Main.node.info.vmArguments());
+
+		d.limitRam.setSelected(args.getMaxRam().isPresent());
+
+		args.arguments.addListener((ListChangeListener<String>) c -> {
+			if (!d.free.isFocused()) {
+				d.free.setText(args.toString());
+			}
+		});
+		d.free.textProperty().addListener((observable, oldValue, newValue) -> {
+			if (d.free.isFocused()) {
+				args.arguments.setAll(newValue.split(" "));
+				args.getMaxRam().ifPresent(d.maxRam::setText);
+			}
+		});
+
+		d.limitRam.selectedProperty().addListener((observable, oldValue, newValue) -> {
+			if (!newValue) args.setMaxRam(null);
+			else args.setMaxRam(d.maxRam.getText());
+		});
+		double maxSystemRamG = Utils.getTotalSystemMemory() / Math.pow(1024, 3);
+		d.maxRam.setPromptText(Main.lang("systemTotalRam").formatted((int) maxSystemRamG));
+		args.getMaxRam().ifPresent(d.maxRam::setText);
+		d.maxRam.textProperty().addListener((observable, oldValue, newValue) -> args.setMaxRam(newValue));
+
+		d.free.setPromptText(Main.lang("fullyCustomArguments"));
+
+		SatPromptDialog<String> dialog = new SatPromptDialog<>();
+		dialog.initOwner(Main.get().stage());
+		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+		Main.get().applySameTheme(dialog.getScene());
+		dialog.getDialogPane().setContent(d);
+
+		ButtonType reset = new ButtonType(Main.lang("reset"), ButtonBar.ButtonData.NO);
+		dialog.getDialogPane().getButtonTypes().addAll(reset, ButtonType.APPLY, ButtonType.CANCEL);
+		dialog.setResultConverter(t -> {
+			if (t == reset) return "";
+			else if (t == ButtonType.APPLY) return args.toString();
+			return null;
+		});
+
+		while (true) {
+			try {
+				String value = dialog.showForResult().orElse(null);
+				if (value == null) break;
+				if (value.isBlank()) {
+					Main.node.info = Main.node.info.withVMArguments(Collections.emptyList());
+				} else {
+					args.validate(Utils.getTotalSystemMemory());
+					Main.node.info = Main.node.info.withVMArguments(List.copyOf(args.arguments));
+					Main.node.writeInfo();
+				}
+				restartNeededNote.setVisible(true);
+				break;
+			} catch (IllegalArgumentException ex) {
+				SatVoidDialog alert = Utils.alert(Alert.AlertType.ERROR, ex.getMessage());
+				alert.hide();
+				alert.showAndWait();
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
+		}
 	}
 
 	private static String toSocketAddress(String host, int port) {

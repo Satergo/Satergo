@@ -11,7 +11,9 @@
 				<MenuItem onAction="#openConf" text="%openConf"/>
 				<MenuItem onAction="#unlockServerWallet" text="%unlockServerWallet"/>
 				<MenuItem onAction="#setPublicAddress" text="%setPublicAddress"/>
-				<CustomMenuItem  text="%autoUpdateNode">
+				<Menu fx:id="logLevelMenu" text="%setLogLevel"/>
+				<MenuItem onAction="#vmArguments" text="%vmArguments"/>
+				<CustomMenuItem text="%autoUpdateNode">
 					<content>
 						<CheckBox onAction="#changeAutoUpdate" fx:id="autoUpdateOption" text="%autoUpdateNode"/>
 					</content>
@@ -22,7 +24,7 @@
 	<HBox>
 		<Label text="%networkTypeC"/><Label text=" "/><Label fx:id="networkType"/>
 		<Region HBox.hgrow="ALWAYS"/>
-		<Label fx:id="logLevelNote" text="%logLevelWillBeChangedWhenNodeIsRestarted" visible="false" managed="${logLevelNote.visible}"/>
+		<Label fx:id="restartNeededNote" text="%restartNeededToApplySettings" visible="false" managed="${restartNeededNote.visible}"/>
 	</HBox>
 	<FlowPane hgap="10" vgap="10" styleClass="section" alignment="CENTER_LEFT">
 		<Label text="%statusC"/>
@@ -36,11 +38,10 @@
 			<graphic><Icon icon="trash-alt" height="14"/></graphic>
 		</Button>
 		<Button onAction="#toggleLogPaused" fx:id="toggleLogPaused" contentDisplay="RIGHT"/>
-		<Button onAction="#showExtra" text="..."/>
+		<Button onAction="#showExtra" text="%settings" contentDisplay="RIGHT">
+			<graphic><Icon icon="gear" height="14"/></graphic>
+		</Button>
 		<Label fx:id="peers"/>
-		<ComboBox fx:id="logLevel">
-			<tooltip><Tooltip text="%logLevel"/></tooltip>
-		</ComboBox>
 	</FlowPane>
 	<HBox spacing="10" alignment="CENTER_LEFT">
 
