@@ -90,7 +90,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 			});
 			Pair<NetworkType, File> moreInfo = dialog.showForResult().orElse(null);
 			if (moreInfo == null) return;
-			EmbeddedNodeInfo info = new EmbeddedNodeInfo(moreInfo.getKey(), nodeJar.getName(), EmbeddedFullNode.LogLevel.WARN, moreInfo.getValue().getName());
+			EmbeddedNodeInfo info = new EmbeddedNodeInfo(moreInfo.getKey(), nodeJar.getName(), EmbeddedFullNode.DEFAULT_LOG_LEVEL, moreInfo.getValue().getName());
 			try {
 				Path path = nodeDirectory.toPath().resolve(EmbeddedNodeInfo.FILE_NAME);
 				Main.programData().embeddedNodeInfo.set(path);

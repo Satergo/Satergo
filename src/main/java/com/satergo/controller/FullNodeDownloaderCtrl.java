@@ -92,7 +92,7 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializ
 	public void continueSetup(ActionEvent e) {
 		if (Main.node != null && Main.node.isRunning()) return;
 		Main.programData().blockchainNodeKind.set(ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE);
-		EmbeddedNodeInfo info = new EmbeddedNodeInfo(networkType.getValue(), nodeJar.getName(), EmbeddedFullNode.LogLevel.ERROR, "ergo.conf");
+		EmbeddedNodeInfo info = new EmbeddedNodeInfo(networkType.getValue(), nodeJar.getName(), EmbeddedFullNode.DEFAULT_LOG_LEVEL, "ergo.conf");
 		Main.programData().embeddedNodeInfo.set(nodeDirectory.toPath().resolve(EmbeddedNodeInfo.FILE_NAME));
 		try {
 			Files.writeString(Main.programData().embeddedNodeInfo.get(), info.toJson());

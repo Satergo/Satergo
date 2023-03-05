@@ -7,6 +7,10 @@ import com.satergo.Utils;
 import com.satergo.controller.NodeOverviewCtrl;
 import com.satergo.extra.DownloadTask;
 import com.satergo.extra.dialog.SatVoidDialog;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigValueFactory;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -27,16 +31,17 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class EmbeddedFullNode {
 
 	public enum LogLevel { ERROR, WARN, INFO, DEBUG, TRACE, OFF }
+
+	public static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.ERROR;
 
 	public final File nodeDirectory;
 	private Process process;
@@ -50,12 +55,12 @@ public class EmbeddedFullNode {
 	public EmbeddedNodeInfo info;
 	public final ErgoNodeAccess nodeAccess;
 
-	private EmbeddedFullNode(File nodeDirectory, NetworkType networkType, LogLevel logLevel, File nodeJar, File confFile, EmbeddedNodeInfo info) {
+	private EmbeddedFullNode(File nodeDirectory, EmbeddedNodeInfo info) {
 		this.nodeDirectory = nodeDirectory;
-		this.networkType = networkType;
-		this.logLevel = logLevel;
-		this.nodeJar = nodeJar;
-		this.confFile = confFile;
+		this.networkType = info.networkType();
+		this.logLevel = info.logLevel();
+		this.nodeJar = new File(nodeDirectory, info.jarFileName());
+		this.confFile = new File(nodeDirectory, info.confFileName());
 		infoFile = new File(nodeDirectory, EmbeddedNodeInfo.FILE_NAME);
 		this.info = info;
 		this.nodeAccess = new ErgoNodeAccess(URI.create(localApiHttpAddress()));
@@ -71,8 +76,7 @@ public class EmbeddedFullNode {
 	public static EmbeddedFullNode fromLocalNodeInfo(File infoFile) {
 		try {
 			File root = infoFile.getParentFile();
-			EmbeddedNodeInfo embeddedNodeInfo = EmbeddedNodeInfo.fromJson(Files.readString(infoFile.toPath()));
-			return new EmbeddedFullNode(root, embeddedNodeInfo.networkType(), embeddedNodeInfo.logLevel(), new File(root, embeddedNodeInfo.jarFileName()), new File(root, embeddedNodeInfo.confFileName()), embeddedNodeInfo);
+			return new EmbeddedFullNode(root, EmbeddedNodeInfo.fromJson(Files.readString(infoFile.toPath())));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -90,8 +94,6 @@ public class EmbeddedFullNode {
 
 	private ScheduledExecutorService scheduler;
 
-	private int[] lastVersionUpdateAlert = null;
-
 	public int apiPort() {
 		return networkType == NetworkType.MAINNET ? 9053 : 9052;
 	}
@@ -102,11 +104,8 @@ public class EmbeddedFullNode {
 
 	public String readVersion() {
 		try (JarFile jar = new JarFile(nodeJar)) {
-			String applicationConf = new String(new DataInputStream(jar.getInputStream(jar.getEntry("application.conf"))).readAllBytes(), StandardCharsets.UTF_8);
-			Pattern pattern = Pattern.compile("appVersion\\s+=\\s+([\\d.]+)");
-			Matcher m = pattern.matcher(applicationConf);
-			if (!m.find()) throw new IllegalArgumentException();
-			return m.group(1);
+			Config nodeAppConf = ConfigFactory.parseString(new String(jar.getInputStream(jar.getEntry("application.conf")).readAllBytes(), StandardCharsets.UTF_8));
+			return nodeAppConf.getString("scorex.network.appVersion");
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -148,6 +147,8 @@ public class EmbeddedFullNode {
 		}, 10, 2, TimeUnit.SECONDS);
 		scheduler.scheduleAtFixedRate(this::checkForUpdate, 5, Duration.ofHours(4).toSeconds(), TimeUnit.SECONDS);
 	}
+
+	private int[] lastVersionUpdateAlert = null;
 
 	public void checkForUpdate() {
 		int[] version = Arrays.stream(readVersion().split("\\.")).mapToInt(Integer::parseInt).toArray();
@@ -244,14 +245,17 @@ public class EmbeddedFullNode {
 	public void start() {
 		if (isRunning()) throw new IllegalStateException("this node is already running");
 		try {
-			String[] command = new String[7];
+			Optional<Object> prop = getConfValue("scorex.logging.level");
+			if (prop.isEmpty() || !prop.get().equals(logLevel.toString())) {
+				setConfValue("scorex.logging.level", logLevel.toString());
+			}
+			String[] command = new String[6];
 			command[0] = findJavaBinary().toString();
 			command[1] = "-jar";
-			command[2] = "-Dlogback.stdout.level=" + logLevel;
-			command[3] = nodeJar.getAbsolutePath();
-			command[4] = "--" + networkType.toString().toLowerCase(Locale.ROOT);
-			command[5] = "-c";
-			command[6] = confFile.getName();
+			command[2] = nodeJar.getAbsolutePath();
+			command[3] = "--" + networkType.toString().toLowerCase(Locale.ROOT);
+			command[4] = "-c";
+			command[5] = confFile.getName();
 			System.out.println("running node with command: " + Arrays.toString(command));
 			process = new PtyProcessBuilder().setCommand(command).setDirectory(nodeDirectory.getAbsolutePath()).start();
 			scheduleRepeatingTasks();
@@ -259,6 +263,21 @@ public class EmbeddedFullNode {
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
+	}
+
+	public Optional<Object> getConfValue(String propertyPath) {
+		Config config = ConfigFactory.parseFile(confFile);
+		if (!config.hasPath(propertyPath))
+			return Optional.empty();
+		return Optional.of(config.getValue(propertyPath).unwrapped());
+	}
+
+	public void setConfValue(String propertyPath, Object value) throws IOException {
+		Files.writeString(confFile.toPath(), ConfigFactory.parseFile(confFile)
+				.withValue(propertyPath, ConfigValueFactory.fromAnyRef(value))
+				.root().render(ConfigRenderOptions.defaults()
+						.setOriginComments(false)
+						.setJson(false)));
 	}
 
 	public InputStream getStandardOutput() {

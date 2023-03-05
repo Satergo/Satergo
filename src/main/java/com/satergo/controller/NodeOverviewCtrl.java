@@ -8,9 +8,6 @@ import com.satergo.ergo.ErgoNodeAccess;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatTextInputDialog;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValueFactory;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -172,7 +169,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		if (key != null) {
 			byte[] hashBytes = (byte[]) Blake2b256.hash(key);
 			String hash = HexFormat.of().formatHex(hashBytes);
-			setConfValue("scorex.restApi.apiKeyHash", hash);
+			Main.node.setConfValue("scorex.restApi.apiKeyHash", hash);
 		}
 	}
 
@@ -273,7 +270,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		});
 		Pair<String, Integer> result = dialog.showForResult().orElse(null);
 		if (result != null) {
-			setConfValue("scorex.network.declaredAddress", toSocketAddress(result.getKey(), result.getValue()));
+			Main.node.setConfValue("scorex.network.declaredAddress", toSocketAddress(result.getKey(), result.getValue()));
 		}
 	}
 
@@ -294,14 +291,6 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@FXML
 	public void toggleLogPaused(ActionEvent e) {
 		logPaused.set(!logPaused.get());
-	}
-
-	private void setConfValue(String propertyPath, Object value) throws IOException {
-		Files.writeString(Main.node.confFile.toPath(), ConfigFactory.parseFile(Main.node.confFile)
-				.withValue(propertyPath, ConfigValueFactory.fromAnyRef(value))
-				.root().render(ConfigRenderOptions.defaults()
-						.setOriginComments(false)
-						.setJson(false)));
 	}
 
 	private static String toSocketAddress(String host, int port) {
