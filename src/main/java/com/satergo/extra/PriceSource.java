@@ -11,25 +11,26 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.List;
+import java.util.stream.Stream;
 
 public enum PriceSource {
-	KUCOIN(CommonCurrency.USD, CommonCurrency.EUR, CommonCurrency.BTC) {
+	KUCOIN(PriceCurrency.USD, PriceCurrency.EUR, PriceCurrency.BTC, PriceCurrency.SAT) {
 		@Override
-		protected BigDecimal fetchPriceInternal(CommonCurrency commonCurrency) throws IOException {
+		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
 			HttpClient httpClient = HttpClient.newHttpClient();
-			if (commonCurrency == CommonCurrency.USD || commonCurrency == CommonCurrency.EUR) {
-				HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.kucoin.com/api/v1/prices?base=" + commonCurrency.uc() + "&currencies=ERG")).build();
+			if (priceCurrency == PriceCurrency.USD || priceCurrency == PriceCurrency.EUR) {
+				HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.kucoin.com/api/v1/prices?base=" + priceCurrency.uc() + "&currencies=ERG")).build();
 				try {
 					JsonObject response = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
 					return new BigDecimal(response.getObject("data").getString("ERG"));
 				} catch (JsonParserException | InterruptedException e) {
 					throw new RuntimeException(e);
 				}
-			} else if (commonCurrency == CommonCurrency.BTC) {
+			} else if (priceCurrency == PriceCurrency.BTC) {
 				HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=ERG-BTC")).build();
 				try {
 					JsonObject response = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
@@ -37,28 +38,29 @@ public enum PriceSource {
 				} catch (JsonParserException | InterruptedException e) {
 					throw new RuntimeException(e);
 				}
-			} else throw new IllegalArgumentException("unsupported common currency");
+			} else throw new IllegalArgumentException("unsupported price currency");
 		}
 	},
-	COINGECKO(CommonCurrency.USD, CommonCurrency.EUR, CommonCurrency.BTC) {
+	COINGECKO(Stream.concat(Stream.of(PriceCurrency.BTC, PriceCurrency.SAT), Stream.of("USD", "AED", "ARS", "AUD", "BDT", "BHD", "BMD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR", "JPY", "KRW", "KWD", "LKR", "MMK", "MXN", "MYR", "NGN", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SAR", "SEK", "SGD", "THB", "TRY", "TWD", "UAH", "VEF", "VND", "ZAR")
+			.map(Currency::getInstance).map(PriceCurrency::fiat)).toList()) {
 		@Override
-		protected BigDecimal fetchPriceInternal(CommonCurrency commonCurrency) throws IOException {
-			if (!supportedCurrencies.contains(commonCurrency)) throw new IllegalArgumentException("unsupported common currency");
+		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
+			if (!supportedCurrencies.contains(priceCurrency)) throw new IllegalArgumentException("unsupported price currency");
 			HttpClient httpClient = HttpClient.newHttpClient();
-			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coingecko.com/api/v3/simple/price?ids=ergo&vs_currencies=" + commonCurrency.lc())).build();
+			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coingecko.com/api/v3/simple/price?ids=ergo&vs_currencies=" + priceCurrency.lc())).build();
 			try {
 				JsonObject response = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
-				return BigDecimal.valueOf(response.getObject("ergo").getDouble(commonCurrency.lc()));
+				return BigDecimal.valueOf(response.getObject("ergo").getDouble(priceCurrency.lc()));
 			} catch (JsonParserException | InterruptedException e) {
 				throw new RuntimeException(e);
 			}
 		}
 	},
-	COINEX(CommonCurrency.USD, CommonCurrency.BTC) {
+	COINEX(PriceCurrency.USD, PriceCurrency.BTC, PriceCurrency.SAT) {
 		@Override
-		protected BigDecimal fetchPriceInternal(CommonCurrency commonCurrency) throws IOException {
-			if (!supportedCurrencies.contains(commonCurrency)) throw new IllegalArgumentException("unsupported common currency");
-			String crypto = commonCurrency == CommonCurrency.USD ? "USDT" : "BTC";
+		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
+			if (!supportedCurrencies.contains(priceCurrency)) throw new IllegalArgumentException("unsupported price currency");
+			String crypto = priceCurrency == PriceCurrency.USD ? "USDT" : "BTC";
 			HttpClient httpClient = HttpClient.newHttpClient();
 			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coinex.com/v1/market/ticker?market=ERG" + crypto)).build();
 			try {
@@ -70,25 +72,24 @@ public enum PriceSource {
 		}
 	};
 
-	public final List<CommonCurrency> supportedCurrencies;
+	public final List<PriceCurrency> supportedCurrencies;
 
-	PriceSource(CommonCurrency... supportedCurrencies) {
-		if (Arrays.stream(supportedCurrencies).anyMatch(c -> c == CommonCurrency.BTC)) {
-			ArrayList<CommonCurrency> c = new ArrayList<>();
-			Collections.addAll(c, supportedCurrencies);
-			c.add(CommonCurrency.SAT);
-			this.supportedCurrencies = Collections.unmodifiableList(c);
-		} else this.supportedCurrencies = List.of(supportedCurrencies);
+	PriceSource(PriceCurrency... supportedCurrencies) {
+		this(Collections.unmodifiableList(Arrays.asList(supportedCurrencies)));
 	}
 
-	protected abstract BigDecimal fetchPriceInternal(CommonCurrency commonCurrency) throws IOException;
+	PriceSource(List<PriceCurrency> supportedCurrencies) {
+		this.supportedCurrencies = supportedCurrencies;
+	}
 
-	public final BigDecimal fetchPrice(CommonCurrency commonCurrency) throws IOException {
-		if (commonCurrency == CommonCurrency.SAT) {
-			if (!supportedCurrencies.contains(CommonCurrency.BTC)) throw new IllegalArgumentException("unsupported common currency");
-			return fetchPriceInternal(CommonCurrency.BTC).movePointRight(8);
+	protected abstract BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException;
+
+	public final BigDecimal fetchPrice(PriceCurrency priceCurrency) throws IOException {
+		if (priceCurrency == PriceCurrency.SAT) {
+			if (!supportedCurrencies.contains(PriceCurrency.BTC)) throw new IllegalArgumentException("unsupported price currency");
+			return fetchPriceInternal(PriceCurrency.BTC).movePointRight(8);
 		}
-		if (!supportedCurrencies.contains(commonCurrency)) throw new IllegalArgumentException("unsupported common currency " + commonCurrency + " " + this);
-		return fetchPriceInternal(commonCurrency);
+		if (!supportedCurrencies.contains(priceCurrency)) throw new IllegalArgumentException("unsupported price currency " + priceCurrency + " " + this);
+		return fetchPriceInternal(priceCurrency);
 	}
 }

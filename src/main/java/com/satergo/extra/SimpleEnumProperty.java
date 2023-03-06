@@ -1,8 +1,6 @@
 package com.satergo.extra;
 
-import javafx.beans.property.SimpleObjectProperty;
-
-public class SimpleEnumProperty<T extends Enum<T>> extends SimpleObjectProperty<T> {
+public class SimpleEnumProperty<T extends Enum<T>> extends SimpleEnumLikeProperty<T> {
 
 	public final Class<T> enumClass;
 
@@ -23,5 +21,15 @@ public class SimpleEnumProperty<T extends Enum<T>> extends SimpleObjectProperty<
 	public SimpleEnumProperty(Class<T> enumClass, Object bean, String name, T initialValue) {
 		super(bean, name, initialValue);
 		this.enumClass = enumClass;
+	}
+
+	@Override
+	public final T valueOf(String s) {
+		return Enum.valueOf(enumClass, s);
+	}
+
+	@Override
+	public final String nameOf(T value) {
+		return value.name();
 	}
 }

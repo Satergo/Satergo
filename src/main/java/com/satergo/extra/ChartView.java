@@ -23,7 +23,7 @@ import java.time.*;
 
 public class ChartView extends VBox {
 
-	private final CommonCurrency vs;
+	private final PriceCurrency vs;
 
 	public enum TimeDetail { HOUR_DAY, DAY_MONTH, MONTH_YEAR }
 
@@ -33,7 +33,7 @@ public class ChartView extends VBox {
 
 	private TimeDetail timeDetail;
 
-	public ChartView(CommonCurrency vs) {
+	public ChartView(PriceCurrency vs) {
 		Load.thisFxml(this, "/chart-view.fxml");
 		this.vs = vs;
 
@@ -85,7 +85,7 @@ public class ChartView extends VBox {
 
 	private static final ZonedDateTime MAINNET_START = ZonedDateTime.of(2019, 7, 1, 10, 0, 0, 0, ZoneOffset.UTC);
 	
-	private static ChartData fetchCoinGeckoChart(CommonCurrency vs, int days) throws IOException, InterruptedException {
+	private static ChartData fetchCoinGeckoChart(PriceCurrency vs, int days) throws IOException, InterruptedException {
 		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coingecko.com/api/v3/coins/ergo/market_chart?vs_currency=" + vs.lc() + "&days=" + (days == -1 ? "max" : days))).build();
 		HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		try {

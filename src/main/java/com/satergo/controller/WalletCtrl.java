@@ -144,7 +144,10 @@ public class WalletCtrl implements Initializable {
 		((ToggleButton) walletRoot.lookup("#" + initialTab)).setSelected(true);
 
 		Main.programData().priceSource.addListener((observable, oldValue, newValue) -> updatePriceValue());
-		Main.programData().priceCurrency.addListener((observable, oldValue, newValue) -> updatePriceValue());
+		Main.programData().priceCurrency.addListener((observable, oldValue, newValue) -> {
+			// Happens when the available currencies are changed. This listener gets called before the currency is selected.
+			if (newValue != null) updatePriceValue();
+		});
 		scheduler.scheduleAtFixedRate(() -> {
 			try {
 				BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());

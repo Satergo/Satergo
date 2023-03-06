@@ -1,9 +1,6 @@
 package com.satergo;
 
-import com.satergo.extra.CommonCurrency;
-import com.satergo.extra.PriceSource;
-import com.satergo.extra.SimpleEnumProperty;
-import com.satergo.extra.SimplePathProperty;
+import com.satergo.extra.*;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
@@ -47,8 +44,11 @@ public class ProgramData {
 			showPrice = new SimpleBooleanProperty(null, "showPrice", true);
 	public final SimpleEnumProperty<PriceSource>
 			priceSource = new SimpleEnumProperty<>(PriceSource.class, null, "priceSource", PriceSource.values()[0]);
-	public final SimpleEnumProperty<CommonCurrency>
-			priceCurrency = new SimpleEnumProperty<>(CommonCurrency.class, null, "priceCurrency", CommonCurrency.values()[0]);
+	public final SimpleEnumLikeProperty<PriceCurrency>
+			priceCurrency = new SimpleEnumLikeProperty<>(null, "priceCurrency", PriceCurrency.USD) {
+		@Override public PriceCurrency valueOf(String s) { return PriceCurrency.get(s); }
+		@Override public String nameOf(PriceCurrency value) { return value.uc(); }
+	};
 	public final SimpleBooleanProperty
 			lightTheme = new SimpleBooleanProperty(null, "lightTheme", false),
 			requirePasswordForSending = new SimpleBooleanProperty(null, "requirePasswordForSending", true);
@@ -63,13 +63,16 @@ public class ProgramData {
 		allSettings.forEach(s -> s.addListener((observable, oldValue, newValue) -> save()));
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private void save() {
 		JsonObject jo = new JsonObject();
 		jo.put("formatVersion", formatVersion);
 		allSettings.forEach(setting -> {
 			String name = ((ReadOnlyProperty<?>) setting).getName();
-			if (setting instanceof SimpleEnumProperty || setting instanceof SimplePathProperty)
+			if (setting instanceof SimplePathProperty)
 				jo.put(name, setting.getValue() == null ? null : String.valueOf(setting.getValue()));
+			else if (setting instanceof SimpleEnumLikeProperty s)
+				jo.put(name, setting.getValue() == null ? null : s.nameOf(setting.getValue()));
 			else jo.put(name, setting.getValue());
 		});
 		try {
@@ -87,8 +90,8 @@ public class ProgramData {
 			programData.allSettings.forEach(setting -> {
 				String k = ((ReadOnlyProperty<?>) setting).getName();
 				try {
-					if (setting instanceof SimpleEnumProperty s)
-						s.set(jo.isNull(k) ? null : Enum.valueOf(s.enumClass, jo.getString(k)));
+					if (setting instanceof SimpleEnumLikeProperty s)
+						s.set(jo.isNull(k) ? null : s.valueOf(jo.getString(k)));
 					else if (setting instanceof SimpleStringProperty s) s.set(jo.getString(k));
 					else if (setting instanceof SimpleBooleanProperty s) s.set(jo.getBoolean(k));
 					else if (setting instanceof SimplePathProperty s) s.set(jo.isNull(k) ? null : Path.of(jo.getString(k)));

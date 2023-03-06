@@ -3,7 +3,7 @@ package com.satergo.controller;
 import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.Translations;
-import com.satergo.extra.CommonCurrency;
+import com.satergo.extra.PriceCurrency;
 import com.satergo.extra.PriceSource;
 import com.satergo.extra.ToggleSwitch;
 import javafx.beans.binding.Bindings;
@@ -23,7 +23,7 @@ public class SettingsCtrl implements Initializable, WalletTab {
 
 	@FXML private ToggleSwitch showPrice;
 	@FXML private ComboBox<PriceSource> priceSource;
-	@FXML private ComboBox<CommonCurrency> priceCurrency;
+	@FXML private ComboBox<PriceCurrency> priceCurrency;
 	@FXML private ComboBox<Translations.Entry> language;
 	@FXML private ToggleSwitch requirePasswordForSending;
 
@@ -39,15 +39,11 @@ public class SettingsCtrl implements Initializable, WalletTab {
 		priceSource.valueProperty().bindBidirectional(Main.programData().priceSource);
 		priceCurrency.getItems().addAll(Main.programData().priceSource.get().supportedCurrencies);
 		priceSource.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			CommonCurrency currentCurrency = priceCurrency.getValue();
-			priceCurrency.getItems().clear();
-			priceCurrency.getItems().addAll(newValue.supportedCurrencies);
+			PriceCurrency currentCurrency = priceCurrency.getValue();
+			priceCurrency.getItems().setAll(newValue.supportedCurrencies);
 			if (newValue.supportedCurrencies.contains(currentCurrency))
 				priceCurrency.setValue(currentCurrency);
 			else priceCurrency.getSelectionModel().select(0);
-		});
-		priceCurrency.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			Main.programData().priceCurrency.set(newValue);
 		});
 		priceCurrency.valueProperty().bindBidirectional(Main.programData().priceCurrency);
 		themeImage.imageProperty().bind(Bindings.when(Main.programData().lightTheme)
