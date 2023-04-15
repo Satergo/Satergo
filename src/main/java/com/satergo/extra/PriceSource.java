@@ -17,15 +17,16 @@ import java.util.Currency;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.satergo.Utils.HTTP;
+
 public enum PriceSource {
 	KUCOIN(PriceCurrency.USD, PriceCurrency.EUR, PriceCurrency.BTC, PriceCurrency.SAT) {
 		@Override
 		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
-			HttpClient httpClient = HttpClient.newHttpClient();
 			if (priceCurrency == PriceCurrency.USD || priceCurrency == PriceCurrency.EUR) {
 				HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.kucoin.com/api/v1/prices?base=" + priceCurrency.uc() + "&currencies=ERG")).build();
 				try {
-					JsonObject response = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
+					JsonObject response = JsonParser.object().from(HTTP.send(request, HttpResponse.BodyHandlers.ofString()).body());
 					return new BigDecimal(response.getObject("data").getString("ERG"));
 				} catch (JsonParserException | InterruptedException e) {
 					throw new RuntimeException(e);
@@ -33,7 +34,7 @@ public enum PriceSource {
 			} else if (priceCurrency == PriceCurrency.BTC) {
 				HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=ERG-BTC")).build();
 				try {
-					JsonObject response = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
+					JsonObject response = JsonParser.object().from(HTTP.send(request, HttpResponse.BodyHandlers.ofString()).body());
 					return new BigDecimal(response.getObject("data").getString("price"));
 				} catch (JsonParserException | InterruptedException e) {
 					throw new RuntimeException(e);
@@ -46,10 +47,9 @@ public enum PriceSource {
 		@Override
 		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
 			if (!supportedCurrencies.contains(priceCurrency)) throw new IllegalArgumentException("unsupported price currency");
-			HttpClient httpClient = HttpClient.newHttpClient();
 			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coingecko.com/api/v3/simple/price?ids=ergo&vs_currencies=" + priceCurrency.lc())).build();
 			try {
-				JsonObject response = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
+				JsonObject response = JsonParser.object().from(HTTP.send(request, HttpResponse.BodyHandlers.ofString()).body());
 				return BigDecimal.valueOf(response.getObject("ergo").getDouble(priceCurrency.lc()));
 			} catch (JsonParserException | InterruptedException e) {
 				throw new RuntimeException(e);
@@ -61,10 +61,9 @@ public enum PriceSource {
 		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
 			if (!supportedCurrencies.contains(priceCurrency)) throw new IllegalArgumentException("unsupported price currency");
 			String crypto = priceCurrency == PriceCurrency.USD ? "USDT" : "BTC";
-			HttpClient httpClient = HttpClient.newHttpClient();
 			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coinex.com/v1/market/ticker?market=ERG" + crypto)).build();
 			try {
-				JsonObject response = JsonParser.object().from(httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body());
+				JsonObject response = JsonParser.object().from(HTTP.send(request, HttpResponse.BodyHandlers.ofString()).body());
 				return new BigDecimal(response.getObject("data").getObject("ticker").getString("last"));
 			} catch (JsonParserException | InterruptedException e) {
 				throw new RuntimeException(e);

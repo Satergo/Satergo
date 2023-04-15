@@ -15,6 +15,7 @@ import java.net.http.HttpRequest;
 import java.util.List;
 import java.util.function.Function;
 
+import static com.satergo.Utils.HTTP;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
 
 public class ErgoInterface {
@@ -38,10 +39,9 @@ public class ErgoInterface {
 
 	public static Balance getBalance(NetworkType networkType, Address address) {
 		// I don't want to use explorer here...
-		HttpClient httpClient = HttpClient.newHttpClient();
 		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getExplorerUrl(networkType)).resolve("/api/v1/addresses/" + address + "/balance/total")).build();
 		try {
-			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());
+			JsonObject body = JsonParser.object().from(HTTP.send(request, ofString()).body());
 			JsonObject confirmed = body.getObject("confirmed");
 			JsonObject unconfirmed = body.getObject("unconfirmed");
 			Function<JsonObject, TokenBalance> tokenDeserialize = obj -> new TokenBalance(obj.getString("tokenId"), obj.getLong("amount"), obj.getInt("decimals"), obj.getString("name"));
@@ -56,10 +56,9 @@ public class ErgoInterface {
 	}
 
 	public static int getNetworkBlockHeight(NetworkType networkType) {
-		HttpClient httpClient = HttpClient.newHttpClient();
 		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getExplorerUrl(networkType) + "/blocks?limit=1&sortBy=height&sortDirection=desc")).build();
 		try {
-			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());
+			JsonObject body = JsonParser.object().from(HTTP.send(request, ofString()).body());
 			return body.getArray("items").getObject(0).getInt("height");
 		} catch (JsonParserException | IOException | InterruptedException e) {
 			throw new RuntimeException(e);
@@ -107,11 +106,10 @@ public class ErgoInterface {
 	}
 
 	public static JsonObject getTokenItem(NetworkType networkType, ErgoId tokenId) {
-		HttpClient httpClient = HttpClient.newHttpClient();
 		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getExplorerUrl(networkType))
 				.resolve("/api/v1/boxes/byTokenId/").resolve(tokenId.toString() + "/").resolve("?limit=1")).build();
 		try {
-			JsonObject body = JsonParser.object().from(httpClient.send(request, ofString()).body());
+			JsonObject body = JsonParser.object().from(HTTP.send(request, ofString()).body());
 			return body.getArray("items").getObject(0);
 		} catch (IOException | InterruptedException | JsonParserException e) {
 			throw new RuntimeException(e);

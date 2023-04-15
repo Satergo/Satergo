@@ -28,10 +28,11 @@ import scorex.crypto.hash.Blake2b256;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static com.satergo.Utils.HTTP;
 
 public class NodeOverviewCtrl implements Initializable, WalletTab {
 	private static final int LOG_LENGTH_LIMIT = 1_000_000;
@@ -243,7 +244,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		Button fetch = new Button(Main.lang("fetch"));
 		fetch.setOnAction(ae -> {
 			try {
-				HttpResponse<String> response = HttpClient.newHttpClient().send(Utils.httpRequestBuilder().uri(URI.create("https://icanhazip.com")).build(), HttpResponse.BodyHandlers.ofString());
+				HttpResponse<String> response = HTTP.send(Utils.httpRequestBuilder().uri(URI.create("https://icanhazip.com")).build(), HttpResponse.BodyHandlers.ofString());
 				if (response.statusCode() == 200) {
 					host.setText(response.body());
 					return;

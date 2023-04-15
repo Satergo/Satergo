@@ -16,10 +16,11 @@ import javafx.util.StringConverter;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.*;
+
+import static com.satergo.Utils.HTTP;
 
 public class ChartView extends VBox {
 
@@ -87,7 +88,7 @@ public class ChartView extends VBox {
 	
 	private static ChartData fetchCoinGeckoChart(PriceCurrency vs, int days) throws IOException, InterruptedException {
 		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coingecko.com/api/v3/coins/ergo/market_chart?vs_currency=" + vs.lc() + "&days=" + (days == -1 ? "max" : days))).build();
-		HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+		HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
 		try {
 			JsonObject o = JsonParser.object().from(response.body());
 			return new ChartData(o.getArray("prices").stream().map(a -> (JsonArray) a).map(a ->

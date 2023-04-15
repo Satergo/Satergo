@@ -17,6 +17,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
+import static com.satergo.Utils.HTTP;
+
 public class UpdateChecker {
 
 	private static final URI latestVersionInfoURI = URI.create("https://satergo.com/latest.json");
@@ -26,7 +28,7 @@ public class UpdateChecker {
 	public static VersionInfo fetchLatestInfo() throws IOException {
 		HttpRequest request = Utils.httpRequestBuilder().uri(latestVersionInfoURI).build();
 		try {
-			JsonObject body = JsonParser.object().from(HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body());
+			JsonObject body = JsonParser.object().from(HTTP.send(request, HttpResponse.BodyHandlers.ofString()).body());
 			return new VersionInfo(body.getString("version"), body.getLong("versionCode"), LocalDate.parse(body.getString("dateReleased")), body.getString("changelog"));
 		} catch (JsonParserException | InterruptedException e) {
 			throw new RuntimeException(e);

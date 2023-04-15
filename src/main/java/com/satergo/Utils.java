@@ -4,7 +4,6 @@ import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.satergo.ergo.ErgoInterface;
-import com.satergo.extra.PasswordInputDialog;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPasswordInputDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
@@ -16,7 +15,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import org.ergoplatform.appkit.ErgoClient;
@@ -36,6 +34,8 @@ import java.util.Comparator;
 import java.util.Objects;
 
 public class Utils {
+
+	public static final HttpClient HTTP = HttpClient.newHttpClient();
 
 	public static URL resource(String location) {
 		return Objects.requireNonNull(Utils.class.getResource(location), "resource not found");
@@ -159,7 +159,7 @@ public class Utils {
 	public static JsonObject fetchLatestNodeData() {
 		HttpRequest request = httpRequestBuilder().uri(URI.create("https://api.github.com/repos/ergoplatform/ergo/releases")).build();
 		try {
-			HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
 			return JsonParser.array().from(response.body()).stream()
 					.map(o -> (JsonObject) o)
 					.filter(o -> !o.getBoolean("prerelease"))

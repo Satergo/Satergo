@@ -8,15 +8,14 @@ import com.satergo.Utils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import static com.satergo.Utils.HTTP;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
 
 public class ErgoNodeAccess {
 
-	private final HttpClient httpClient = HttpClient.newHttpClient();
 	private final URI apiAddress;
 
 	public ErgoNodeAccess(URI apiAddress) {
@@ -28,7 +27,7 @@ public class ErgoNodeAccess {
 	public Status getStatus() {
 		HttpRequest request = Utils.httpRequestBuilder().uri(apiAddress.resolve("/info")).build();
 		try {
-			JsonObject o = JsonParser.object().from(httpClient.send(request, ofString()).body());
+			JsonObject o = JsonParser.object().from(HTTP.send(request, ofString()).body());
 			return new Status(o.getInt("fullHeight"), o.getInt("headersHeight"), o.getInt("maxPeerHeight"), o.getInt("peersCount"));
 		} catch (JsonParserException | IOException | InterruptedException e) {
 			throw new RuntimeException(e);
@@ -43,7 +42,7 @@ public class ErgoNodeAccess {
 				.header("api_key", apiKey)
 				.POST(HttpRequest.BodyPublishers.ofString(JsonWriter.string().object().value("pass", password).end().done())).build();
 		try {
-			HttpResponse<String> response = httpClient.send(request, ofString());
+			HttpResponse<String> response = HTTP.send(request, ofString());
 			if (response.statusCode() == 403) {
 				return UnlockingResult.INCORRECT_API_KEY;
 			} else if (response.statusCode() == 400) {
