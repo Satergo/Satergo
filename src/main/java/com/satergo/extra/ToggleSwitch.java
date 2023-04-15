@@ -31,6 +31,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.BooleanPropertyBase;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
+import javafx.scene.AccessibleAttribute;
+import javafx.scene.AccessibleRole;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.Skin;
 
@@ -73,6 +75,7 @@ public class ToggleSwitch extends Labeled
 
 	private void initialize() {
 		getStyleClass().setAll(DEFAULT_STYLE_CLASS);
+		setAccessibleRole(AccessibleRole.CHECK_BOX);
 	}
 
 	/***************************************************************************
@@ -109,7 +112,7 @@ public class ToggleSwitch extends Labeled
 				@Override protected void invalidated() {
 					final boolean v = get();
 					pseudoClassStateChanged(PSEUDO_CLASS_SELECTED, v);
-//					accSendNotification(Attribute.SELECTED);
+					notifyAccessibleAttributeChanged(AccessibleAttribute.SELECTED);
 				}
 
 				@Override
@@ -167,4 +170,11 @@ public class ToggleSwitch extends Labeled
 		return ToggleSwitch.class.getResource("/toggleswitch.css").toExternalForm();
 	}
 
+	@Override
+	public Object queryAccessibleAttribute(AccessibleAttribute attribute, Object... parameters) {
+		switch (attribute) {
+			case SELECTED: return isSelected();
+			default: return super.queryAccessibleAttribute(attribute, parameters);
+		}
+	}
 }

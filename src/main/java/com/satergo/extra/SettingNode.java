@@ -20,7 +20,6 @@ public class SettingNode<T extends Control> extends Pane {
 	private final Label label = new Label();
 
 	private final SimpleObjectProperty<Image> image = new SimpleObjectProperty<>();
-	private final T controlN;
 
 	public Image getImage() { return image.get(); }
 	public void setImage(Image image) { this.image.set(image); }
@@ -37,7 +36,6 @@ public class SettingNode<T extends Control> extends Pane {
 	public void setControl(T control) { this.control.set(control); }
 
 	public SettingNode(@NamedArg("image") Image image, @NamedArg("text") String text, @NamedArg("control") T control) {
-		controlN = control;
 		getStyleClass().add("setting");
 
 		imageView.getStyleClass().add("setting-image-view");
@@ -46,6 +44,8 @@ public class SettingNode<T extends Control> extends Pane {
 		imageView.imageProperty().bind(this.image);
 		imageView.imageProperty().addListener((observable, oldValue, newValue) -> layoutChildren());
 		label.getStyleClass().add("setting-label");
+		label.labelForProperty().bind(this.control);
+		this.control.set(control);
 
 		this.image.set(image);
 		this.text.set(text);
@@ -53,6 +53,7 @@ public class SettingNode<T extends Control> extends Pane {
 		label.textProperty().bind(this.text);
 
 		getChildren().addAll(imageView, label, control);
+		this.control.addListener((obs, old, node) -> getChildren().set(2, node));
 
 		setMinHeight(HEIGHT);
 		setPrefHeight(HEIGHT);
@@ -71,6 +72,6 @@ public class SettingNode<T extends Control> extends Pane {
 		double verticalArea = HEIGHT - insets.getTop() - insets.getBottom();
 		layoutInArea(imageView, insets.getLeft(), insets.getTop(), 52, verticalArea, 0, HPos.CENTER, VPos.CENTER);
 		layoutInArea(label, insets.getLeft() + 52 + 16, insets.getTop(), label.prefWidth(-1), verticalArea, 0, HPos.LEFT, VPos.CENTER);
-		layoutInArea(controlN, getWidth() - insets.getRight() - controlN.prefWidth(-1), insets.getTop(), controlN.prefWidth(-1), verticalArea, 0, HPos.RIGHT, VPos.CENTER);
+		layoutInArea(control.get(), getWidth() - insets.getRight() - control.get().prefWidth(-1), insets.getTop(), control.get().prefWidth(-1), verticalArea, 0, HPos.RIGHT, VPos.CENTER);
 	}
 }

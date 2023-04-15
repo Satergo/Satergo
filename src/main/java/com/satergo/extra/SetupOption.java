@@ -1,11 +1,13 @@
 package com.satergo.extra;
 
+import com.satergo.Utils;
 import javafx.beans.NamedArg;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.AccessibleAction;
+import javafx.scene.AccessibleRole;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
@@ -34,7 +36,13 @@ public class SetupOption extends VBox {
 		setOnKeyReleased(e -> {
 			if (e.getCode() == KeyCode.SPACE && isFocusVisible())
 				fire();
+			else if (!Utils.isMac() && e.getCode() == KeyCode.ENTER && isFocusVisible())
+				fire();
 		});
+
+		setAccessibleRole(AccessibleRole.BUTTON);
+		setAccessibleText(title);
+		setAccessibleHelp(description);
 	}
 
 	public SetupOption(@NamedArg("title") String title) {
