@@ -27,7 +27,6 @@
 					<VBox spacing="8">
 						<ToggleButton fx:id="home" text="%home" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="account" text="%account" toggleGroup="$group" maxWidth="Infinity"/>
-						<ToggleButton fx:id="receive" text="%receive" toggleGroup="$group" maxWidth="Infinity" visible="false" managed="false"/>
 						<ToggleButton fx:id="transactions" text="%transactions" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="about" text="%about" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="node" text="%node" toggleGroup="$group" maxWidth="Infinity"/>
