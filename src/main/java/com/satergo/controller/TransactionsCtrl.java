@@ -54,8 +54,9 @@ public class TransactionsCtrl implements Initializable, WalletTab {
 		};
 		transactionsTask.setOnSucceeded(e -> {
 			List<Address> myAddresses = Main.get().getWallet().addressStream().toList();
-			transactionsTask.getValue().stream().map(t -> new TransactionCell(t, myAddresses))
-					.forEach(finished.getChildren()::add);
+			for (TransactionInfo t : transactionsTask.getValue()) {
+				finished.getChildren().add(new TransactionCell(t, myAddresses));
+			}
 		});
 		new Thread(transactionsTask).start();
 	}

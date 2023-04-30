@@ -31,6 +31,7 @@ public final class TransactionInOut extends HBox {
 		box.setMinWidth(Region.USE_PREF_SIZE);
 		box.setAlignment(Pos.CENTER_LEFT);
 		this.tokens = new Hyperlink(Main.lang("[tokens]"));
+		this.tokens.getStyleClass().add("text-color");
 		this.tokens.managedProperty().bind(this.tokens.visibleProperty());
 		Label space = new Label(" ");
 		space.visibleProperty().bind(tokens.visibleProperty());
