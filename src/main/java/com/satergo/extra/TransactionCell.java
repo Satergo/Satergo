@@ -12,12 +12,12 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Side;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
@@ -35,7 +35,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 public class TransactionCell extends BorderPane implements Initializable {
@@ -163,35 +166,6 @@ public class TransactionCell extends BorderPane implements Initializable {
 		bottomContainer.resize(getWidth(), contentHeight);
 		clipRect.setHeight(contentHeight);
 		super.layoutChildren();
-	}
-
-	private static class TransactionInOut extends HBox {
-		public enum Type {
-			INPUT, OUTPUT;
-			@Override
-			public String toString() {
-				return name().toLowerCase(Locale.ROOT);
-			}
-		}
-		@FXML private Label address, amount;
-		@FXML private Hyperlink tokens;
-
-		public TransactionInOut(Type type, Address address, String amount, boolean hasTokens, Runnable showTokens, boolean isMyAddress) {
-			Load.thisFxml(this, "/tx-" + type + ".fxml");
-			this.address.setText(address.toString());
-			Utils.addCopyContextMenu(this.address);
-			if (isMyAddress) this.address.setUnderline(true);
-			this.amount.setText(amount);
-			setOnContextMenuRequested(e -> {
-				ContextMenu menu = new ContextMenu();
-				MenuItem copyAddress = new MenuItem("Copy address");
-				menu.getItems().add(copyAddress);
-				menu.show(this, Side.BOTTOM, getWidth(), 0);
-				menu.setX(menu.getX() - menu.prefWidth(-1));
-			});
-			this.tokens.setVisible(hasTokens);
-			this.tokens.setOnAction(e -> showTokens.run());
-		}
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.VBox;
+import org.ergoplatform.appkit.Address;
 import org.ergoplatform.explorer.client.DefaultApi;
 import org.ergoplatform.explorer.client.model.TransactionInfo;
 import retrofit2.Retrofit;
@@ -36,7 +37,10 @@ public class TransactionsCtrl implements Initializable, WalletTab {
 				return Main.get().getWallet().addressStream().parallel()
 						.map(address -> {
 							try {
-								return api.getApiV1AddressesP1Transactions(address.toString(), 0, 500, false).execute().body().getItems();
+								return api.getApiV1AddressesP1Transactions(address.toString(), 0, 500, false)
+										.execute()
+										.body()
+										.getItems();
 							} catch (IOException e) {
 								throw new RuntimeException(e);
 							}
@@ -49,7 +53,8 @@ public class TransactionsCtrl implements Initializable, WalletTab {
 			}
 		};
 		transactionsTask.setOnSucceeded(e -> {
-			transactionsTask.getValue().stream().map(t -> new TransactionCell(t, Main.get().getWallet().addressStream().toList()))
+			List<Address> myAddresses = Main.get().getWallet().addressStream().toList();
+			transactionsTask.getValue().stream().map(t -> new TransactionCell(t, myAddresses))
 					.forEach(finished.getChildren()::add);
 		});
 		new Thread(transactionsTask).start();
