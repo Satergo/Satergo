@@ -9,6 +9,7 @@ import com.satergo.*;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
 import com.satergo.ergouri.ErgoURIString;
+import com.satergo.extra.ImageConversion;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
@@ -16,7 +17,6 @@ import com.satergo.extra.dialog.SatTextInputDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
 import javafx.application.Platform;
 import javafx.collections.MapChangeListener;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -398,7 +398,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 					new FileChooser.ExtensionFilter(Main.lang("pngImage"), "*.png"),
 					new FileChooser.ExtensionFilter(Main.lang("jpegImage"), "*.jpg"));
 			if (path == null) return;
-			RenderedImage renderedImage = SwingFXUtils.fromFXImage(img, null);
+			RenderedImage renderedImage = ImageConversion.fromFXImage(img, null);
 			String format = "png";
 			if (path.getFileName().toString().endsWith(".jpg") || path.getFileName().toString().endsWith(".jpeg"))
 				format = "jpg";

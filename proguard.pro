@@ -50,6 +50,7 @@
 -dontwarn scala.tools.**
 -dontwarn **$$anonfun$*
 -dontwarn algebra.**,spire.**,debox.**
+-dontwarn okio.*
 
 -dontwarn org.controlsfx.**
 -dontwarn org.fusesource.jansi.**,jtermios.windows.**
