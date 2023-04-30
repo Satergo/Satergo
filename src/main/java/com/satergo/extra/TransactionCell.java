@@ -10,6 +10,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -18,6 +19,7 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
@@ -26,6 +28,9 @@ import org.ergoplatform.appkit.Address;
 import org.ergoplatform.explorer.client.model.InputInfo;
 import org.ergoplatform.explorer.client.model.OutputInfo;
 import org.ergoplatform.explorer.client.model.TransactionInfo;
+import org.fxmisc.flowless.Cell;
+import org.fxmisc.flowless.VirtualFlow;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -52,11 +57,13 @@ public class TransactionCell extends BorderPane implements Initializable {
 	@FXML private Label dateTime;
 	@FXML private Hyperlink tokens;
 	@FXML private Label totalCoins;
-	@FXML private Node top, bottom;
+	@FXML private Node top;
+	@FXML private GridPane bottom;
 	@FXML private StackPane arrow;
 	@FXML private StackPane bottomContainer;
 
-	@FXML private VBox inputs, outputs;
+	private final VirtualFlow<InputInfo, Cell<InputInfo, TransactionInOut>> inputFlow;
+	private final VirtualFlow<OutputInfo, Cell<OutputInfo, TransactionInOut>> outputFlow;
 
 	private final BooleanProperty expanded = new SimpleBooleanProperty(null, "expanded", false);
 	public BooleanProperty expandedProperty() { return expanded; }
@@ -101,6 +108,18 @@ public class TransactionCell extends BorderPane implements Initializable {
 		});
 		clipRect.widthProperty().bind(widthProperty());
 		bottomContainer.setClip(clipRect);
+		inputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getInputs()), input -> {
+			return Cell.wrapNode(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(input), FULL_PRECISION.format(ErgoInterface.toFullErg(input.getValue())), !input.getAssets().isEmpty(), () -> {
+				Utils.alert(Alert.AlertType.INFORMATION, input.getAssets().stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
+			}, myAddresses.contains(getAddress(input))));
+		});
+		outputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getOutputs()), output -> {
+			return Cell.wrapNode(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(output), FULL_PRECISION.format(ErgoInterface.toFullErg(output.getValue())), !output.getAssets().isEmpty(), () -> {
+				Utils.alert(Alert.AlertType.INFORMATION, output.getAssets().stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
+			}, myAddresses.contains(getAddress(output))));
+		});
+		bottom.add(new VirtualizedScrollPane<>(inputFlow), 0, 0);
+		bottom.add(new VirtualizedScrollPane<>(outputFlow), 1, 0);
 	}
 
 	private Timeline timeline;
@@ -188,16 +207,6 @@ public class TransactionCell extends BorderPane implements Initializable {
 				return a.name() + ": " + (fullAmount.compareTo(BigDecimal.ZERO) > 0 ? "+" : "") + fullAmount.toPlainString();
 			}).collect(Collectors.joining("\n")));
 		});
-		for (InputInfo input : tx.getInputs()) {
-			inputs.getChildren().add(new TransactionInOut(TransactionInOut.Type.INPUT, getAddress(input), FULL_PRECISION.format(ErgoInterface.toFullErg(input.getValue())), !input.getAssets().isEmpty(), () -> {
-				Utils.alert(Alert.AlertType.INFORMATION, input.getAssets().stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
-			}, myAddresses.contains(getAddress(input))));
-		}
-		for (OutputInfo output : tx.getOutputs()) {
-			outputs.getChildren().add(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(output), FULL_PRECISION.format(ErgoInterface.toFullErg(output.getValue())), !output.getAssets().isEmpty(), () -> {
-				Utils.alert(Alert.AlertType.INFORMATION, output.getAssets().stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
-			}, myAddresses.contains(getAddress(output))));
-		}
 	}
 
 	// utils

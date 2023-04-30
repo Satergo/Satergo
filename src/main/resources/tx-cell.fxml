@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.control.Hyperlink?>
 <fx:root xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.BorderPane" stylesheets="tx-cell.css" styleClass="tx-cell">
 	<top>
 		<BorderPane fx:id="top">
@@ -32,8 +32,6 @@
 					<ColumnConstraints percentWidth="50"/>
 					<ColumnConstraints percentWidth="50"/>
 				</columnConstraints>
-				<VBox fx:id="inputs" spacing="2" GridPane.columnIndex="0"/>
-				<VBox fx:id="outputs" spacing="2" GridPane.columnIndex="1"/>
 			</GridPane>
 		</StackPane>
 	</bottom>
