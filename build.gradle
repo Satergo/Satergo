@@ -107,12 +107,12 @@ satergoRuntime {
 	switch (platform) {
 		case "linux": {
 			platformName = "linux-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_linux-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_linux-x64_bin.tar.gz")
 			break
 		}
 		case "linux-aarch64": {
 			platformName = "linux-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_linux-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_linux-aarch64_bin.tar.gz")
 			break
 		}
 		case "win": {
