@@ -43,7 +43,7 @@ public class RuntimeBuildExt {
 	public List<String> extraJlinkOptions;
 
 	public boolean runProguard;
-	public String proguardConfig;
+	public Path proguardConfig;
 	public String proguardOutputName;
 
 	public LauncherScript launcherScript;

@@ -47,7 +47,7 @@ public class RuntimeBuildTask extends DefaultTask {
 		File proguardOutputFile = new File(getProject().getBuildDir(), "libs/" + extension.proguardOutputName);
 		if (extension.runProguard) {
 			Configuration config = new Configuration();
-			try (ConfigurationParser configurationParser = new ConfigurationParser(getProject().file(extension.proguardConfig), System.getProperties())) {
+			try (ConfigurationParser configurationParser = new ConfigurationParser(extension.proguardConfig.toFile(), System.getProperties())) {
 				configurationParser.parse(config);
 			}
 

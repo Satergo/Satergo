@@ -79,7 +79,8 @@ dependencies {
 jar {
 	manifest.attributes(
 			"Specification-Version": project.version,
-			"Satergo-Package-Type": "PORTABLE")
+			"Satergo-Package-Type": "PORTABLE",
+			"Satergo-Package-Platform": platform)
 }
 
 satergoRuntime {
@@ -90,7 +91,7 @@ satergoRuntime {
 	cacheRuntimes = true
 
 	runProguard = !project.hasProperty("dontshrink")
-	proguardConfig = "proguard.pro"
+	proguardConfig = file("proguard.pro").toPath()
 	proguardOutputName = "Satergo-${project.version}-${platform}-shrunk.jar"
 
 	includeJarInRuntime = true
