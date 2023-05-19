@@ -47,6 +47,9 @@
 		<center>
 			<VBox spacing="10">
 				<BorderPane.margin><Insets top="27.5"/></BorderPane.margin>
+				<HBox alignment="BASELINE_CENTER">
+					<Label fx:id="paymentRequestIndicator" text="%youHaveOpenedAPaymentRequest" visible="false" managed="${paymentRequestIndicator.visible}"/>
+				</HBox>
 				<VBox>
 					<Label text="%address" styleClass="fieldLabel">
 						<labelFor><TextField fx:id="sendAddress"/></labelFor>

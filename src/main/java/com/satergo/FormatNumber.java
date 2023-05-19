@@ -30,7 +30,7 @@ public class FormatNumber {
 	public static String tokenExact(TokenBalance tokenBalance) {
 		DecimalFormat df = new DecimalFormat("0");
 		df.setMaximumFractionDigits(tokenBalance.decimals());
-		return df.format(ErgoInterface.fullTokenAmount(tokenBalance.amount(), tokenBalance.decimals()));
+		return df.format(tokenBalance.fullAmount());
 	}
 
 	public static String currencyExact(BigDecimal value, PriceCurrency currency) {

@@ -1,6 +1,8 @@
 package com.satergo.ergo;
 
-public record TokenBalance(String id, long amount, int decimals, String name) implements Comparable<TokenBalance> {
+import java.math.BigDecimal;
+
+public record TokenBalance(String id, long amount, int decimals, String name) implements TokenSummary {
 
 	public TokenBalance withAmount(long amount) {
 		return new TokenBalance(this.id, amount, this.decimals, this.name);
@@ -11,8 +13,7 @@ public record TokenBalance(String id, long amount, int decimals, String name) im
 		return tb1.withAmount(tb1.amount + tb2.amount);
 	}
 
-	@Override
-	public int compareTo(TokenBalance o) {
-		return name.compareTo(o.name);
+	public BigDecimal fullAmount() {
+		return ErgoInterface.fullTokenAmount(amount, decimals);
 	}
 }

@@ -3,57 +3,57 @@ package com.satergo.ergouri;
 import org.ergoplatform.appkit.ErgoId;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.*;
 
-public class ErgoURIString {
-
-	private static final Pattern PATTERN = Pattern.compile("^ergo:([a-z\\d]+)(?:\\?(.*))?$", Pattern.CASE_INSENSITIVE);
+public class ErgoURI {
 
 	public final String address;
 	// nullable
 	public final BigDecimal amount;
 	public final Map<ErgoId, BigDecimal> tokens;
+	// nullable
+	public final String description;
 
 	/**
 	 * @param address Receiving address
 	 * @param amount Amount requested (can be changed by sender, can be null)
 	 * @param tokens Tokens requested
 	 */
-	public ErgoURIString(String address, BigDecimal amount, Map<ErgoId, BigDecimal> tokens) {
+	public ErgoURI(String address, BigDecimal amount, Map<ErgoId, BigDecimal> tokens, String description) {
 		this.address = Objects.requireNonNull(address, "address");
 		if (amount != null && amount.compareTo(BigDecimal.ZERO) < 0)
 			throw new IllegalArgumentException("negative amount");
 		this.amount = amount;
 		this.tokens = Collections.unmodifiableMap(tokens);
+		this.description = description;
 	}
 
 	/**
 	 * @param address Receiving address
 	 * @param amount Amount requested (can be changed by sender, can be null)
 	 */
-	public ErgoURIString(String address, BigDecimal amount) {
-		this(address, amount, Collections.emptyMap());
+	public ErgoURI(String address, BigDecimal amount) {
+		this(address, amount, Collections.emptyMap(), null);
 	}
 
 	/**
-	 * Parses a string of the format "ergo:address?amount=x", where ?amount=x is not required
+	 * Parses an ergo URI like "ergo:address?amount=x"
 	 */
-	public static ErgoURIString parse(String string) {
-		Matcher matcher = PATTERN.matcher(string);
-		if (!matcher.matches()) throw new IllegalArgumentException("not an ergo URI");
-		String address = matcher.group(1);
+	public static ErgoURI parse(URI uri) {
+		if (!"ergo".equals(uri.getScheme()))
+			throw new IllegalArgumentException("not an ergo URI");
+		String content = uri.getRawSchemeSpecificPart();
+		int qMark = content.indexOf('?');
+		String address = content.substring(0, qMark == -1 ? content.length() : qMark);
 		BigDecimal amount = null;
 		LinkedHashMap<ErgoId, BigDecimal> tokens = new LinkedHashMap<>();
-		if (matcher.group(2) != null) {
-			String queryParams = matcher.group(2);
+		String description = null;
+		if (qMark != -1) {
+			String queryParams = content.substring(qMark);
 			String[] params = queryParams.split("&");
 			for (String param : params) {
 				String[] pair = param.split("=");
@@ -64,10 +64,12 @@ public class ErgoURIString {
 				} else if (key.startsWith("token-")) {
 					ErgoId tokenId = ErgoId.create(key.substring(6));
 					tokens.put(tokenId, new BigDecimal(value));
+				} else if (key.equals("description")) {
+					description = value;
 				}
 			}
 		}
-		return new ErgoURIString(address, amount, tokens);
+		return new ErgoURI(address, amount, tokens, description);
 	}
 
 	/**
@@ -75,12 +77,15 @@ public class ErgoURIString {
 	 */
 	@Override
 	public String toString() {
-		String uri = "ergo:" + address;
-		if (amount != null) uri += "?amount=" + amount;
+		ArrayList<String> params = new ArrayList<>();
+		if (amount != null) params.add("amount=" + amount);
 		if (!tokens.isEmpty()) {
-			uri += amount == null ? "?" : "&";
-			uri += tokens.entrySet().stream().map(t -> "token-" + t.getKey() + "=" + t.getValue()).collect(Collectors.joining("&"));
+			tokens.forEach((id, value) -> params.add("token-" + id + "=" + value));
 		}
-		return uri;
+		if (description != null) {
+			params.add("description=" + URLEncoder.encode(description, StandardCharsets.UTF_8)
+							.replace("+", "%20"));
+		}
+		return "ergo:" + address + (params.isEmpty() ? "" : "?" + String.join("&", params));
 	}
 }

@@ -3,7 +3,7 @@ package com.satergo;
 import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
 import com.satergo.ergo.EmbeddedFullNode;
-import com.satergo.ergouri.ErgoURIString;
+import com.satergo.ergouri.ErgoURI;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.ThemeStyle;
 import javafx.application.Application;
@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.util.Pair;
@@ -20,6 +21,7 @@ import javafx.util.Pair;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -31,7 +33,7 @@ public class Main extends Application {
 
 	public static EmbeddedFullNode node;
 	// from command line
-	static ErgoURIString initErgoURI;
+	static ErgoURI initErgoURI;
 
 	private static Main INSTANCE;
 
@@ -143,8 +145,7 @@ public class Main extends Application {
 					Pair<Parent, WalletCtrl> load = Load.fxmlNodeAndController("/wallet.fxml");
 					walletPage = load.getValue();
 					if (initErgoURI != null) {
-						throw new UnsupportedOperationException("Ergo URI handling is not implemented");
-//						load.getValue().openSendWithErgoURI(initErgoURI);
+						load.getValue().openErgoURI(initErgoURI);
 					}
 					displayWalletPage(load);
 				} catch (IncorrectPasswordException e) {
@@ -260,10 +261,19 @@ public class Main extends Application {
 		this.walletPage = walletPage;
 	}
 
-	public void handleErgoURI(ErgoURIString ergoURI) {
-		throw new UnsupportedOperationException("Ergo URI handling is not implemented");
-//		if (walletPage == null) return;
-//		walletPage.openSendWithErgoURI(ergoURI);
-//		stage.toFront();
+	public void handleErgoURI(String uri) {
+		ErgoURI ergoURI;
+		try {
+			ergoURI = ErgoURI.parse(new URI(uri));
+		} catch (Exception e) {
+			Utils.alert(Alert.AlertType.ERROR, lang("theUrlYouTriedToOpenIsInvalid"));
+			return;
+		}
+		if (walletPage == null) {
+			Utils.alert(Alert.AlertType.ERROR, lang("noWalletIsOpen"));
+		} else {
+			walletPage.openErgoURI(ergoURI);
+			stage.toFront();
+		}
 	}
 }

@@ -7,8 +7,7 @@
 		<ToggleGroup fx:id="group"/>
 	</fx:define>
 	<top>
-		<HBox fx:id="connectionWarning" style="-fx-background-color: rgb(208, 52, 44); -fx-cursor: HAND;" alignment="CENTER" managed="${connectionWarning.visible}" onMouseClicked="#checkConnection">
-			<padding><Insets topRightBottomLeft="4"/></padding>
+		<HBox fx:id="connectionWarning" id="connection-warning" managed="${connectionWarning.visible}" onMouseClicked="#checkConnection">
 			<Label text="%offlineInfo"/>
 		</HBox>
 	</top>

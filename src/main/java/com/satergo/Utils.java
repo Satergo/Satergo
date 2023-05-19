@@ -17,8 +17,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
-import org.ergoplatform.appkit.ErgoClient;
-import org.ergoplatform.appkit.ErgoId;
+import org.ergoplatform.appkit.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -139,10 +138,15 @@ public class Utils {
 		node.setContextMenu(new ContextMenu(menuItem));
 	}
 
+	private static ErgoClient ergoClient;
+	private static NetworkType ecNetworkType;
+	private static String ecNodeAddress;
 	public static ErgoClient createErgoClient() {
-		return ErgoInterface.newNodeApiClient(
-				Main.programData().nodeNetworkType.get(),
-				Main.programData().nodeAddress.get());
+		if (ergoClient == null || ecNetworkType != Main.programData().nodeNetworkType.get() || !Main.programData().nodeAddress.get().equals(ecNodeAddress))
+			return ergoClient = ErgoInterface.newNodeApiClient(
+					Main.programData().nodeNetworkType.get(),
+					Main.programData().nodeAddress.get());
+		return ergoClient;
 	}
 
 	public record NodeVersion(String version, URI uri) {

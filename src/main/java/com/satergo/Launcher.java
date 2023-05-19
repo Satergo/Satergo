@@ -1,9 +1,10 @@
 package com.satergo;
 
-import com.satergo.ergouri.ErgoURIString;
+import com.satergo.ergouri.ErgoURI;
 import javafx.application.Application;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 
 /**
@@ -39,7 +40,7 @@ public class Launcher {
 					return;
 				} else {
 					// open in this instance when ready
-					Main.initErgoURI = ErgoURIString.parse(args[1]);
+					Main.initErgoURI = ErgoURI.parse(URI.create(args[1]));
 				}
 			}
 		}

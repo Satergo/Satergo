@@ -5,11 +5,13 @@ import com.satergo.Main;
 import com.satergo.ProgramData;
 import com.satergo.WalletKey;
 import com.satergo.ergo.Balance;
+import com.satergo.ergouri.ErgoURI;
 import com.satergo.extra.SimpleTask;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -41,9 +43,10 @@ public class WalletCtrl implements Initializable {
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(0);
 
 	public void cancelRepeatingTasks() {
-		scheduler.shutdown();
+		scheduler.shutdownNow();
 	}
 
+	private ChangeListener<Boolean> windowFocusListener;
 	private final String initialTab;
 
 	public WalletCtrl(String initialTab) {
@@ -59,6 +62,7 @@ public class WalletCtrl implements Initializable {
 
 	@FXML private BorderPane walletRoot;
 	@FXML private Node connectionWarning;
+
 	@FXML private BorderPane sidebar;
 	@FXML private Label networkStatusLabel;
 	@FXML private ProgressBar networkProgress;
@@ -219,6 +223,20 @@ public class WalletCtrl implements Initializable {
 			updatePriceValue(v.getValue());
 			revertOfflineMode();
 		}).newThread();
+	}
+
+	public void openErgoURI(ErgoURI ergoURI) {
+		home.setSelected(true);
+		HomeCtrl homeTab = (HomeCtrl) tabs.get("home").getValue();
+		homeTab.insertErgoURI(ergoURI);
+	}
+
+	public void logout() {
+		cancelRepeatingTasks();
+		Main.get().setWallet(null);
+		Main.get().displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
+		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE)
+			Main.node.stop();
 	}
 
 //	@FXML

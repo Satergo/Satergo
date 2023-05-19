@@ -4,6 +4,8 @@ import com.satergo.*;
 import com.satergo.ergo.Balance;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
+import com.satergo.ergo.TokenSummary;
+import com.satergo.ergouri.ErgoURI;
 import com.satergo.extra.PriceCurrency;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
@@ -24,10 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class HomeCtrl implements WalletTab, Initializable {
@@ -40,6 +39,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 	// Send section
 	private List<Integer> candidates;
 	private Address change;
+	@FXML private Label paymentRequestIndicator;
 	@FXML private Hyperlink addToken;
 	@FXML private VBox tokenList;
 	@FXML private TextField sendAddress, sendAmount, sendFee;
@@ -53,11 +53,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 
 	@FXML
 	public void logout(ActionEvent e) {
-		Main.get().getWalletPage().cancelRepeatingTasks();
-		Main.get().setWallet(null);
-		Main.get().displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
-		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE)
-			Main.node.stop();
+		Main.get().getWalletPage().logout();
 	}
 
 	public static class TokenLine extends BorderPane {
@@ -65,13 +61,13 @@ public class HomeCtrl implements WalletTab, Initializable {
 		@FXML private Tooltip idTooltip;
 		@FXML private TextField amount;
 
-		public final TokenBalance tokenInfo;
+		public final TokenSummary tokenSummary;
 
-		public TokenLine(TokenBalance tokenInfo) {
+		public TokenLine(TokenSummary tokenSummary) {
 			Load.thisFxml(this, "/line/send-token.fxml");
-			this.tokenInfo = tokenInfo;
-			name.setText(tokenInfo.name());
-			idTooltip.setText(tokenInfo.id());
+			this.tokenSummary = tokenSummary;
+			name.setText(tokenSummary.name());
+			idTooltip.setText(tokenSummary.id());
 			amount.textProperty().addListener((observable, oldValue, newValue) -> setIsValidAmount(amountIsValid() || amount.getText().isEmpty()));
 		}
 
@@ -91,6 +87,10 @@ public class HomeCtrl implements WalletTab, Initializable {
 			return Utils.isValidBigDecimal(amount.getText());
 		}
 
+		public void setAmount(BigDecimal bigDecimal) {
+			this.amount.setText(bigDecimal.toPlainString());
+		}
+
 		public BigDecimal getAmount() {
 			if (!amountIsValid()) throw new IllegalArgumentException();
 			return new BigDecimal(amount.getText());
@@ -103,7 +103,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 
 		@FXML
 		public void copyId() {
-			Utils.copyStringToClipboard(tokenInfo.id());
+			Utils.copyStringToClipboard(tokenSummary.id());
 			Utils.showTemporaryTooltip(idTooltipLabel, new Tooltip(Main.lang("copied")), 400);
 		}
 	}
@@ -163,9 +163,8 @@ public class HomeCtrl implements WalletTab, Initializable {
 		} catch (WalletKey.Failure e) {
 			// won't happen because the master address is always either cached or available
 		}
-//		paymentRequestIndicator.managedProperty().bind(paymentRequestIndicator.visibleProperty());
 		sendAddress.textProperty().addListener((obs, o, n) -> {
-//			paymentRequestIndicator.setVisible(false);
+			paymentRequestIndicator.setVisible(false);
 			txIdContainer.setVisible(false);
 		});
 		Main.get().getWallet().myAddresses.addListener((MapChangeListener<Integer, String>) change -> {
@@ -198,7 +197,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 		addTokenContextMenu = new ContextMenu();
 		List<TokenBalance> ownedTokens = Main.get().getWallet().lastKnownBalance.get().confirmedTokens();
 		for (TokenBalance token : ownedTokens) {
-			if (tokenList.getChildren().stream().anyMatch(t -> ((TokenLine) t).tokenInfo.id().equals(token.id())))
+			if (tokenList.getChildren().stream().anyMatch(t -> ((TokenLine) t).tokenSummary.id().equals(token.id())))
 				continue;
 			MenuItem menuItem = new MenuItem();
 			menuItem.setText(token.name() + " (" + token.id().substring(0, 20) + "...)");
@@ -219,7 +218,13 @@ public class HomeCtrl implements WalletTab, Initializable {
 		if (address.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
 		else if (amount.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
 		else {
-			Address recipient = Address.create(address.getText());
+			Address recipient;
+			try {
+				recipient = Address.create(address.getText());
+			} catch (RuntimeException ex) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("invalidAddress"));
+				return;
+			}
 			if (recipient.isMainnet() && Main.programData().nodeNetworkType.get() != NetworkType.MAINNET) {
 				Utils.alert(Alert.AlertType.ERROR, Main.lang("recipientIsAMainnetAddress"));
 				return;
@@ -245,15 +250,15 @@ public class HomeCtrl implements WalletTab, Initializable {
 			for (int i = 0; i < tokenList.getChildren().size(); i++) {
 				TokenLine tokenLine = (TokenLine) tokenList.getChildren().get(i);
 				if (!tokenLine.hasAmount()) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_needsAmount").formatted(tokenLine.tokenInfo.name()));
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_needsAmount").formatted(tokenLine.tokenSummary.name()));
 					return;
 				}
 				if (!tokenLine.amountIsValid()) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_hasInvalidAmount").formatted(tokenLine.tokenInfo.name()));
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_hasInvalidAmount").formatted(tokenLine.tokenSummary.name()));
 					return;
 				}
-				tokensToSend[i] = new ErgoToken(tokenLine.tokenInfo.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenInfo.decimals()));
-				tokenNames.put(ErgoId.create(tokenLine.tokenInfo.id()), tokenLine.tokenInfo.name());
+				tokensToSend[i] = new ErgoToken(tokenLine.tokenSummary.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenSummary.decimals()));
+				tokenNames.put(ErgoId.create(tokenLine.tokenSummary.id()), tokenLine.tokenSummary.name());
 			}
 			BigDecimal feeFullErg = null;
 			if (!fee.getText().isBlank()) {
@@ -333,9 +338,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 			unsignedTxTask.setOnFailed(f -> {
 				send.setDisable(false);
 				if (unsignedTxTask.getException() instanceof InputBoxesSelectionException.NotEnoughErgsException ex) {
-					DecimalFormat exactNoLeading = new DecimalFormat("0");
-					exactNoLeading.setMaximumFractionDigits(9);
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(exactNoLeading.format(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(FormatNumber.ergExact(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
 				} else if (unsignedTxTask.getException() instanceof InputBoxesSelectionException.NotEnoughTokensException ex) {
 					Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughOf_s").formatted(ex.tokenBalances.keySet().stream().map(ErgoId::create).map(tokenNames::get).map(name -> '"' + name + '"').collect(Collectors.joining(", "))));
 				} else if (unsignedTxTask.getException() != null) {
@@ -353,5 +356,26 @@ public class HomeCtrl implements WalletTab, Initializable {
 		sendAmount.setText("");
 		sendFee.setText("");
 		tokenList.getChildren().clear();
+	}
+
+	public void insertErgoURI(ErgoURI ergoURI) {
+		try {
+			clearAll(null);
+			sendAddress.setText(ergoURI.address);
+			paymentRequestIndicator.setVisible(true);
+			if (ergoURI.amount != null)
+				sendAmount.setText(ergoURI.amount.toPlainString());
+			ergoURI.tokens.entrySet()
+					.parallelStream()
+					.map(entry -> new Pair<>(ErgoInterface.getTokenInfo(Main.programData().nodeNetworkType.get(), entry.getKey()), entry.getValue()))
+					.sequential()
+					.forEachOrdered(entry -> {
+						TokenLine tokenLine = new TokenLine(entry.getKey());
+						tokenLine.setAmount(entry.getValue());
+						tokenList.getChildren().add(tokenLine);
+					});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

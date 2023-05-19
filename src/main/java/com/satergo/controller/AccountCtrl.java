@@ -8,7 +8,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.satergo.*;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
-import com.satergo.ergouri.ErgoURIString;
+import com.satergo.ergouri.ErgoURI;
 import com.satergo.extra.ImageConversion;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.dialog.MoveStyle;
@@ -43,7 +43,6 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -195,11 +194,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 
 	@FXML
 	public void logout(ActionEvent e) {
-		Main.get().getWalletPage().cancelRepeatingTasks();
-		Main.get().setWallet(null);
-		Main.get().displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
-		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE)
-			Main.node.stop();
+		Main.get().getWalletPage().logout();
 	}
 
 	@FXML
@@ -288,7 +283,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 			Load.thisFxml(this, "/line/account-token.fxml");
 			this.name.setText(token.name() == null ? Main.lang("unnamed_parentheses") : token.name());
 			this.icon.setImage(Utils.tokenIcon36x36(ErgoId.create(token.id())));
-			this.amount.setText(ErgoInterface.fullTokenAmount(token.amount(), token.decimals()).toPlainString());
+			this.amount.setText(FormatNumber.tokenExact(token));
 		}
 
 		@FXML
@@ -378,7 +373,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 	private void qrCode(String address) throws WriterException {
 		QRCodeWriter qrCodeWriter = new QRCodeWriter();
 		int size = 200;
-		ErgoURIString ergoURI = new ErgoURIString(address, null);
+		ErgoURI ergoURI = new ErgoURI(address, null);
 		BitMatrix bitMatrix = qrCodeWriter.encode(ergoURI.toString(), BarcodeFormat.QR_CODE, size, size, Map.of(EncodeHintType.MARGIN, 1));
 		WritableImage img = new WritableImage(size, size);
 		PixelWriter writer = img.getPixelWriter();

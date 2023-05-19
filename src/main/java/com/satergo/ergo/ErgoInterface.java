@@ -115,6 +115,18 @@ public class ErgoInterface {
 		}
 	}
 
+	public static TokenInfo getTokenInfo(NetworkType networkType, ErgoId tokenId) {
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getExplorerUrl(networkType))
+				.resolve("/api/v1/tokens/").resolve(tokenId.toString())).build();
+		try {
+			JsonObject body = JsonParser.object().from(HTTP.send(request, ofString()).body());
+			return new TokenInfo(body.getString("id"), body.getString("boxId"), body.getLong("emissionAmount"),
+					body.getString("name"), body.getString("description"), body.getString("type"), body.getInt("decimals"));
+		} catch (IOException | InterruptedException | JsonParserException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public static String generateMnemonicPhrase(String languageId) {
 		return Mnemonic.generate(languageId, Mnemonic.DEFAULT_STRENGTH, Mnemonic.getEntropy(Mnemonic.DEFAULT_STRENGTH));
 	}
@@ -139,8 +151,8 @@ public class ErgoInterface {
 		return fullTokenAmount.movePointRight(decimals).longValue();
 	}
 
-	public static BigDecimal fullTokenAmount(long longTokenAmount, int decimals) {
-		return BigDecimal.valueOf(longTokenAmount).movePointLeft(decimals);
+	public static BigDecimal fullTokenAmount(long longTokenAmount, Integer decimals) {
+		return BigDecimal.valueOf(longTokenAmount).movePointLeft(decimals == null ? 0 : decimals);
 	}
 
 	public static boolean hasValidNumberOfDecimals(BigDecimal fullErg) {

@@ -54,3 +54,10 @@
 .account-address-line {
 	-fx-border-color: -w-account-address-border-color-1, -w-account-address-border-color-2;
 }
+
+#connection-warning {
+	-fx-alignment: CENTER;
+	-fx-padding: 4px;
+	-fx-background-color: rgb(208, 52, 44);
+	-fx-cursor: HAND;
+}

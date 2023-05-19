@@ -201,9 +201,8 @@ public class TransactionCell extends BorderPane implements Initializable {
 		// tokens.setVisible(!totalTokens.isEmpty());
 		tokens.setVisible(false);
 		tokens.setOnAction(e -> {
-			Utils.alert(Alert.AlertType.INFORMATION, totalTokens.stream().map(a -> {
-				BigDecimal fullAmount = ErgoInterface.fullTokenAmount(a.amount(), a.decimals());
-				return a.name() + ": " + (fullAmount.compareTo(BigDecimal.ZERO) > 0 ? "+" : "") + fullAmount.toPlainString();
+			Utils.alert(Alert.AlertType.INFORMATION, totalTokens.stream().map(tb -> {
+				return tb.name() + ": " + (tb.fullAmount().compareTo(BigDecimal.ZERO) > 0 ? "+" : "") + tb.fullAmount().toPlainString();
 			}).collect(Collectors.joining("\n")));
 		});
 	}

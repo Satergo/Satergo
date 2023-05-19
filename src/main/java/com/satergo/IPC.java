@@ -1,12 +1,10 @@
 package com.satergo;
 
-import com.satergo.ergouri.ErgoURIString;
 import javafx.application.Platform;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -26,7 +24,6 @@ public class IPC {
 
 	private ByteBuffer readBytes(SocketChannel channel, int length) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(length);
-		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		channel.read(buffer);
 		buffer.flip();
 		return buffer;
@@ -71,7 +68,7 @@ public class IPC {
 				if (messageType == 1) { // open ergo URI
 					int length = readBytes(channel, 4).getInt();
 					String uri = StandardCharsets.UTF_8.decode(readBytes(channel, length)).toString();
-					Platform.runLater(() -> Main.get().handleErgoURI(ErgoURIString.parse(uri)));
+					Platform.runLater(() -> Main.get().handleErgoURI(uri));
 				}
 				channel.close();
 			}
@@ -91,10 +88,10 @@ public class IPC {
 			channel = SocketChannel.open();
 		}
 		channel.connect(address);
-		channel.write(ByteBuffer.allocate(1).order(ByteOrder.LITTLE_ENDIAN).put((byte) messageType).flip());
+		channel.write(ByteBuffer.allocate(1).put((byte) messageType).flip());
 		if (data != null) {
 			byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-			channel.write(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(bytes.length).flip());
+			channel.write(ByteBuffer.allocate(4).putInt(bytes.length).flip());
 			channel.write(ByteBuffer.wrap(bytes));
 		}
 		channel.close();
@@ -109,7 +106,7 @@ public class IPC {
 		try {
 			ServerSocketChannel serverChannel = ServerSocketChannel.open();
 			serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-			serverChannel.bind(new InetSocketAddress(port));
+			serverChannel.bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), port));
 			return serverChannel;
 		} catch (BindException e) {
 			return tcpChannelOnAvailablePort();
