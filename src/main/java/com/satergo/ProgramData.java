@@ -1,11 +1,14 @@
 package com.satergo;
 
-import com.satergo.extra.*;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonWriter;
-import javafx.beans.property.*;
+import com.satergo.extra.*;
+import javafx.beans.property.ReadOnlyProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import org.ergoplatform.appkit.NetworkType;
 
@@ -16,11 +19,12 @@ import java.util.List;
 
 public class ProgramData {
 
+	private static final String DEFAULT_LANGUAGE = "en";
 	private final Path path;
 
 	public enum BlockchainNodeKind { EMBEDDED_FULL_NODE, REMOTE_NODE }
 
-	private final long formatVersion = 0;
+	private final long formatVersion = 1;
 
 	// data
 	public final SimpleEnumProperty<BlockchainNodeKind>
@@ -39,7 +43,7 @@ public class ProgramData {
 
 	// settings
 	public final SimpleStringProperty
-			language = new SimpleStringProperty(null, "language", "eng");
+			language = new SimpleStringProperty(null, "language", DEFAULT_LANGUAGE);
 	public final SimpleBooleanProperty
 			showPrice = new SimpleBooleanProperty(null, "showPrice", true);
 	public final SimpleEnumProperty<PriceSource>
@@ -86,6 +90,7 @@ public class ProgramData {
 	public static ProgramData load(Path path) {
 		try {
 			JsonObject jo = JsonParser.object().from(Files.readString(path));
+			long loadedVersion = jo.getLong("formatVersion");
 			ProgramData programData = new ProgramData(path);
 			programData.allSettings.forEach(setting -> {
 				String k = ((ReadOnlyProperty<?>) setting).getName();
@@ -101,6 +106,10 @@ public class ProgramData {
 					System.err.println("ProgramData field \"" + k + "\" is corrupted. (value=" + jo.get(k) + ")");
 				}
 			});
+			// Version 0 migration:
+			// It used ISO-639 alpha-3 codes for all languages, but that causes issues with date/time and number formatters because
+			// they expect alpha-2 codes and fall back to default English locale when given an alpha-3 code for a language that has an alpha-2 code
+			if (loadedVersion == 0) programData.language.set(DEFAULT_LANGUAGE);
 			return programData;
 		} catch (IOException | JsonParserException e) {
 			throw new RuntimeException(e);

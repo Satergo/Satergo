@@ -317,11 +317,8 @@ public class AccountCtrl implements Initializable, WalletTab {
 		totalBalanceLabel.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
 		totalBalance.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
 		tokens.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
-		DecimalFormat lossless = new DecimalFormat("0");
-		lossless.setMinimumFractionDigits(9);
-		lossless.setMaximumFractionDigits(9);
 		if (Main.get().getWallet().lastKnownBalance.get() != null) {
-			totalBalance.setText(lossless.format(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed())) + " ERG");
+			totalBalance.setText(FormatNumber.ergAllDecimals(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed())) + " ERG");
 			for (TokenBalance token : Main.get().getWallet().lastKnownBalance.get().confirmedTokens()) {
 				TokenLine tokenLine = new TokenLine(token);
 				tokens.getChildren().add(tokenLine);
@@ -329,7 +326,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		}
 		// binding with a converter could be used here
 		Main.get().getWallet().lastKnownBalance.addListener((observable, oldValue, newValue) -> {
-			totalBalance.setText(lossless.format(ErgoInterface.toFullErg(newValue.confirmed())) + " ERG");
+			totalBalance.setText(FormatNumber.ergAllDecimals(ErgoInterface.toFullErg(newValue.confirmed())) + " ERG");
 			tokens.getChildren().clear();
 			for (TokenBalance token : Main.get().getWallet().lastKnownBalance.get().confirmedTokens()) {
 				TokenLine tokenLine = new TokenLine(token);

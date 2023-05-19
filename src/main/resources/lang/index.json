@@ -1,9 +1,9 @@
 {
-	"eng": { "name": "English", "credit": "Aberg" },
-	"spa": { "name": "Español", "credit": "@Secharles, Comet community & Daniu" },
-	"ita": { "name": "Italiano", "credit": "ErGonario" },
-	"deu": { "name": "Deutsch", "credit": "@Gstoiti" },
-	"rus": { "name": "Русский", "credit": "Art Melks и кое-кто" },
-	"fra": { "name": "Français", "credit": "@pilotfish & Giufa_online" },
-	"por": { "name": "Português", "credit": "@DavidO_crypto" }
+	"en": { "name": "English", "credit": "Aberg" },
+	"es": { "name": "Español", "credit": "@Secharles, Comet community & Daniu" },
+	"it": { "name": "Italiano", "credit": "ErGonario" },
+	"de": { "name": "Deutsch", "credit": "@Gstoiti" },
+	"ru": { "name": "Русский", "credit": "Art Melks и кое-кто" },
+	"fr": { "name": "Français", "credit": "@pilotfish & Giufa_online" },
+	"pt": { "name": "Português", "credit": "@DavidO_crypto" }
 }

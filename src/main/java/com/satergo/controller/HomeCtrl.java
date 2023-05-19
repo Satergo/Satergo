@@ -4,6 +4,7 @@ import com.satergo.*;
 import com.satergo.ergo.Balance;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
+import com.satergo.extra.PriceCurrency;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
 import javafx.collections.MapChangeListener;
@@ -144,9 +145,9 @@ public class HomeCtrl implements WalletTab, Initializable {
 		DecimalFormat balanceFormat = new DecimalFormat("0.#####");
 		balanceFormat.setRoundingMode(RoundingMode.FLOOR);
 		balance.setText(balanceFormat.format(ErgoInterface.toFullErg(bal.confirmed())) + " ERG");
-		DecimalFormat priceFormat = new DecimalFormat("0");
-		priceFormat.setMaximumFractionDigits(Main.programData().priceCurrency.get().displayDecimals);
-		value.setText(priceFormat.format(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed()).multiply(Main.get().lastOneErgValue.get())) + " " + Main.programData().priceCurrency.get().uc());
+		PriceCurrency currency = Main.programData().priceCurrency.get();
+		BigDecimal converted = ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed()).multiply(Main.get().lastOneErgValue.get());
+		value.setText(FormatNumber.currencyExact(converted, currency) + " " + Main.programData().priceCurrency.get().uc());
 	}
 
 	@Override

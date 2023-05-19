@@ -46,7 +46,7 @@ public class Translations {
 	}
 
 	public Entry getEntry(String code) {
-		return entries.stream().filter(e -> e.code.equals(code)).findAny().orElse(null);
+		return entries.stream().filter(e -> e.code.equals(code)).findAny().orElseThrow();
 	}
 
 	public List<Entry> getEntries() {
@@ -60,6 +60,7 @@ public class Translations {
 	public void setLocale(Locale locale) {
 		this.locale = locale;
 		resourceBundle = ResourceBundle.getBundle(baseName);
+		FormatNumber.update();
 	}
 
 	public Locale getLocale() {
@@ -72,7 +73,7 @@ public class Translations {
 	}
 
 	public Entry getEntry() {
-		return entries.stream().filter(e -> e.locale() == locale).findAny().orElseThrow();
+		return entries.stream().filter(e -> e.locale().equals(locale)).findAny().orElseThrow();
 	}
 
 	public String getString(String key) {

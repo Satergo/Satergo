@@ -1,6 +1,7 @@
 package com.satergo.extra;
 
 import com.satergo.Load;
+import com.satergo.FormatNumber;
 import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
@@ -21,7 +22,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 import org.ergoplatform.appkit.Address;
@@ -48,9 +48,8 @@ import java.util.stream.Collectors;
 
 public class TransactionCell extends BorderPane implements Initializable {
 
-	private static final DecimalFormat
-			FULL_PRECISION = new DecimalFormat("0.#########"),
-			FORMAT_TOTAL   = new DecimalFormat("+0.000000000;-0.000000000");
+	// This is not static because the decimal format symbols need to be reselected when the Locale is changed
+	private final DecimalFormat FORMAT_TOTAL = new DecimalFormat("+0.000000000;-0.000000000");
 
 	private final TransactionInfo tx;
 	private final List<Address> myAddresses;
@@ -109,12 +108,12 @@ public class TransactionCell extends BorderPane implements Initializable {
 		clipRect.widthProperty().bind(widthProperty());
 		bottomContainer.setClip(clipRect);
 		inputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getInputs()), input -> {
-			return Cell.wrapNode(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(input), FULL_PRECISION.format(ErgoInterface.toFullErg(input.getValue())), !input.getAssets().isEmpty(), () -> {
+			return Cell.wrapNode(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(input), FormatNumber.ergExact(ErgoInterface.toFullErg(input.getValue())), !input.getAssets().isEmpty(), () -> {
 				Utils.alert(Alert.AlertType.INFORMATION, input.getAssets().stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
 			}, myAddresses.contains(getAddress(input))));
 		});
 		outputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getOutputs()), output -> {
-			return Cell.wrapNode(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(output), FULL_PRECISION.format(ErgoInterface.toFullErg(output.getValue())), !output.getAssets().isEmpty(), () -> {
+			return Cell.wrapNode(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(output), FormatNumber.ergExact(ErgoInterface.toFullErg(output.getValue())), !output.getAssets().isEmpty(), () -> {
 				Utils.alert(Alert.AlertType.INFORMATION, output.getAssets().stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
 			}, myAddresses.contains(getAddress(output))));
 		});
