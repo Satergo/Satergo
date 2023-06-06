@@ -61,3 +61,8 @@
 	-fx-background-color: rgb(208, 52, 44);
 	-fx-cursor: HAND;
 }
+
+#ergopay-notice {
+	-fx-padding: 4px 8px 4px 8px;
+	-fx-background-color: -w-ergopay-notice-bg;
+}

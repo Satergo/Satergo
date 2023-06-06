@@ -1,12 +1,15 @@
 package com.satergo.controller;
 
-import com.satergo.Load;
-import com.satergo.Main;
-import com.satergo.ProgramData;
-import com.satergo.WalletKey;
+import com.satergo.*;
 import com.satergo.ergo.Balance;
+import com.satergo.ergopay.ErgoPay;
+import com.satergo.ergopay.ErgoPayPrompt;
+import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.ergouri.ErgoURI;
 import com.satergo.extra.SimpleTask;
+import com.satergo.extra.dialog.MoveStyle;
+import com.satergo.extra.dialog.SatPromptDialog;
+import com.satergo.extra.dialog.SatVoidDialog;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -14,17 +17,20 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
+import javafx.scene.input.Clipboard;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.Pair;
+import javafx.util.StringConverter;
+import org.ergoplatform.appkit.Address;
 import org.ergoplatform.appkit.NetworkType;
+import org.ergoplatform.appkit.SignedTransaction;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -34,9 +40,11 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class WalletCtrl implements Initializable {
 
@@ -59,9 +67,12 @@ public class WalletCtrl implements Initializable {
 
 	@FXML final SimpleBooleanProperty offlineMode = new SimpleBooleanProperty(false);
 	@FXML private final BooleanBinding notOfflineMode = offlineMode.not();
+	private ErgoPayURI lastErgoPayURI;
 
 	@FXML private BorderPane walletRoot;
 	@FXML private Node connectionWarning;
+	@FXML private Node ergoPayNotice;
+	@FXML private ButtonBar ergoPayButtonBar;
 
 	@FXML private BorderPane sidebar;
 	@FXML private Label networkStatusLabel;
@@ -185,6 +196,37 @@ public class WalletCtrl implements Initializable {
 				}
 			});
 		}
+
+		Button show = new Button(ButtonType.YES.getText()), doNotShow = new Button(ButtonType.NO.getText());
+		ButtonBar.setButtonData(show, ButtonType.YES.getButtonData());
+		ButtonBar.setButtonData(doNotShow, ButtonType.NO.getButtonData());
+		ergoPayButtonBar.getButtons().addAll(show, doNotShow);
+		show.setOnAction(event -> {
+			ergoPayNotice.setVisible(false);
+			handleErgoPayURI(lastErgoPayURI);
+		});
+		doNotShow.setOnAction(event -> ergoPayNotice.setVisible(false));
+		if (SystemProperties.packageType() == SystemProperties.PackageType.PORTABLE) walletRoot.sceneProperty().addListener((obs, old, scene) -> {
+			if (scene != null) {
+				scene.getWindow().focusedProperty().addListener(windowFocusListener = (observable, oldValue, focused) -> {
+					if (focused) {
+						String content = Clipboard.getSystemClipboard().getString();
+						ErgoPayURI uri;
+						try {
+							uri = new ErgoPayURI(content);
+						} catch (Exception e) {
+							return;
+						}
+						if (uri.equals(lastErgoPayURI))
+							return;
+						lastErgoPayURI = uri;
+						ergoPayNotice.setVisible(true);
+					}
+				});
+			} else {
+				old.getWindow().focusedProperty().removeListener(windowFocusListener);
+			}
+		});
 	}
 
 	public void bindToNodeProperties() {
@@ -229,6 +271,91 @@ public class WalletCtrl implements Initializable {
 		home.setSelected(true);
 		HomeCtrl homeTab = (HomeCtrl) tabs.get("home").getValue();
 		homeTab.insertErgoURI(ergoURI);
+	}
+
+	public void handleErgoPayURI(ErgoPayURI uri) {
+		Address address;
+		int addressIndex;
+		if (uri.needsAddress()) {
+			SatPromptDialog<Integer> addressPrompt = new SatPromptDialog<>();
+			addressPrompt.setHeaderText(Main.lang("ergoPay.selectAnAddressToProvide"));
+			addressPrompt.initOwner(Main.get().stage());
+			addressPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+			Main.get().applySameTheme(addressPrompt.getScene());
+			ComboBox<Integer> comboBox = new ComboBox<>();
+			comboBox.getItems().addAll(Main.get().getWallet().myAddresses.keySet());
+			comboBox.setValue(0);
+			comboBox.setConverter(new StringConverter<>() {
+				@Override
+				public String toString(Integer object) {
+					return Main.get().getWallet().myAddresses.get(object);
+				}
+				@Override public Integer fromString(String string) { return null; }
+			});
+			HBox center = new HBox(comboBox);
+			center.setAlignment(Pos.CENTER);
+			addressPrompt.getDialogPane().setContent(center);
+			addressPrompt.setResultConverter(param -> param == ButtonType.OK ? comboBox.getValue() : null);
+			addressPrompt.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+			Integer index = addressPrompt.showForResult().orElse(null);
+			if (index == null) return;
+			try {
+				address = Main.get().getWallet().publicAddress(index);
+			} catch (WalletKey.Failure e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			address = null;
+		}
+		Callable<ErgoPay.Request> makeRequest = () -> ErgoPay.getRequest(uri, () -> address);
+		Consumer<ErgoPay.Request> successHandler = request -> {
+			if (request.reducedTx() == null) {
+				// TODO show a message?
+				return;
+			}
+			ErgoPayPrompt prompt = new ErgoPayPrompt(request);
+			prompt.initOwner(Main.get().stage());
+			prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+			Main.get().applySameTheme(prompt.getScene());
+			if (prompt.showForResult().orElse(false)) {
+				String id = Utils.createErgoClient().execute(ctx -> {
+					SignedTransaction transaction;
+					try {
+						transaction = Main.get().getWallet().key().signReduced(ctx, request.reducedTx(), 0, Main.get().getWallet().myAddresses.keySet());
+					} catch (WalletKey.Failure e) {
+						throw new RuntimeException(e);
+					}
+					String quoted = ctx.sendTransaction(transaction);
+					return quoted.substring(1, quoted.length() - 1);
+				});
+				SatVoidDialog result = new SatVoidDialog();
+				result.initOwner(Main.get().stage());
+				result.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+				Main.get().applySameTheme(result.getScene());
+				result.setHeaderText("The transaction succeeded");
+				ButtonType copyId = new ButtonType(Main.lang("ergoPay.copyId"), ButtonBar.ButtonData.OK_DONE);
+				ButtonType viewOnExplorer = new ButtonType(Main.lang("ergoPay.viewOnExplorer"), ButtonBar.ButtonData.OK_DONE);
+				result.getDialogPane().getButtonTypes().addAll(copyId, viewOnExplorer);
+				result.showForResult().ifPresent(t -> {
+					if (t == copyId) Utils.copyStringToClipboard(id);
+					else if (t == viewOnExplorer) {
+						Main.get().getHostServices().showDocument(Utils.explorerTransactionUrl(id));
+					}
+				});
+			}
+		};
+		if (uri.needsNetworkRequest()) {
+			new SimpleTask<>(makeRequest)
+					.onSuccess(successHandler)
+					.onFail(throwable -> Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable))
+					.newThread();
+		} else {
+			try {
+				successHandler.accept(makeRequest.call());
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
 	public void logout() {

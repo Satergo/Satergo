@@ -23,14 +23,18 @@ import java.util.ResourceBundle;
 public class TransactionsCtrl implements Initializable, WalletTab {
 
 	@FXML private VBox pending, finished;
+	private DefaultApi api;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		DefaultApi api = new Retrofit.Builder()
+		api = new Retrofit.Builder()
 				.baseUrl(ErgoInterface.getExplorerUrl(Main.programData().nodeNetworkType.get()))
 				.addConverterFactory(GsonConverterFactory.create())
 				.build().create(DefaultApi.class);
+		reload();
+	}
 
+	public void reload() {
 		Task<List<TransactionInfo>> transactionsTask = new Task<>() {
 			@Override
 			protected List<TransactionInfo> call() {

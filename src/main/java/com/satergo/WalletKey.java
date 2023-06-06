@@ -103,6 +103,7 @@ public abstract class WalletKey {
 	public void initCaches(ByteBuffer data) {}
 
 	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure;
+	public abstract SignedTransaction signReduced(BlockchainContext ctx, ReducedTransaction reducedTx, int baseCost, Collection<Integer> addressIndexes) throws Failure;
 	public abstract Address derivePublicAddress(NetworkType networkType, int index) throws Failure;
 	public abstract WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure; // it would be cool to call this "recrypt" :)
 
@@ -238,6 +239,11 @@ public abstract class WalletKey {
 		@Override
 		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
 			return ErgoInterface.newWithMnemonicProver(ctx, nonstandard, getMnemonic(), addressIndexes).sign(unsignedTx);
+		}
+
+		@Override
+		public SignedTransaction signReduced(BlockchainContext ctx, ReducedTransaction reducedTx, int baseCost, Collection<Integer> addressIndexes) throws Failure {
+			return ErgoInterface.newWithMnemonicProver(ctx, nonstandard, getMnemonic(), addressIndexes).signReduced(reducedTx, baseCost);
 		}
 
 		@Override

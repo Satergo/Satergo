@@ -69,6 +69,10 @@ public class IPC {
 					int length = readBytes(channel, 4).getInt();
 					String uri = StandardCharsets.UTF_8.decode(readBytes(channel, length)).toString();
 					Platform.runLater(() -> Main.get().handleErgoURI(uri));
+				} else if (messageType == 2) { // handle ergopay URI
+					int length = readBytes(channel, 4).getInt();
+					String uri = StandardCharsets.UTF_8.decode(readBytes(channel, length)).toString();
+					Platform.runLater(() -> Main.get().handleErgoPayURI(uri));
 				}
 				channel.close();
 			}
