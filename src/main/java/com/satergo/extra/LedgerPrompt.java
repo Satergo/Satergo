@@ -34,7 +34,7 @@ public interface LedgerPrompt {
 				ExtendedPublicKey extendedPublicKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
 				setResult(extendedPublicKey);
 			} catch (ErgoLedgerException e) {
-				if (e.getSW() == 0x6985) {
+				if (e.getSW() == ErgoLedgerException.SW_DENY) {
 					setHeaderText("You denied the request");
 					getDialogPane().getButtonTypes().addAll(askAgain, exit);
 					getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {

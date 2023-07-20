@@ -321,6 +321,7 @@ public abstract class WalletKey {
 					Platform.runLater(() -> {
 						connectionPrompt.close();
 						ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice(hidDevice)));
+						ergoLedgerAppkit.device.open();
 						LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
 						ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
 						// not sure if this occurs
