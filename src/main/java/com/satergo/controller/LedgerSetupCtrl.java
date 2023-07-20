@@ -67,6 +67,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		System.out.println("Stopped");
 		System.out.println("Instantiating device");
 		LedgerDevice ledgerDevice = new HidLedgerDevice(ledgerSelector.getDevice());
+		ledgerSelector.getDevice().setNonBlocking(false);
 		System.out.println("Instantiated");
 		System.out.println("Opening device");
 		ledgerDevice.open();
