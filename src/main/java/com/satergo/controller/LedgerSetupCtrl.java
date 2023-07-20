@@ -10,6 +10,7 @@ import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.transport.hid.HidLedgerDevice;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -43,12 +44,14 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		ledgerSelector = new LedgerSelector() {
 			@Override
 			public void deviceFound(HidDevice device) {
-				if (LedgerDevice.PRODUCT_IDS.contains(device.getProductId())) {
-					status.setText("Found a " + getModelName(device.getProductId()) + " device.");
-				} else {
-					status.setText("Found a Ledger device, the model is unknown.");
-				}
-				found.setVisible(true);
+				Platform.runLater(() -> {
+					if (LedgerDevice.PRODUCT_IDS.contains(device.getProductId())) {
+						status.setText("Found a " + getModelName(device.getProductId()) + " device.");
+					} else {
+						status.setText("Found a Ledger device, the model is unknown.");
+					}
+					found.setVisible(true);
+				});
 			}
 		};
 		ledgerSelector.startListener();
