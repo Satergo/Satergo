@@ -72,7 +72,9 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		ledgerDevice.open();
 		System.out.println("Opened");
 		System.out.println("Creating kit");
-		ErgoLedgerAppkit ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(ledgerDevice));
+		ErgoProtocol proto = new ErgoProtocol(ledgerDevice);
+		System.out.println("proto.getVersion() = " + proto.getVersion());
+		ErgoLedgerAppkit ergoLedgerAppkit = new ErgoLedgerAppkit(proto);
 		System.out.println("Created");
 		ExtendedPublicKey parentExtPubKey;
 		status.setText(Main.lang("ledger.pleaseAcceptRequest"));
