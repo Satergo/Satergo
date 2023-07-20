@@ -7,7 +7,7 @@ import com.satergo.WalletKey;
 import com.satergo.controller.ledger.ErgoLedgerAppkit;
 import com.satergo.extra.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
-import com.satergo.jledger.protocol.ergo.ErgoException;
+import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.transport.hid.HidLedgerDevice;
 import javafx.event.ActionEvent;
@@ -68,8 +68,8 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			try {
 				parentExtPubKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
 				break;
-			} catch (ErgoException ex) {
-				if (ex.getId() == 0x6985) {
+			} catch (ErgoLedgerException ex) {
+				if (ex.getSW() == 0x6985) {
 					status.setText("Rejected");
 				}
 			}

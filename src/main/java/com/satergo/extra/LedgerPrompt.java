@@ -3,7 +3,7 @@ package com.satergo.extra;
 import com.satergo.controller.ledger.ErgoLedgerAppkit;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
-import com.satergo.jledger.protocol.ergo.ErgoException;
+import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ButtonType;
 import org.ergoplatform.wallet.secrets.ExtendedPublicKey;
@@ -33,8 +33,8 @@ public interface LedgerPrompt {
 			try {
 				ExtendedPublicKey extendedPublicKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
 				setResult(extendedPublicKey);
-			} catch (ErgoException e) {
-				if (e.getId() == 0x6985) {
+			} catch (ErgoLedgerException e) {
+				if (e.getSW() == 0x6985) {
 					setHeaderText("You denied the request");
 					getDialogPane().getButtonTypes().addAll(askAgain, exit);
 					getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
