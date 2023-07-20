@@ -62,21 +62,30 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 	@FXML
 	public void continueProcess(ActionEvent e) {
+		System.out.println("Stopping selector");
 		ledgerSelector.stop();
+		System.out.println("Stopped");
+		System.out.println("Instantiating device");
 		LedgerDevice ledgerDevice = new HidLedgerDevice(ledgerSelector.getDevice());
+		System.out.println("Instantiated");
+		System.out.println("Opening device");
 		ledgerDevice.open();
+		System.out.println("Opened");
+		System.out.println("Creating kit");
 		ErgoLedgerAppkit ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(ledgerDevice));
+		System.out.println("Created");
 		ExtendedPublicKey parentExtPubKey;
 		status.setText(Main.lang("ledger.pleaseAcceptRequest"));
-		while (true) {
-			try {
-				parentExtPubKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
-				break;
-			} catch (ErgoLedgerException ex) {
-				if (ex.getSW() == ErgoLedgerException.SW_DENY) {
-					status.setText("Rejected");
-				}
+		try {
+			System.out.println("Requesting parent ext pub key");
+			System.out.println("Got it");
+			parentExtPubKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
+		} catch (ErgoLedgerException ex) {
+			if (ex.getSW() == ErgoLedgerException.SW_DENY) {
+				status.setText("Rejected");
 			}
+			System.out.println("Didn't get it");
+			return;
 		}
 		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 		if (path == null) return;
