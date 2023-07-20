@@ -64,6 +64,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 	public void continueProcess(ActionEvent e) {
 		ledgerSelector.stop();
 		LedgerDevice ledgerDevice = new HidLedgerDevice(ledgerSelector.getDevice());
+		ledgerDevice.open();
 		ErgoLedgerAppkit ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(ledgerDevice));
 		ExtendedPublicKey parentExtPubKey;
 		status.setText(Main.lang("ledger.pleaseAcceptRequest"));
@@ -72,7 +73,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 				parentExtPubKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
 				break;
 			} catch (ErgoLedgerException ex) {
-				if (ex.getSW() == 0x6985) {
+				if (ex.getSW() == ErgoLedgerException.SW_DENY) {
 					status.setText("Rejected");
 				}
 			}
