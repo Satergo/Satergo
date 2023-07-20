@@ -6,7 +6,6 @@ import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
 import com.satergo.extra.LedgerPrompt;
 import com.satergo.extra.LedgerSelector;
-import com.satergo.jledger.protocol.ergo.ErgoException;
 import com.satergo.jledger.protocol.ergo.ErgoNetworkType;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.protocol.ergo.ErgoResponse;
@@ -41,8 +40,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import static com.satergo.controller.ledger.ErgoLedgerAppkit.h;
 
 /**
  * This API is open for extending by third-parties, but consult the wallet-format.md and apply for an ID first.
