@@ -78,13 +78,13 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		status.setText(Main.lang("ledger.pleaseAcceptRequest"));
 		try {
 			System.out.println("Requesting parent ext pub key");
-			System.out.println("Got it");
 			parentExtPubKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
+			System.out.println("Got it");
 		} catch (ErgoLedgerException ex) {
 			if (ex.getSW() == ErgoLedgerException.SW_DENY) {
 				status.setText("Rejected");
 			}
-			System.out.println("Didn't get it");
+			System.out.println("Didn't get it, error " + ex.getMessage());
 			return;
 		}
 		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
