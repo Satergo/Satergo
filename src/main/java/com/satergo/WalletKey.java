@@ -1,14 +1,32 @@
 package com.satergo;
 
+import com.satergo.controller.ledger.AttestedBox;
+import com.satergo.controller.ledger.ErgoLedgerAppkit;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
+import com.satergo.extra.LedgerPrompt;
+import com.satergo.extra.LedgerSelector;
+import com.satergo.jledger.protocol.ergo.ErgoException;
+import com.satergo.jledger.protocol.ergo.ErgoNetworkType;
+import com.satergo.jledger.protocol.ergo.ErgoProtocol;
+import com.satergo.jledger.protocol.ergo.ErgoResponse;
+import com.satergo.jledger.transport.hid.HidLedgerDevice;
 import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
+import org.ergoplatform.ErgoLikeTransaction;
 import org.ergoplatform.P2PKAddress;
+import org.ergoplatform.UnsignedErgoLikeTransaction;
 import org.ergoplatform.appkit.*;
+import org.ergoplatform.appkit.impl.BlockchainContextBase;
+import org.ergoplatform.appkit.impl.SignedTransactionImpl;
+import org.ergoplatform.appkit.impl.UnsignedTransactionImpl;
 import org.ergoplatform.wallet.secrets.DerivationPath;
 import org.ergoplatform.wallet.secrets.ExtendedPublicKey;
 import org.ergoplatform.wallet.secrets.ExtendedSecretKey;
+import org.hid4java.HidDevice;
+import scala.collection.JavaConverters;
+import sigmastate.interpreter.ContextExtension;
+import sigmastate.interpreter.ProverResult;
 
 import javax.crypto.AEADBadTagException;
 import javax.crypto.SecretKey;
@@ -23,6 +41,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import static com.satergo.controller.ledger.ErgoLedgerAppkit.h;
 
 /**
  * This API is open for extending by third-parties, but consult the wallet-format.md and apply for an ID first.
@@ -50,14 +70,20 @@ public abstract class WalletKey {
 	}
 
 	public static class Type<T extends WalletKey> {
-		public static final Type<Local> LOCAL = registerType("LOCAL", 0, Local::new);
+		public static final Type<Local> LOCAL = registerType("LOCAL", 0, Set.of(Property.SUPPORTS_REDUCED_TX), Local::new);
 //		public static final Type<ViewOnly> VIEW_ONLY = registerType("VIEW_ONLY", 1, ViewOnly::new);
-//		public static final Type<Ledger> LEDGER = registerType("LEDGER", 10, Ledger::new);
+		public static final Type<Ledger> LEDGER = registerType("LEDGER", 50, Set.of(), Ledger::new);
 
 		private final String name;
 		private final Supplier<T> constructor;
+		public final Set<Property> properties;
 
-		private Type(String name, Supplier<T> constructor) {
+		public enum Property {
+			SUPPORTS_REDUCED_TX
+		}
+
+		private Type(String name, Set<Property> properties, Supplier<T> constructor) {
+			this.properties = properties;
 			if (!name.toUpperCase(Locale.ROOT).equals(name))
 				throw new IllegalArgumentException("Name must be all uppercase.");
 			this.name = name;
@@ -74,8 +100,8 @@ public abstract class WalletKey {
 		@Override public String toString() { return name; }
 	}
 
-	public static <T extends WalletKey>Type<T> registerType(String name, int id, Supplier<T> constructor) {
-		Type<T> type = new Type<>(name, constructor);
+	public static <T extends WalletKey>Type<T> registerType(String name, int id, Set<Type.Property> properties, Supplier<T> constructor) {
+		Type<T> type = new Type<>(name, properties, constructor);
 		if (types.containsKey(id)) throw new IllegalArgumentException("Type ID " + id + " is already used by " + types.get(id));
 		if (types.values().stream().map(Type::name).anyMatch(n -> n.equals(name)))
 			throw new IllegalArgumentException("Type name " + name + " is already used");
@@ -261,6 +287,120 @@ public abstract class WalletKey {
 				scheduler.shutdown();
 			scheduler = Executors.newSingleThreadScheduledExecutor();
 			scheduler.schedule(() -> cachedKey = null, cacheDuration.toMillis(), TimeUnit.MILLISECONDS);
+		}
+	}
+
+	/**
+	 * The public key is saved to the wallet file, the chain code is not so deriving solely from the wallet file + password is not possible
+	 * Each time a wallet of this type is opened, the Ledger must be connected and the user must accept ext pub key export
+	 * Using the pub key the wallet on the Ledger and the one that was used to create this key can be compared
+	 */
+	public static class Ledger extends WalletKey {
+		private static final int ID = 50;
+
+		private static final int KEY_LENGTH = 33;
+
+		private ErgoLedgerAppkit ergoLedgerAppkit;
+		private ExtendedPublicKey parentExtPubKey;
+
+		private int productId;
+		private byte[] storedKeyBytes;
+
+		private Ledger() {
+			super(Type.LEDGER);
+		}
+
+		@Override
+		public void initCaches(ByteBuffer data) {
+			productId = data.getInt();
+			storedKeyBytes = new byte[KEY_LENGTH];
+			data.get(storedKeyBytes);
+			LedgerPrompt.Connection connectionPrompt = new LedgerPrompt.Connection(productId);
+			connectionPrompt.show();
+			LedgerSelector ledgerSelector = new LedgerSelector() {
+				@Override
+				public void deviceFound(HidDevice hidDevice) {
+					connectionPrompt.close();
+					ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice(hidDevice)));
+					LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
+					ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
+					// not sure if this occurs
+					if (parentExtPubKey == null) throw new RuntimeException();
+					if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
+						throw new IllegalStateException("This wallet does not belong to this device");
+					Ledger.this.parentExtPubKey = parentExtPubKey;
+					stop();
+				}
+			};
+			ledgerSelector.startListener();
+		}
+
+		private void initStoredKeyBytes(byte[] storedKeyBytes) {
+			this.storedKeyBytes = storedKeyBytes;
+		}
+
+		public static Ledger create(ExtendedPublicKey parentExtPubKey, ErgoLedgerAppkit ergoLedgerAppkit, char[] password) {
+			if (parentExtPubKey.keyBytes().length != KEY_LENGTH) throw new IllegalArgumentException("public key must be " + KEY_LENGTH + " bytes");
+			if (parentExtPubKey.chainCode().length != 32) throw new IllegalArgumentException("chain code must be 32 bytes");
+			Ledger key = new Ledger();
+			key.parentExtPubKey = parentExtPubKey;
+			key.ergoLedgerAppkit = ergoLedgerAppkit;
+			try {
+				byte[] iv = AESEncryption.generateNonce12();
+				ByteBuffer buffer = ByteBuffer.allocate(2 + 4 + KEY_LENGTH)
+						.putShort((short) ID)
+						.putInt(ergoLedgerAppkit.device.getProductId())
+						.put(parentExtPubKey.keyBytes());
+				key.initEncryptedData(AESEncryption.encryptData(iv, AESEncryption.generateSecretKey(password, iv), buffer.array()));
+				key.initStoredKeyBytes(parentExtPubKey.keyBytes());
+				return key;
+			} catch (GeneralSecurityException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
+			UnsignedTransactionImpl unsignedTxImpl = (UnsignedTransactionImpl) unsignedTx;
+			// This is only used to access the reduce method of ErgoProver, which does not use the mnemonic at all.
+			ErgoProver dummyProver = ctx.newProverBuilder().build();
+			// Reduce transaction (to get access to reducedTx.outputs())
+			UnsignedErgoLikeTransaction reducedTx = ctx.newProverBuilder().build().reduce(unsignedTxImpl, 0).getTx().unsignedTx();
+
+			List<AttestedBox> inputBoxes = unsignedTxImpl.getBoxesToSpend().stream()
+					.filter(b -> reducedTx.inputIds().contains(b.box().id()))
+					.map(extInBox -> {
+						ErgoResponse.AttestedBoxFrame[] attestedBoxFrames = ergoLedgerAppkit.getAttestedBoxFrames(extInBox.box());
+						return new AttestedBox(extInBox.box(), attestedBoxFrames, ErgoLedgerAppkit.serializeContextExtension(extInBox.extension()));
+					}).toList();
+
+			byte[] bytes;
+			LedgerPrompt.Signing prompt = new LedgerPrompt.Signing();
+			prompt.show();
+			bytes = ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
+						case MAINNET -> ErgoNetworkType.MAINNET;
+						case TESTNET -> ErgoNetworkType.TESTNET;
+					},
+					inputBoxes, unsignedTxImpl.getDataBoxes(), JavaConverters.seqAsJavaList(reducedTx.outputs()), null, null);
+			prompt.close();
+
+			ErgoLikeTransaction signed = reducedTx.toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
+			return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);
+		}
+
+		@Override
+		public SignedTransaction signReduced(BlockchainContext ctx, ReducedTransaction reducedTx, int baseCost, Collection<Integer> addressIndexes) throws Failure {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Address derivePublicAddress(NetworkType networkType, int index) throws Failure {
+			return new Address(P2PKAddress.apply(parentExtPubKey.child(index).key(), new ErgoAddressEncoder(networkType.networkPrefix)));
+		}
+
+		@Override
+		public WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure {
+			return create(parentExtPubKey, ergoLedgerAppkit, newPassword);
 		}
 	}
 }

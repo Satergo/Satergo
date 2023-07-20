@@ -64,6 +64,10 @@ dependencies {
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
 	implementation 'com.google.zxing:core:3.5.3' // used for qr codes
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
+
+	// ledger
+	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation 'org.hid4java:hid4java:0.7.0'
 }
 
 jar {
