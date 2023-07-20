@@ -10,6 +10,7 @@ import com.satergo.jledger.protocol.ergo.ErgoNetworkType;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.protocol.ergo.ErgoResponse;
 import com.satergo.jledger.transport.hid.HidLedgerDevice;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.ErgoLikeTransaction;
@@ -317,16 +318,18 @@ public abstract class WalletKey {
 			LedgerSelector ledgerSelector = new LedgerSelector() {
 				@Override
 				public void deviceFound(HidDevice hidDevice) {
-					connectionPrompt.close();
-					ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice(hidDevice)));
-					LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
-					ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
-					// not sure if this occurs
-					if (parentExtPubKey == null) throw new RuntimeException();
-					if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
-						throw new IllegalStateException("This wallet does not belong to this device");
-					Ledger.this.parentExtPubKey = parentExtPubKey;
-					stop();
+					Platform.runLater(() -> {
+						connectionPrompt.close();
+						ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice(hidDevice)));
+						LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
+						ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
+						// not sure if this occurs
+						if (parentExtPubKey == null) throw new RuntimeException();
+						if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
+							throw new IllegalStateException("This wallet does not belong to this device");
+						Ledger.this.parentExtPubKey = parentExtPubKey;
+						stop();
+					});
 				}
 			};
 			ledgerSelector.startListener();
