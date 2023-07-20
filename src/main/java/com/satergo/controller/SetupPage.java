@@ -21,4 +21,5 @@ public interface SetupPage {
 	Parent recreate();
 	Parent content();
 	boolean showExtra();
+	default void cleanup() {}
 }
