@@ -1,5 +1,6 @@
 package com.satergo;
 
+import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.ergouri.ErgoURI;
 import javafx.application.Application;
 
@@ -24,6 +25,7 @@ public class Launcher {
 				System.out.println("""
 						Satergo can be started by providing no arguments.
 						To open an "ergo:" URI, use --uri and provide the URI after it.
+						To handle an "ergopay:" URI, use --ergopay and provide the URI after it.
 						If the wallet is already open, it will be shown in that instance, otherwise a new instance with it will be started""");
 				return;
 			}
@@ -41,6 +43,18 @@ public class Launcher {
 				} else {
 					// open in this instance when ready
 					Main.initErgoURI = ErgoURI.parse(URI.create(args[1]));
+				}
+			} else if (args[0].equals("--ergopay")) {
+				if (ipc.exists()) {
+					try {
+						ipc.connectAndSend(2, args[1]);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+					return;
+				} else {
+					// open in this instance when ready
+					Main.initErgoPayURI = new ErgoPayURI(args[1]);
 				}
 			}
 		}

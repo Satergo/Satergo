@@ -149,6 +149,10 @@ public class Utils {
 		return ergoClient;
 	}
 
+	public static ErgoClient offlineErgoClient() {
+		return new ColdErgoClient(null, Parameters.ColdClientMaxBlockCost, Parameters.ColdClientBlockVersion);
+	}
+
 	public record NodeVersion(String version, URI uri) {
 		public String fileName() {
 			return "ergo-" + version + ".jar";
@@ -260,6 +264,10 @@ public class Utils {
 			}
 			Platform.runLater(runnable);
 		}).start();
+	}
+
+	public static String explorerTransactionUrl(String transactionId) {
+		return "https://" + (Main.programData().nodeNetworkType.get() == NetworkType.MAINNET ? "explorer" : "testnet") + ".ergoplatform.com/en/transactions/" + transactionId;
 	}
 
 	private static final String os = System.getProperty("os.name");

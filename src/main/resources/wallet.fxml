@@ -10,6 +10,10 @@
 		<HBox fx:id="connectionWarning" id="connection-warning" managed="${connectionWarning.visible}" onMouseClicked="#checkConnection">
 			<Label text="%offlineInfo"/>
 		</HBox>
+		<BorderPane fx:id="ergoPayNotice" id="ergopay-notice" visible="false" managed="${ergoPayNotice.visible}">
+			<left><Label BorderPane.alignment="CENTER_LEFT" text="%ergoPay.showItNotice"/></left>
+			<right><ButtonBar fx:id="ergoPayButtonBar" focusTraversable="${ergoPayNotice.visible}"/></right>
+		</BorderPane>
 	</top>
 	<left>
 		<BorderPane fx:id="sidebar" prefWidth="${walletRoot.width/7}">

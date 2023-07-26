@@ -1,0 +1,9 @@
+#betaWarning .text {
+	-fx-font-weight: bold;
+	-fx-font-size: 16px;
+}
+
+#title .text {
+	-fx-font-weight: bold;
+	-fx-font-size: 16px;
+}

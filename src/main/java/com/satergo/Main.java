@@ -3,6 +3,7 @@ package com.satergo;
 import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
 import com.satergo.ergo.EmbeddedFullNode;
+import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.ergouri.ErgoURI;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.ThemeStyle;
@@ -34,6 +35,7 @@ public class Main extends Application {
 	public static EmbeddedFullNode node;
 	// from command line
 	static ErgoURI initErgoURI;
+	static ErgoPayURI initErgoPayURI;
 
 	private static Main INSTANCE;
 
@@ -273,6 +275,15 @@ public class Main extends Application {
 			Utils.alert(Alert.AlertType.ERROR, lang("noWalletIsOpen"));
 		} else {
 			walletPage.openErgoURI(ergoURI);
+			stage.toFront();
+		}
+	}
+
+	public void handleErgoPayURI(String uri) {
+		if (walletPage == null) {
+			Utils.alert(Alert.AlertType.ERROR, lang("noWalletIsOpen"));
+		} else {
+			walletPage.handleErgoPayURI(new ErgoPayURI(uri));
 			stage.toFront();
 		}
 	}

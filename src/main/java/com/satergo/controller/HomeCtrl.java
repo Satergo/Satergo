@@ -317,8 +317,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 					send.setDisable(false);
 					String transactionId = transactTask.getValue();
 					txLink.setText(transactionId);
-					String explorerUrl = "https://" + (Main.programData().nodeNetworkType.get() == NetworkType.MAINNET ? "explorer" : "testnet") + ".ergoplatform.com/en/transactions";
-					txLink.setOnAction(te -> Main.get().getHostServices().showDocument(explorerUrl + "/" + transactionId));
+					txLink.setOnAction(te -> Main.get().getHostServices().showDocument(Utils.explorerTransactionUrl(transactionId)));
 					copyTxId.setOnAction(ce -> {
 						Utils.copyStringToClipboard(transactionId);
 						Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), 400);
