@@ -1,8 +1,8 @@
 /* COLOR DEFINITIONS */
 
 .root {
-	-fx-base: #161719;
 	-sat-background-color: #161719;
+	-fx-base: -sat-background-color;
 
 	-sat-input-text-fill: white;
 	-sat-input-border-color: #BDBDBD;
@@ -52,6 +52,10 @@
 	-w-setting-border-color-1: linear-gradient(from 0px 3px to 207px 394.37px, #FFFFFF, #141414);
 	-w-setting-border-color-2: transparent;
 	-w-ergopay-notice-bg: #00928e;
+}
+
+.button:default {
+	-fx-base: -sat-background-color;
 }
 
 /* COMBO BOX */
