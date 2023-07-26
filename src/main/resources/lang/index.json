@@ -6,5 +6,7 @@
 	"ru": { "name": "Русский", "credit": "Art Melks и кое-кто" },
 	"fr": { "name": "Français", "credit": "@pilotfish & Giufa_online" },
 	"pt": { "name": "Português", "credit": "@DavidO_crypto" },
-	"id": { "name": "Bahasa Indonesia", "credit": "@chris45new" }
+	"pt": { "name": "Português", "credit": "@DavidO_crypto" },
+	"id": { "name": "Bahasa Indonesia", "credit": "@chris45new" },
+	"ms": { "name": "Bahasa Melayu", "credit": "@chris45new" }
 }
