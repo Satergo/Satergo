@@ -3,13 +3,16 @@ import com.satergo.build.SatergoBuildPlugin
 plugins {
 	id 'java'
 	id 'application'
-	id 'com.github.johnrengelman.shadow' version '7.1.2'
+	id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 apply plugin: SatergoBuildPlugin
 
 java {
 	sourceCompatibility = JavaLanguageVersion.of(20)
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(20)
+	}
 }
 
 group 'com.satergo'
@@ -23,15 +26,9 @@ application {
 repositories {
 	mavenCentral()
 	maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
-	// for org.jetbrains.pty4j:purejavacomm:0.12.5, which is used by pty4j
-	maven {
-		url 'https://packages.jetbrains.team/maven/p/ij/intellij-dependencies'
-		content {
-			includeGroup 'org.jetbrains.pty4j'
-		}
-	}
 }
 
+boolean buildInstaller = project.hasProperty("buildInstaller")
 boolean platformProvided = project.hasProperty("platform")
 String platform
 if (platformProvided && project.findProperty("platform") != "auto") {
@@ -49,12 +46,8 @@ if (platformProvided && project.findProperty("platform") != "auto") {
 	if (arch != "amd64") platform += "-" + arch
 }
 
-def javaFxVersion = '20.0.1'
+def javaFxVersion = '20.0.2'
 def javaFxModules = [ 'base', 'controls', 'fxml', 'graphics' ]
-
-configurations {
-	jna
-}
 
 dependencies {
 	implementation ('com.pixelduke:FXSkins:1.0.0') {
@@ -68,20 +61,19 @@ dependencies {
 	implementation 'org.slf4j:slf4j-simple:1.7.36'
 	implementation 'com.grack:nanojson:1.8' // used for numerous HTTP APIs and ProgramData saving
 	implementation 'com.google.code.gson:gson:2.10.1'
-	implementation 'org.jetbrains.pty4j:pty4j:0.12.10' // for running node
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
 	implementation 'com.google.zxing:core:3.5.1' // used for qr codes
-	jna 'net.java.dev.jna:jna:5.11.0' // used for running the registration of ergo uri with admin privileges on Windows
-	implementation configurations.jna.dependencies
-	implementation 'net.java.dev.jna:jna-platform:5.11.0' // used for running the registration of ergo uri with admin privileges on Windows
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 }
 
 jar {
-	manifest.attributes(
-			"Specification-Version": project.version,
-			"Satergo-Package-Type": "PORTABLE",
-			"Satergo-Package-Platform": platform)
+	manifest {
+		attributes("Specification-Version": project.version)
+		attributes(
+				"Package-Type": buildInstaller ? "INSTALLATION" : "PORTABLE",
+				"Package-Platform": platform,
+				/* Section name */ "Satergo")
+	}
 }
 
 satergoRuntime {
@@ -91,11 +83,10 @@ satergoRuntime {
 	cleanupRuntimeContent = true
 	cacheRuntimes = true
 
-	runProguard = !project.hasProperty("dontshrink")
 	proguardConfig = file("proguard.pro").toPath()
 	proguardOutputName = "Satergo-${project.version}-${platform}-shrunk.jar"
 
-	includeJarInRuntime = true
+	includeJarInRuntime = !buildInstaller
 
 	launcherScript {
 		type = platform == "win" ? "bat" : "sh"
@@ -105,38 +96,41 @@ satergoRuntime {
 						  '-Dsatergo.platform=' + platform ]
 		windowsConsole = false
 	}
+	if (buildInstaller)
+		launcherScript = null
 
 	switch (platform) {
 		case "linux": {
 			platformName = "linux-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_linux-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_linux-x64_bin.tar.gz")
 			break
 		}
 		case "linux-aarch64": {
 			platformName = "linux-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_linux-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_linux-aarch64_bin.tar.gz")
 			break
 		}
 		case "win": {
 			platformName = "windows-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_windows-x64_bin.zip")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_windows-x64_bin.zip")
 			break
 		}
 		case "mac": {
 			platformName = "mac-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_macos-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_macos-x64_bin.tar.gz")
 			jdkRuntimeRoot = "Contents/Home/"
 			break
 		}
 		case "mac-aarch64": {
 			platformName = "mac-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.1/b4887098932d415489976708ad6d1a4b/9/GPL/openjdk-20.0.1_macos-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_macos-aarch64_bin.tar.gz")
+			jdkRuntimeRoot = "Contents/Home/"
 			break
 		}
 		default: throw new IllegalArgumentException()
 	}
 
-	createArchive = true
+	createArchive = !buildInstaller
 	archiveOutputPath = file("runtimes/${project.name}-v${project.version}-${platformName}.zip").toPath()
 
 	// Create a convenient run file in the top level
@@ -153,6 +147,36 @@ satergoRuntime {
 	}
 }
 
+satergoWinInstaller {
+	def packagingDir = file("src/main/packaging").toPath()
+
+	installerType = "MSI"
+
+	appName = "Satergo"
+	appVersion = project.version.toString()
+	icoIconPath = packagingDir.resolve("windows-icon.ico")
+	vendor = "Satergo"
+	description = "The desktop wallet for the Ergo cryptocurrency"
+
+	aboutUrl = "https://satergo.com"
+	updateUrl = "https://satergo.com"
+
+	windowsUpgradeUUID = "ef3fc1f4-414b-43e6-a2c2-cb4f7ccab4de"
+
+	fileAssociations = [ packagingDir.resolve("erg-file-association.properties") ]
+
+	extraArgs = [ "--resource-dir", packagingDir.resolve("windows-resources").toAbsolutePath().toString() ]
+
+	outputDir = file("installers").toPath()
+
+}
+
+tasks.satergoWinInstaller {
+	doFirst {
+		if (!buildInstaller) throw new RuntimeException("Specify -PbuildInstaller to build an installer")
+	}
+}
+
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 }
@@ -161,30 +185,4 @@ tasks.withType(JavaCompile).configureEach {
 tasks.withType(AbstractArchiveTask).configureEach {
 	preserveFileTimestamps = false
 	reproducibleFileOrder = true
-}
-
-shadowJar {
-	if (platformProvided) {
-		String jnaPlatform = (!platform.contains("-") ? platform + "-x86-64" : platform)
-				.replaceFirst("^mac-", "darwin-")
-				.replaceFirst("^win-", "win32-")
-		List<String> platformList = jnaPlatformList()
-		if (!platformList.contains(jnaPlatform))
-			throw new RuntimeException("could not find jna platform " + jnaPlatform + " (from " + platform + ")")
-		platformList.remove(jnaPlatform)
-		platformList.forEach {
-			exclude "com/sun/jna/${it}/**"
-		}
-	}
-	doFirst {
-		if (!platformProvided)
-			println "Desired platform was not provided. Extra JNA platforms will not be filtered out from the final JAR."
-	}
-}
-
-ArrayList<String> jnaPlatformList() {
-	return new java.util.jar.JarFile(configurations.jna.files.first()).stream()
-			.filter({ it.name.startsWith("com/sun/jna/") && it.name.count("/") == 4 && it.directory && it.name.contains('-') })
-			.map({ it.name.split("/").last() })
-			.collect(java.util.stream.Collectors.toCollection(ArrayList::new))
 }

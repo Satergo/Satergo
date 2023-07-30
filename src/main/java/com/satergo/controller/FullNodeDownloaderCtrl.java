@@ -1,9 +1,6 @@
 package com.satergo.controller;
 
-import com.satergo.Load;
-import com.satergo.Main;
-import com.satergo.ProgramData;
-import com.satergo.Utils;
+import com.satergo.*;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergo.EmbeddedNodeInfo;
 import com.satergo.extra.DownloadTask;
@@ -31,16 +28,15 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializ
 	@FXML private ProgressBar progressBar;
 	@FXML private Label nodeVersion;
 	@FXML private Button selectCustomDirectory, download, continueSetup;
-	@FXML private Label customDirectoryLocation;
+	@FXML private Label directoryPath;
 	@FXML private ComboBox<NetworkType> networkType;
 
 	private File nodeDirectory;
 	private File nodeJar;
 
 	@FXML
-	public void selectCustomDirectory(ActionEvent e) {
+	public void selectDirectory(ActionEvent e) {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
-		directoryChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
 		directoryChooser.setTitle(Main.lang("nodeDirectory"));
 		File nodeDirectory = directoryChooser.showDialog(Main.get().stage());
 		if (nodeDirectory == null) return;
@@ -50,7 +46,7 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializ
 			return;
 		}
 		this.nodeDirectory = nodeDirectory;
-		customDirectoryLocation.setText(Main.lang("current_s").formatted(nodeDirectory.getAbsolutePath()));
+		directoryPath.setText(Main.lang("current_s").formatted(nodeDirectory.getAbsolutePath()));
 	}
 
 	@FXML
@@ -116,10 +112,6 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializ
 					nodeVersion.setText(v.version());
 					download.setDisable(false);
 				}).newThread();
-		if (new File("node").exists()) {
-			nodeDirectory = null;
-			customDirectoryLocation.setText(Main.lang("currentNone"));
-		} else nodeDirectory = new File("node");
 	}
 
 	@Override

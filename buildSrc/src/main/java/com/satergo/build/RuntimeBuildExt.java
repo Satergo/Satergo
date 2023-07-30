@@ -42,7 +42,6 @@ public class RuntimeBuildExt {
 	public List<String> extraModules;
 	public List<String> extraJlinkOptions;
 
-	public boolean runProguard;
 	public Path proguardConfig;
 	public String proguardOutputName;
 
@@ -64,7 +63,7 @@ public class RuntimeBuildExt {
 	}
 
 	// For accessing from the doBeforeArchival closure
-	public final String runtimeDirectoryName = "runtime";
+	public static final String runtimeDirectoryName = "runtime";
 
 	/**
 	 * Whether to create a zip archive of the final runtime

@@ -1,76 +1,36 @@
 package com.satergo.build;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.Task;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
-import proguard.*;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.spi.ToolProvider;
 import java.util.stream.Collectors;
 
 public class RuntimeBuildTask extends DefaultTask {
 
-	private static final String JDK_CACHE_DIR_NAME = "jdks";
-
-	// Avoid depending on the plugin because it causes problems
-	@SuppressWarnings("unchecked")
-	private File getShadowArchiveFile() {
-		try {
-			Task shadowJarTask = getProject().getTasks().getByName("shadowJar");
-			Provider<RegularFile> regularFileProvider = (Provider<RegularFile>)
-					shadowJarTask.getClass().getMethod("getArchiveFile").invoke(shadowJarTask);
-			return regularFileProvider.get().getAsFile();
-		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	static final String JDK_CACHE_DIR_NAME = "jdks";
 
 	@TaskAction
-	public void execute() throws TaskExecutionException, IOException, ParseException, InterruptedException {
+	public void execute() throws TaskExecutionException, IOException, InterruptedException {
 		RuntimeBuildExt extension = getProject().getExtensions().getByType(RuntimeBuildExt.class);
-		File shadowJarFile = getShadowArchiveFile();
 
-		// Run proguard
-		File proguardOutputFile = new File(getProject().getBuildDir(), "libs/" + extension.proguardOutputName);
-		if (extension.runProguard) {
-			Configuration config = new Configuration();
-			try (ConfigurationParser configurationParser = new ConfigurationParser(extension.proguardConfig.toFile(), System.getProperties())) {
-				configurationParser.parse(config);
-			}
+		// This task supports working with both full and shrunk jars
+		boolean dependsOnShrinkJar = getLifecycleDependencies().getDependencies(this)
+				.contains(getProject().getTasks().getByName("shrinkJarTask"));
 
-			config.libraryJars = new ClassPath();
-			for (File jmod : Objects.requireNonNull(new File(System.getProperty("java.home") + "/jmods").listFiles())) {
-				ClassPathEntry classPathEntry = new ClassPathEntry(jmod, false);
-				classPathEntry.setJarFilter(Collections.singletonList("!**.jar"));
-				classPathEntry.setFilter(Collections.singletonList("!module-info.class"));
-				config.libraryJars.add(classPathEntry);
-			}
-
-			config.programJars = new ClassPath();
-			config.programJars.add(new ClassPathEntry(shadowJarFile, false));
-			config.programJars.add(new ClassPathEntry(proguardOutputFile, true));
-
-			try {
-				new ProGuard(config).execute();
-			} catch (Exception e) {
-				throw new RuntimeException("ProGuard exception", e);
-			}
-		}
-
-		File mainJar = extension.runProguard ? proguardOutputFile : shadowJarFile;
+		File mainJar = dependsOnShrinkJar
+				? ((File) getProject().getTasks().getByPath("shrinkJarTask").getExtensions().getByName("output"))
+				: ShrinkJarTask.getShadowArchiveFile(getProject());
+		getExtensions().add("mainJar", mainJar);
 
 		// Invoke jdeps to find used modules
 		StringWriter jdepsOut = new StringWriter();
@@ -90,27 +50,7 @@ public class RuntimeBuildTask extends DefaultTask {
 			Files.createDirectory(cacheDir);
 		Path jdk = cacheDir.resolve(jdkArchiveName);
 		if (!Files.exists(jdk)) {
-			HttpResponse<InputStream> request = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build()
-					.send(HttpRequest.newBuilder().uri(extension.jdkRuntimeURI).build(), HttpResponse.BodyHandlers.ofInputStream());
-			FileUtils.ArchiveType archiveType;
-			if (jdkArchiveName.endsWith(".zip")) archiveType = FileUtils.ArchiveType.ZIP;
-			else if (jdkArchiveName.endsWith(".tar.gz")) archiveType = FileUtils.ArchiveType.TAR_GZ;
-			else throw new IllegalArgumentException("unsupported archive type");
-			Files.createDirectory(jdk);
-			Function<String, String> pathRewriter = name -> {
-				// appears in linux & mac archives
-				if (name.startsWith("./")) name = name.substring(2);
-				// skip top directory
-				name = name.substring(name.indexOf('/') + 1);
-				// skip path to root
-				if (name.startsWith(extension.jdkRuntimeRoot))
-					return name.substring(extension.jdkRuntimeRoot.length());
-				else return null;
-			};
-			switch (archiveType) {
-				case ZIP -> FileUtils.extractZipTo(request.body(), jdk, pathRewriter);
-				case TAR_GZ -> FileUtils.extractTarGzTo(request.body(), jdk, pathRewriter);
-			}
+			FileUtils.downloadJdk(jdkArchiveName, extension.jdkRuntimeURI, extension.jdkRuntimeRoot, jdk);
 		}
 
 		// Invoke jlink to create a runtime
@@ -172,12 +112,11 @@ public class RuntimeBuildTask extends DefaultTask {
 			}
 		}
 
-		if (extension.doBeforeArchival != null) {
-			extension.doBeforeArchival.run();
-		}
-
 		// Archive runtime
 		if (extension.createArchive) {
+			if (extension.doBeforeArchival != null) {
+				extension.doBeforeArchival.run();
+			}
 			Files.createDirectories(extension.archiveOutputPath.getParent());
 			FileUtils.zipContent(runtimeOutput, extension.archiveOutputPath);
 		}

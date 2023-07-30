@@ -5,7 +5,7 @@ import com.satergo.ergo.Balance;
 import com.satergo.ergopay.ErgoPay;
 import com.satergo.ergopay.ErgoPayPrompt;
 import com.satergo.ergopay.ErgoPayURI;
-import com.satergo.ergouri.ErgoURI;
+import com.satergo.ergo.ErgoURI;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;

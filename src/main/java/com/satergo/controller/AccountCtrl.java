@@ -8,7 +8,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.satergo.*;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
-import com.satergo.ergouri.ErgoURI;
+import com.satergo.ergo.ErgoURI;
 import com.satergo.extra.ImageConversion;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.dialog.MoveStyle;

@@ -11,6 +11,10 @@ import org.apache.tools.ant.util.PermissionUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -102,5 +106,29 @@ class FileUtils {
 
 	static void extractTarGzTo(InputStream inputStream, Path outputDirectory, Function<String, String> nameRewrite) throws IOException {
 		extractArchiveTo(new TarArchiveInputStream(new GZIPInputStream(inputStream)), outputDirectory, nameRewrite);
+	}
+
+	static void downloadJdk(String archiveName, URI uri, String root, Path out) throws IOException, InterruptedException {
+		HttpResponse<InputStream> request = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build()
+				.send(HttpRequest.newBuilder().uri(uri).build(), HttpResponse.BodyHandlers.ofInputStream());
+		ArchiveType archiveType;
+		if (archiveName.endsWith(".zip")) archiveType = ArchiveType.ZIP;
+		else if (archiveName.endsWith(".tar.gz")) archiveType = ArchiveType.TAR_GZ;
+		else throw new IllegalArgumentException("unsupported archive type");
+		Files.createDirectory(out);
+		Function<String, String> pathRewriter = name -> {
+			// appears in linux & mac archives
+			if (name.startsWith("./")) name = name.substring(2);
+			// skip top directory
+			name = name.substring(name.indexOf('/') + 1);
+			// skip path to root
+			if (name.startsWith(root))
+				return name.substring(root.length());
+			else return null;
+		};
+		switch (archiveType) {
+			case ZIP -> FileUtils.extractZipTo(request.body(), out, pathRewriter);
+			case TAR_GZ -> FileUtils.extractTarGzTo(request.body(), out, pathRewriter);
+		}
 	}
 }

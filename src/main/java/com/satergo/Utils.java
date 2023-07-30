@@ -28,6 +28,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Objects;
@@ -276,7 +277,24 @@ public class Utils {
 	private static final boolean MAC = os.startsWith("Mac");
 	private static final boolean LINUX = os.startsWith("Linux");
 
-	public static boolean isMac() {
-		return MAC;
+	public static boolean isWindows() { return WINDOWS; }
+	public static boolean isMac() { return MAC; }
+	public static boolean isLinux() { return LINUX; }
+
+	public static Path settingsDir() {
+		return switch (SystemProperties.packageType()) {
+			case INSTALLATION -> {
+				if (isWindows()) {
+					Path path = Path.of(System.getProperty("user.home")).resolve("AppData/Roaming/Satergo");
+					try {
+						Files.createDirectories(path);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+					yield path;
+				} else throw new UnsupportedOperationException(); // no installers are made for other operating systems yet
+			}
+			case PORTABLE -> Path.of(System.getProperty("user.dir"));
+		};
 	}
 }

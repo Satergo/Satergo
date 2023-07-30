@@ -1,7 +1,6 @@
 package com.satergo.ergo;
 
 import com.grack.nanojson.JsonObject;
-import com.pty4j.PtyProcessBuilder;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.controller.NodeOverviewCtrl;
@@ -261,7 +260,7 @@ public class EmbeddedFullNode {
 			command[i++] = "-c";
 			command[i] = confFile.getName();
 			System.out.println("running node with command: " + Arrays.toString(command));
-			process = new PtyProcessBuilder().setCommand(command).setDirectory(nodeDirectory.getAbsolutePath()).start();
+			process = new ProcessBuilder().command(command).directory(nodeDirectory).start();
 			scheduleRepeatingTasks();
 			startedTime = System.currentTimeMillis();
 		} catch (IOException ex) {

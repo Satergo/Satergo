@@ -35,7 +35,9 @@ Java is not needed for running the prebuilt runtimes, because it is included in 
 
 To run the wallet from the sources, run the command `./gradlew run`.
 
-To build a runtime, run `./gradlew satergoRuntime -Pplatform=<platform>`, where platform can be any of `win linux linux-aarch64 linux-arm32 mac mac-aarch64`.
+To build a portable runtime, run `./gradlew satergoRuntime -Pplatform=<platform>`, where platform can be any of `win linux linux-aarch64 linux-arm32 mac mac-aarch64`.
+
+To build a Windows installer, you need to be on Windows. Then, run `./gradlew satergoWinInstaller -Pplatform=win -PbuildInstaller` (if using CMD, don't write `./`)
 
 To build runtimes for all platforms, run `./build-all-runtimes.sh`.
 

@@ -1,4 +1,4 @@
-package com.satergo.ergouri;
+package com.satergo.ergo;
 
 import org.ergoplatform.appkit.ErgoId;
 

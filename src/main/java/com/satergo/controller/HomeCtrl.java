@@ -5,7 +5,7 @@ import com.satergo.ergo.Balance;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
 import com.satergo.ergo.TokenSummary;
-import com.satergo.ergouri.ErgoURI;
+import com.satergo.ergo.ErgoURI;
 import com.satergo.extra.PriceCurrency;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;

@@ -4,7 +4,7 @@ import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
 import com.satergo.ergo.EmbeddedFullNode;
 import com.satergo.ergopay.ErgoPayURI;
-import com.satergo.ergouri.ErgoURI;
+import com.satergo.ergo.ErgoURI;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.ThemeStyle;
 import javafx.application.Application;
@@ -34,6 +34,7 @@ public class Main extends Application {
 
 	public static EmbeddedFullNode node;
 	// from command line
+	static Path initWalletFile;
 	static ErgoURI initErgoURI;
 	static ErgoPayURI initErgoPayURI;
 
@@ -52,7 +53,7 @@ public class Main extends Application {
 	private Scene scene;
 
 	private final SimpleObjectProperty<ThemeStyle> themeStyle = new SimpleObjectProperty<>();
-	private static final Path CUSTOM_STYLESHEET = Path.of("custom.css");
+	private static final Path CUSTOM_STYLESHEET = Utils.settingsDir().resolve("custom.css");
 
 	private Wallet wallet;
 	private ProgramData programData;
@@ -89,7 +90,7 @@ public class Main extends Application {
 		stage = primaryStage;
 
 		{
-			Path programDataPath = Path.of("program-data.json");
+			Path programDataPath = Utils.settingsDir().resolve("program-data.json");
 			programData = Files.isRegularFile(programDataPath) ? ProgramData.load(programDataPath) : new ProgramData(programDataPath);
 		}
 
@@ -134,16 +135,16 @@ public class Main extends Application {
 				node = nodeFromInfo();
 			}
 
-			if (programData.lastWallet.get() == null || !Files.isRegularFile(programData.lastWallet.get())) {
-				displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
-			} else {
-				displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
-				String password = Utils.requestPassword(Main.lang("passwordOf_s").formatted(programData.lastWallet.get().getFileName()));
+			displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
+			if (initWalletFile != null || (programData.lastWallet.get() != null && Files.isRegularFile(programData.lastWallet.get()))) {
+				Path path = initWalletFile != null ? initWalletFile : programData.lastWallet.get();
+				String password = Utils.requestPassword(Main.lang("passwordOf_s").formatted(path.getFileName()));
 				if (password == null) {
-					programData.lastWallet.set(null);
+					if (initWalletFile == null)
+						programData.lastWallet.set(null);
 					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 				} else try {
-					setWallet(Wallet.load(programData.lastWallet.get(), password));
+					setWallet(Wallet.load(path, password));
 					Pair<Parent, WalletCtrl> load = Load.fxmlNodeAndController("/wallet.fxml");
 					walletPage = load.getValue();
 					if (initErgoURI != null) {
@@ -181,6 +182,9 @@ public class Main extends Application {
 			Launcher.getIPC().stopListening();
 			Files.deleteIfExists(Launcher.getIPC().path);
 		} catch (IOException ignored) {}
+		// Unfortunately, the appkit dependency uses an HTTP library that remains active for 5 minutes after last use,
+		// which prevents the application process from shutting down, so explicitly exiting is required.
+		System.exit(0);
 	}
 
 	public EmbeddedFullNode nodeFromInfo() {

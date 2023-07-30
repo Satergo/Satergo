@@ -3,6 +3,7 @@
 /build/
 /buildSrc/build/
 runtimes/
+installers/
 
 # running
 node/

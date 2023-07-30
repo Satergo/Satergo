@@ -39,7 +39,6 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 	@FXML
 	public void useExisting(ActionEvent e) {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
-		directoryChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
 		directoryChooser.setTitle(Main.lang("nodeDirectory"));
 		File nodeDirectory = directoryChooser.showDialog(Main.get().stage());
 		if (nodeDirectory == null || !nodeDirectory.exists()) return;

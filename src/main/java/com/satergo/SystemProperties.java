@@ -2,11 +2,14 @@ package com.satergo;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import static java.lang.System.getProperty;
 
 public class SystemProperties {
+
+	// System properties
 
 	public static Optional<String> mainnetExplorerApi() {
 		return Optional.ofNullable(getProperty("satergo.mainnetExplorerApi"));
@@ -24,30 +27,37 @@ public class SystemProperties {
 		return Boolean.getBoolean("satergo.alwaysNonstandardDerivation");
 	}
 
+	// Manifest
+
 	public enum PackageType {
 		PORTABLE, INSTALLATION;
 
 		public static final PackageType FALLBACK = PORTABLE;
 	}
 
-	private static Manifest readManifest() {
+	private static final Attributes manifestSection;
+	private static final Attributes.Name
+			PACKAGE_TYPE = new Attributes.Name("Package-Type"),
+			PACKAGE_PLATFORM = new Attributes.Name("Package-Platform");
+
+	static {
+		Manifest manifest = null;
 		try {
-			return new Manifest(SystemProperties.class.getResourceAsStream("/META-INF/MANIFEST.MF"));
-		} catch (IOException e) {
-			return null;
+			manifest = new Manifest(SystemProperties.class.getResourceAsStream("/META-INF/MANIFEST.MF"));
+		} catch (IOException ignored) {
 		}
+		manifestSection = manifest == null ? null : manifest.getAttributes("Satergo");
 	}
-	private static final Manifest manifest = readManifest();
 
 	public static PackageType packageType() {
-		if (manifest == null || !manifest.getMainAttributes().containsKey("Satergo-Package-Type"))
-			return PackageType.FALLBACK;
-		return PackageType.valueOf(manifest.getMainAttributes().getValue("Satergo-Package-Type"));
+		return manifestSection == null
+				? PackageType.FALLBACK
+				: PackageType.valueOf(manifestSection.getValue(PACKAGE_TYPE));
 	}
 
 	public static String packagePlatform() {
-		if (manifest == null || !manifest.getMainAttributes().containsKey("Satergo-Package-Platform"))
-			return "src";
-		return manifest.getMainAttributes().getValue("Satergo-Package-Platform");
+		return manifestSection == null
+				? "src"
+				: manifestSection.getValue(PACKAGE_PLATFORM);
 	}
 }
