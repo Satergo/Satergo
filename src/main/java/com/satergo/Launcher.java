@@ -1,14 +1,13 @@
 package com.satergo;
 
-import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.ergo.ErgoURI;
+import com.satergo.ergopay.ErgoPayURI;
 import javafx.application.Application;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 /**

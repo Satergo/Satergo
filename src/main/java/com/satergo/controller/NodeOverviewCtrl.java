@@ -309,6 +309,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		VMArguments args = new VMArguments(Main.node.info.vmArguments());
 
 		d.limitRam.setSelected(args.getMaxRam().isPresent());
+		d.free.setText(args.toString());
 
 		args.arguments.addListener((ListChangeListener<String>) c -> {
 			if (!d.free.isFocused()) {

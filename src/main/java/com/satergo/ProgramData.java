@@ -47,7 +47,7 @@ public class ProgramData {
 	public final SimpleBooleanProperty
 			showPrice = new SimpleBooleanProperty(null, "showPrice", true);
 	public final SimpleEnumProperty<PriceSource>
-			priceSource = new SimpleEnumProperty<>(PriceSource.class, null, "priceSource", PriceSource.values()[0]);
+			priceSource = new SimpleEnumProperty<>(PriceSource.class, null, "priceSource", PriceSource.DEFAULT);
 	public final SimpleEnumLikeProperty<PriceCurrency>
 			priceCurrency = new SimpleEnumLikeProperty<>(null, "priceCurrency", PriceCurrency.USD) {
 		@Override public PriceCurrency valueOf(String s) { return PriceCurrency.get(s); }

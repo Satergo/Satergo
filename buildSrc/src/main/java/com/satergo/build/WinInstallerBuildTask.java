@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.spi.ToolProvider;
 
@@ -21,7 +20,6 @@ public class WinInstallerBuildTask extends DefaultTask {
 	@TaskAction
 	public void execute() throws TaskExecutionException, IOException {
 		WinInstallerBuildExt ext = getProject().getExtensions().getByType(WinInstallerBuildExt.class);
-		RuntimeBuildExt runtimeExt = getProject().getExtensions().getByType(RuntimeBuildExt.class);
 
 		File mainJar = (File) getProject().getTasks().getByPath("satergoRuntime").getExtensions().getByName("mainJar");
 

@@ -70,6 +70,8 @@ public enum PriceSource {
 		}
 	};
 
+	public static PriceSource DEFAULT = COINGECKO;
+
 	public final List<PriceCurrency> supportedCurrencies;
 
 	PriceSource(PriceCurrency... supportedCurrencies) {
