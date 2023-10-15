@@ -29,6 +29,7 @@ package com.satergo.extra;
 
 import javafx.animation.Animation;
 import javafx.animation.TranslateTransition;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.WritableValue;
 import javafx.css.CssMetaData;
@@ -36,6 +37,7 @@ import javafx.css.Styleable;
 import javafx.css.StyleableDoubleProperty;
 import javafx.css.StyleableProperty;
 import javafx.css.converter.SizeConverter;
+import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.SkinBase;
@@ -54,6 +56,7 @@ import java.util.List;
 public class ToggleSwitchSkin extends SkinBase<ToggleSwitch> {
 
 	private final StackPane thumb;
+	private final StackPane filling;
 	private final StackPane thumbArea;
 	private final Label label;
 	private final StackPane labelContainer;
@@ -68,6 +71,7 @@ public class ToggleSwitchSkin extends SkinBase<ToggleSwitch> {
 		super(control);
 
 		thumb = new StackPane();
+		filling = new StackPane();
 		thumbArea = new StackPane();
 		label = new Label();
 		labelContainer = new StackPane();
@@ -75,12 +79,15 @@ public class ToggleSwitchSkin extends SkinBase<ToggleSwitch> {
 		transition.setFromX(0.0);
 
 		label.textProperty().bind(control.textProperty());
-		getChildren().addAll(labelContainer, thumbArea, thumb);
+		getChildren().addAll(labelContainer, thumbArea, filling, thumb);
 		labelContainer.getChildren().addAll(label);
 		StackPane.setAlignment(label, Pos.CENTER_LEFT);
 
 		thumb.getStyleClass().setAll("thumb");
+		filling.getStyleClass().setAll("filling");
 		thumbArea.getStyleClass().setAll("thumb-area");
+		filling.prefWidthProperty().bind(Bindings.createDoubleBinding(() -> thumb.getTranslateX() == 0 ? 0.0 : thumb.getBoundsInParent().getMinX(),
+				thumb.boundsInParentProperty(), thumb.translateXProperty()));
 
 		control.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
 			if (event.getCode() == KeyCode.SPACE) {
@@ -88,6 +95,7 @@ public class ToggleSwitchSkin extends SkinBase<ToggleSwitch> {
 			}
 		});
 		thumbArea.setOnMouseReleased(event -> toggle(control));
+		filling.setOnMouseReleased(event -> toggle(control));
 		thumb.setOnMouseReleased(event -> toggle(control));
 		control.selectedProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue.booleanValue() != oldValue.booleanValue())
@@ -170,6 +178,13 @@ public class ToggleSwitchSkin extends SkinBase<ToggleSwitch> {
 		thumbArea.resize(thumbAreaWidth, thumbAreaHeight);
 		thumbArea.setLayoutX(contentWidth - thumbAreaWidth);
 		thumbArea.setLayoutY(thumbAreaY);
+
+		double fillingWidth = snapSizeX(filling.prefWidth(-1));
+		double fillingHeight = snapSizeY(filling.prefHeight(-1));
+
+		filling.resize(fillingWidth, fillingHeight);
+		filling.setLayoutX(thumbArea.getLayoutX());
+		filling.setLayoutY(thumbAreaY);
 
 		labelContainer.resize(contentWidth - thumbAreaWidth, thumbAreaHeight);
 		labelContainer.setLayoutY(thumbAreaY);

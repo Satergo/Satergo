@@ -298,12 +298,12 @@
 	-fx-background-insets: 2, 2, 2;
 }
 
-.toggle-switch .thumb-area {
+.toggle-switch .thumb-area, .toggle-switch .filling {
 	-fx-padding: 0.75em 1.666666em 0.75em 1.666666em;
 	-fx-background-color: #4F4F4F;
 }
 
-.toggle-switch:selected .thumb-area {
+.toggle-switch .filling {
 	-fx-background-color: linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC), linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC);
 }
 
