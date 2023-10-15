@@ -1,0 +1,10 @@
+<?import com.satergo.extra.SetupOption?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.LightNodeSourceCtrl" styleClass="node-source" stylesheets="@./welcome.css" fx:id="root" fillWidth="false">
+	<Label text="%lightNodeSource" styleClass="welcome-text"/>
+	<VBox spacing="30">
+		<SetupOption title="%downloadAndSetup" onAction="#downloadAndSetup" description="%nodeDownloadInfo"/>
+		<SetupOption title="%useExistingFromDirectory" onAction="#useExisting" description="%nodeUseExistingInfo"/>
+	</VBox>
+</VBox>

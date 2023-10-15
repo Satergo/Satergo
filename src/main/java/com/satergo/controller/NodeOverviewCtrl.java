@@ -4,7 +4,7 @@ import com.satergo.Icon;
 import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.Utils;
-import com.satergo.ergo.EmbeddedFullNode;
+import com.satergo.ergo.EmbeddedNode;
 import com.satergo.ergo.ErgoNodeAccess;
 import com.satergo.extra.VMArguments;
 import com.satergo.extra.dialog.MoveStyle;
@@ -93,7 +93,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		transferLog();
 		networkType.textProperty().bind(Main.programData().nodeNetworkType.asString());
 		ToggleGroup logLevelGroup = new ToggleGroup();
-		for (EmbeddedFullNode.LogLevel value : EmbeddedFullNode.LogLevel.values()) {
+		for (EmbeddedNode.LogLevel value : EmbeddedNode.LogLevel.values()) {
 			RadioMenuItem item = new RadioMenuItem(value.toString());
 			item.setToggleGroup(logLevelGroup);
 			item.setSelected(value == Main.node.logLevel());
@@ -102,7 +102,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		}
 		logLevelGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
 			try {
-				EmbeddedFullNode.LogLevel level = (EmbeddedFullNode.LogLevel) newValue.getUserData();
+				EmbeddedNode.LogLevel level = (EmbeddedNode.LogLevel) newValue.getUserData();
 				restartNeededNote.setVisible(level != Main.node.logLevel());
 				Main.node.info = Main.node.info.withLogLevel(level);
 				Main.node.writeInfo();

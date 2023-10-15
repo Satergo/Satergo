@@ -2,20 +2,22 @@ package com.satergo.controller;
 
 import com.satergo.Load;
 import com.satergo.Main;
-import com.satergo.Translations;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
-import javafx.scene.control.ComboBox;
 
 public class BlockchainSetupCtrl implements SetupPage.WithExtra {
 
 	@FXML private Parent root;
-	@FXML private ComboBox<Translations.Entry> language;
 
 	@FXML
 	public void localFullNode(ActionEvent e) {
 		Main.get().displaySetupPage(Load.<FullNodeSourceCtrl>fxmlController("/setup-page/full-node-source.fxml"));
+	}
+
+	@FXML
+	public void lightNode(ActionEvent e) {
+		Main.get().displaySetupPage(Load.<LightNodeSourceCtrl>fxmlController("/setup-page/light-node-source.fxml"));
 	}
 
 	@FXML

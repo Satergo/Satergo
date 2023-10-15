@@ -36,7 +36,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 
-public class EmbeddedFullNode {
+public class EmbeddedNode {
 
 	public enum LogLevel { ERROR, WARN, INFO, DEBUG, TRACE, OFF }
 
@@ -52,7 +52,7 @@ public class EmbeddedFullNode {
 	public EmbeddedNodeInfo info;
 	public final ErgoNodeAccess nodeAccess;
 
-	private EmbeddedFullNode(File nodeDirectory, File infoFile, EmbeddedNodeInfo info) {
+	private EmbeddedNode(File nodeDirectory, File infoFile, EmbeddedNodeInfo info) {
 		this.nodeDirectory = nodeDirectory;
 		this.nodeJar = new File(nodeDirectory, info.jarFileName());
 		this.confFile = new File(nodeDirectory, info.confFileName());
@@ -72,10 +72,10 @@ public class EmbeddedFullNode {
 		return info.logLevel();
 	}
 
-	public static EmbeddedFullNode fromLocalNodeInfo(File infoFile) {
+	public static EmbeddedNode fromLocalNodeInfo(File infoFile) {
 		try {
 			File root = infoFile.getParentFile();
-			return new EmbeddedFullNode(root, infoFile, EmbeddedNodeInfo.fromJson(Files.readString(infoFile.toPath())));
+			return new EmbeddedNode(root, infoFile, EmbeddedNodeInfo.fromJson(Files.readString(infoFile.toPath())));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -110,10 +110,10 @@ public class EmbeddedFullNode {
 		}
 	}
 
-	public void firstTimeSetup() {
+	public void firstTimeSetup(boolean nipopow, boolean utxoSetSnapshot) {
 		try {
 			// create .conf file
-			Files.writeString(nodeDirectory.toPath().resolve("ergo.conf"), Utils.resourceStringUTF8("/conf-template.conf"));
+			Files.writeString(nodeDirectory.toPath().resolve("ergo.conf"), Utils.makeNodeConfig(nipopow, utxoSetSnapshot));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

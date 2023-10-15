@@ -112,7 +112,7 @@ public class WalletCtrl implements Initializable {
 		Main.get().setWalletPageInternal(this);
 		format.setMaximumFractionDigits(4);
 		format.setRoundingMode(RoundingMode.FLOOR);
-		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
+		if (Main.programData().blockchainNodeKind.get().embedded) {
 			if (!Main.node.isRunning()) // a refresh due to language change will not stop the node (see SettingsCtrl), so check if it is running
 				Main.node.start();
 			bindToNodeProperties();
@@ -145,7 +145,7 @@ public class WalletCtrl implements Initializable {
 		tabs.put("transactions", Load.fxmlNodeAndController("/transactions.fxml"));
 		tabs.put("settings", Load.fxmlNodeAndController("/settings.fxml"));
 		tabs.put("about", Load.fxmlNodeAndController("/about.fxml"));
-		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
+		if (Main.programData().blockchainNodeKind.get().embedded) {
 			tabs.put("node", Load.fxmlNodeAndController("/node-overview.fxml"));
 		} else {
 			((Pane) node.getParent()).getChildren().remove(node);
@@ -362,7 +362,7 @@ public class WalletCtrl implements Initializable {
 		cancelRepeatingTasks();
 		Main.get().setWallet(null);
 		Main.get().displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
-		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE)
+		if (Main.programData().blockchainNodeKind.get().embedded)
 			Main.node.stop();
 	}
 

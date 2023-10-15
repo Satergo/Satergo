@@ -297,4 +297,28 @@ public class Utils {
 			case PORTABLE -> Path.of(System.getProperty("user.dir"));
 		};
 	}
+
+	public static String makeNodeConfig(boolean nipopow, boolean utxoSetSnapshot) {
+		String template = Utils.resourceStringUTF8("/conf-template.conf");
+		String[] lines = template.split("\n");
+		StringBuilder config = new StringBuilder();
+		boolean inNipopow = false, inUtxo = false;
+		for (int i = 0; i < lines.length; i++) {
+			String line = lines[i];
+			switch (line.strip()) {
+				case "// nipopow_start" -> inNipopow = true;
+				case "// nipopow_end" -> inNipopow = false;
+				case "// utxo_snapshot_start" -> inUtxo = true;
+				case "// utxo_snapshot_end" -> inUtxo = false;
+				default -> {
+					if ((inNipopow && nipopow) || (inUtxo && utxoSetSnapshot) || (!inNipopow && !inUtxo)) {
+						config.append(line);
+						if (i != lines.length - 1)
+							config.append("\n");
+					}
+				}
+			}
+		}
+		return config.toString();
+	}
 }

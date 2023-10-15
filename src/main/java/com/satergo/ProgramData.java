@@ -22,13 +22,19 @@ public class ProgramData {
 	private static final String DEFAULT_LANGUAGE = "en";
 	private final Path path;
 
-	public enum BlockchainNodeKind { EMBEDDED_FULL_NODE, REMOTE_NODE }
+	public enum NodeKind {
+		EMBEDDED_FULL_NODE(true), EMBEDDED_LIGHT_NODE(true), REMOTE_NODE(false);
+		public final boolean embedded;
+		NodeKind(boolean embedded) {
+			this.embedded = embedded;
+		}
+	}
 
 	private final long formatVersion = 1;
 
 	// data
-	public final SimpleEnumProperty<BlockchainNodeKind>
-			blockchainNodeKind = new SimpleEnumProperty<>(BlockchainNodeKind.class, null, "blockchainNodeKind", null);
+	public final SimpleEnumProperty<NodeKind>
+			blockchainNodeKind = new SimpleEnumProperty<>(NodeKind.class, null, "blockchainNodeKind", null);
 	public final SimpleStringProperty
 			nodeAddress = new SimpleStringProperty(null, "nodeAddress", null);
 	public final SimplePathProperty

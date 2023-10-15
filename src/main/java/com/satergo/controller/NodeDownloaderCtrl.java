@@ -1,7 +1,7 @@
 package com.satergo.controller;
 
 import com.satergo.*;
-import com.satergo.ergo.EmbeddedFullNode;
+import com.satergo.ergo.EmbeddedNode;
 import com.satergo.ergo.EmbeddedNodeInfo;
 import com.satergo.extra.DownloadTask;
 import com.satergo.extra.SimpleTask;
@@ -21,15 +21,32 @@ import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.util.ResourceBundle;
 
-public class FullNodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializable {
+public class NodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializable {
 	private Utils.NodeVersion version;
 
 	@FXML private Parent root;
+	@FXML private Label title;
 	@FXML private ProgressBar progressBar;
 	@FXML private Label nodeVersion;
 	@FXML private Button selectCustomDirectory, download, continueSetup;
 	@FXML private Label directoryPath;
 	@FXML private ComboBox<NetworkType> networkType;
+
+	private final boolean nipopow, utxoSetSnapshot;
+	private final String titleText;
+
+	public NodeDownloaderCtrl(String title, boolean nipopow, boolean utxoSetSnapshot) {
+		this.titleText = title;
+		this.nipopow = nipopow;
+		this.utxoSetSnapshot = utxoSetSnapshot;
+	}
+
+	/** full node */
+	public NodeDownloaderCtrl() {
+		this.nipopow = false;
+		this.utxoSetSnapshot = false;
+		this.titleText = null;
+	}
 
 	private File nodeDirectory;
 	private File nodeJar;
@@ -87,8 +104,8 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializ
 	@FXML
 	public void continueSetup(ActionEvent e) {
 		if (Main.node != null && Main.node.isRunning()) return;
-		Main.programData().blockchainNodeKind.set(ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE);
-		EmbeddedNodeInfo info = new EmbeddedNodeInfo(networkType.getValue(), nodeJar.getName(), EmbeddedFullNode.DEFAULT_LOG_LEVEL, "ergo.conf");
+		Main.programData().blockchainNodeKind.set(ProgramData.NodeKind.EMBEDDED_FULL_NODE);
+		EmbeddedNodeInfo info = new EmbeddedNodeInfo(networkType.getValue(), nodeJar.getName(), EmbeddedNode.DEFAULT_LOG_LEVEL, "ergo.conf");
 		Main.programData().embeddedNodeInfo.set(nodeDirectory.toPath().resolve(EmbeddedNodeInfo.FILE_NAME));
 		try {
 			Files.writeString(Main.programData().embeddedNodeInfo.get(), info.toJson());
@@ -97,12 +114,13 @@ public class FullNodeDownloaderCtrl implements SetupPage.WithoutExtra, Initializ
 		}
 		Main.node = Main.get().nodeFromInfo();
 		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
-		Main.node.firstTimeSetup();
+		Main.node.firstTimeSetup(nipopow, utxoSetSnapshot);
 		Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		if (titleText != null) title.setText(titleText);
 		networkType.getItems().addAll(NetworkType.values());
 		networkType.setValue(NetworkType.MAINNET);
 		networkType.valueProperty().bindBidirectional(Main.programData().nodeNetworkType);

@@ -2,7 +2,7 @@ package com.satergo;
 
 import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
-import com.satergo.ergo.EmbeddedFullNode;
+import com.satergo.ergo.EmbeddedNode;
 import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.ergo.ErgoURI;
 import com.satergo.extra.IncorrectPasswordException;
@@ -32,7 +32,7 @@ public class Main extends Application {
 	public static final String VERSION = "1.6.0";
 	public static final int VERSION_CODE = 8;
 
-	public static EmbeddedFullNode node;
+	public static EmbeddedNode node;
 	// from command line
 	static Path initWalletFile;
 	static ErgoURI initErgoURI;
@@ -128,10 +128,10 @@ public class Main extends Application {
 		primaryStage.show();
 
 		if (programData.blockchainNodeKind.get() == null ||
-				(programData.blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE && !Files.isRegularFile(programData.embeddedNodeInfo.get()))) {
+				(programData.blockchainNodeKind.get().embedded && !Files.isRegularFile(programData.embeddedNodeInfo.get()))) {
 			displayTopSetupPage(Load.<BlockchainSetupCtrl>fxmlController("/setup-page/blockchain.fxml"));
 		} else {
-			if (programData.blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
+			if (programData.blockchainNodeKind.get().embedded) {
 				node = nodeFromInfo();
 			}
 
@@ -187,8 +187,8 @@ public class Main extends Application {
 		System.exit(0);
 	}
 
-	public EmbeddedFullNode nodeFromInfo() {
-		return EmbeddedFullNode.fromLocalNodeInfo(programData.embeddedNodeInfo.get().toFile());
+	public EmbeddedNode nodeFromInfo() {
+		return EmbeddedNode.fromLocalNodeInfo(programData.embeddedNodeInfo.get().toFile());
 	}
 
 	private final LinkedList<Parent> pages = new LinkedList<>();

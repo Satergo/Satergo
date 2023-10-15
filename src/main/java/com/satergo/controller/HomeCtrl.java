@@ -181,7 +181,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 		Main.get().lastOneErgValue.addListener((obs, old, val) -> updateInfo(Main.get().getWallet().lastKnownBalance.get()));
 		updateInfo(Main.get().getWallet().lastKnownBalance.get());
 		info.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
-		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
+		if (Main.programData().blockchainNodeKind.get().embedded) {
 			Main.node.nodeBlocksLeft.addListener((observable, oldValue, newValue) -> {
 				send.setDisable((int) newValue > 150);
 				nodeSyncNotice.setVisible((int) newValue > 150);

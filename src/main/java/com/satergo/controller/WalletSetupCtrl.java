@@ -22,8 +22,11 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 	public void initialize(URL location, ResourceBundle resources) {
 		String langProperty;
 		String param2;
-		if (Main.programData().blockchainNodeKind.get() == ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE) {
+		if (Main.programData().blockchainNodeKind.get() == ProgramData.NodeKind.EMBEDDED_FULL_NODE) {
 			langProperty = "nodeConfigurationEmbedded_path";
+			param2 = Main.node.nodeDirectory.getAbsolutePath();
+		} else if (Main.programData().blockchainNodeKind.get() == ProgramData.NodeKind.EMBEDDED_LIGHT_NODE) {
+			langProperty = "nodeConfigurationEmbeddedLight_path";
 			param2 = Main.node.nodeDirectory.getAbsolutePath();
 		} else {
 			langProperty = "nodeConfigurationRemote_address";

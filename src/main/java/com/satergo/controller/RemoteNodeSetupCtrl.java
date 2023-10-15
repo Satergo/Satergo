@@ -31,7 +31,7 @@ public class RemoteNodeSetupCtrl implements SetupPage.WithExtra, Initializable {
 		if (address.getText().isBlank() || !address.getText().startsWith("http")) {
 			Utils.alert(Alert.AlertType.ERROR, Main.lang("remoteNodeAddressInvalid"));
 		} else {
-			Main.programData().blockchainNodeKind.set(ProgramData.BlockchainNodeKind.REMOTE_NODE);
+			Main.programData().blockchainNodeKind.set(ProgramData.NodeKind.REMOTE_NODE);
 			Main.programData().nodeNetworkType.set(networkType.getValue());
 			Main.programData().nodeAddress.set(address.getText());
 			Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));

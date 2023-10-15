@@ -3,7 +3,7 @@ package com.satergo.controller;
 import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.ProgramData;
-import com.satergo.ergo.EmbeddedFullNode;
+import com.satergo.ergo.EmbeddedNode;
 import com.satergo.ergo.EmbeddedNodeInfo;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
@@ -28,21 +28,24 @@ import java.util.List;
 public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 	@FXML private Parent root;
 
-	private File existingNodeConfFile;
-
 	@FXML
 	public void downloadAndSetup(ActionEvent e) {
-		Main.get().displaySetupPage(Load.<FullNodeDownloaderCtrl>fxmlController("/setup-page/full-node-download.fxml"));
+		Main.get().displaySetupPage(Load.<NodeDownloaderCtrl>fxmlController("/setup-page/node-download.fxml"));
+	}
+
+	@FXML
+	public void useExisting(ActionEvent e) {
+		useExisting(ProgramData.NodeKind.EMBEDDED_FULL_NODE);
 	}
 
 	@SuppressWarnings("unchecked")
-	@FXML
-	public void useExisting(ActionEvent e) {
+	public static void useExisting(ProgramData.NodeKind nodeKind) {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setTitle(Main.lang("nodeDirectory"));
 		File nodeDirectory = directoryChooser.showDialog(Main.get().stage());
 		if (nodeDirectory == null || !nodeDirectory.exists()) return;
 		File nodeJar;
+		File[] existingNodeConfFile = { null };
 		File nodeInfoFile = new File(nodeDirectory, EmbeddedNodeInfo.FILE_NAME);
 		// ask for required EmbeddedNodeInfo values if it doesn't exist
 		if (!nodeInfoFile.exists()) {
@@ -65,7 +68,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 			Main.get().applySameTheme(dialog.getScene());
 			dialog.setTitle(Main.lang("programName"));
 			dialog.setHeaderText(Main.lang("moreInformationNeededNode"));
-			Parent root = Load.fxml("/setup-page/need-more-info-existing-node.fxml");
+			Parent root = Load.fxml("/dialog/need-more-info-existing-node.fxml");
 			ComboBox<NetworkType> networkType = (ComboBox<NetworkType>) root.lookup("#networkType");
 			networkType.getItems().addAll(NetworkType.values());
 			networkType.setValue(NetworkType.MAINNET);
@@ -75,21 +78,21 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 				FileChooser fileChooser = new FileChooser();
 				fileChooser.setInitialDirectory(nodeDirectory);
 				fileChooser.setTitle(Main.lang("confFile"));
-				existingNodeConfFile = fileChooser.showOpenDialog(Main.get().stage());
-				if (existingNodeConfFile == null) return;
-				confFile.setText(existingNodeConfFile.getName());
+				existingNodeConfFile[0] = fileChooser.showOpenDialog(Main.get().stage());
+				if (existingNodeConfFile[0] == null) return;
+				confFile.setText(existingNodeConfFile[0].getName());
 			});
 			dialog.getDialogPane().setContent(root);
 			dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 			dialog.setResultConverter(type -> {
-				if (type == ButtonType.OK && existingNodeConfFile != null) {
-					return new Pair<>(networkType.getValue(), existingNodeConfFile);
+				if (type == ButtonType.OK && existingNodeConfFile[0] != null) {
+					return new Pair<>(networkType.getValue(), existingNodeConfFile[0]);
 				}
 				return null;
 			});
 			Pair<NetworkType, File> moreInfo = dialog.showForResult().orElse(null);
 			if (moreInfo == null) return;
-			EmbeddedNodeInfo info = new EmbeddedNodeInfo(moreInfo.getKey(), nodeJar.getName(), EmbeddedFullNode.DEFAULT_LOG_LEVEL, moreInfo.getValue().getName());
+			EmbeddedNodeInfo info = new EmbeddedNodeInfo(moreInfo.getKey(), nodeJar.getName(), EmbeddedNode.DEFAULT_LOG_LEVEL, moreInfo.getValue().getName());
 			try {
 				Path path = nodeDirectory.toPath().resolve(EmbeddedNodeInfo.FILE_NAME);
 				Main.programData().embeddedNodeInfo.set(path);
@@ -100,7 +103,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 		} else {
 			Main.programData().embeddedNodeInfo.set(nodeInfoFile.toPath());
 		}
-		Main.programData().blockchainNodeKind.set(ProgramData.BlockchainNodeKind.EMBEDDED_FULL_NODE);
+		Main.programData().blockchainNodeKind.set(nodeKind);
 		Main.node = Main.get().nodeFromInfo();
 		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
 		Main.programData().nodeNetworkType.set(Main.node.info.networkType());

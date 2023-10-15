@@ -1,7 +1,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.FullNodeDownloaderCtrl" stylesheets="@./welcome.css" fx:id="root">
-	<Label text="%fullNodeSetup" styleClass="welcome-text"/>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.NodeDownloaderCtrl" stylesheets="@./welcome.css" fx:id="root">
+	<Label fx:id="title" text="%fullNodeSetup" styleClass="welcome-text"/>
 
 	<HBox alignment="CENTER" spacing="10"><Button fx:id="selectCustomDirectory" text="%selectDirectory" onAction="#selectDirectory"/><Label fx:id="directoryPath" text="%currentNone"/></HBox>
 

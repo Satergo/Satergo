@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import com.satergo.extra.ToggleSwitch?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.*?>
+<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" hgap="200" vgap="10" stylesheets="@./light-node-config.css">
+	<padding><Insets topRightBottomLeft="20"/></padding>
+
+	<Label text="%nipopows" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+	<ToggleSwitch fx:id="nipopow" GridPane.columnIndex="1" GridPane.rowIndex="0" selected="true"/>
+
+	<Label text="%utxoSetSnapshot" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+	<ToggleSwitch fx:id="utxoSetSnapshot" GridPane.columnIndex="1" GridPane.rowIndex="1" selected="true"/>
+</GridPane>
