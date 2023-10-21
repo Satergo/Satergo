@@ -137,7 +137,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 		while ((result = framing.getReducedResult(acc)) == null) {
 			byte[] buffer = new byte[bytes.length];
 			read = hidDevice.read(buffer);
-			System.out.println(toStringUnsigned(buffer));
+			System.out.println("read (count " + read + ") = " + toStringUnsigned(buffer));
 			acc = framing.reduceResponse(acc, ByteBuffer.wrap(buffer));
 		}
 		System.arraycopy(result, 0, bytes, 0, result.length);
