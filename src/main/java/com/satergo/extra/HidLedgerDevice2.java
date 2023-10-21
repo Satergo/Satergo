@@ -18,6 +18,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 
 	public HidLedgerDevice2(HidDevice hidDevice) {
 		this.hidDevice = hidDevice;
+		System.out.println(channel);
 	}
 
 	@Override
@@ -78,7 +79,9 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			int dataLength = temp.dataLength,
 					sequence = temp.sequence;
 
-			if (Short.toUnsignedInt(chunk.getShort()) != channel) {
+			short sh = chunk.getShort();
+			System.out.println(sh + " -- " + Short.toUnsignedInt(sh) + " -- " + channel);
+			if (Short.toUnsignedInt(sh) != channel) {
 				throw new RuntimeException("Invalid channel");
 			}
 
