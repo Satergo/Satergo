@@ -9,9 +9,9 @@ plugins {
 apply plugin: SatergoBuildPlugin
 
 java {
-	sourceCompatibility = JavaLanguageVersion.of(20)
+	sourceCompatibility = JavaLanguageVersion.of(21)
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(20)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
