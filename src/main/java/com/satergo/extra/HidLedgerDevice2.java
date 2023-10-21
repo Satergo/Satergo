@@ -136,10 +136,21 @@ public class HidLedgerDevice2 implements LedgerDevice {
 		while ((result = framing.getReducedResult(acc)) == null) {
 			byte[] buffer = new byte[bytes.length];
 			read = hidDevice.getFeatureReport(buffer, (byte) 0);
+			System.out.println(toStringUnsigned(buffer));
 			acc = framing.reduceResponse(acc, ByteBuffer.wrap(buffer));
 		}
 		System.arraycopy(result, 0, bytes, 0, result.length);
 		return read;
 	}
 
+	private static String toStringUnsigned(byte[] bytes) {
+		StringBuilder s = new StringBuilder("[");
+		for (int i = 0; i < bytes.length; i++) {
+			s.append(bytes[i] & 0xFF);
+			if (i != bytes.length - 1)
+				s.append(", ");
+		}
+		s.append("]");
+		return s.toString();
+	}
 }
