@@ -5,6 +5,7 @@ import com.satergo.Utils;
 import com.satergo.Wallet;
 import com.satergo.WalletKey;
 import com.satergo.controller.ledger.ErgoLedgerAppkit;
+import com.satergo.extra.HidLedgerDevice2;
 import com.satergo.extra.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
@@ -66,7 +67,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		ledgerSelector.stop();
 		System.out.println("Stopped");
 		System.out.println("Instantiating device");
-		LedgerDevice ledgerDevice = new HidLedgerDevice(ledgerSelector.getDevice());
+		LedgerDevice ledgerDevice = new HidLedgerDevice2(ledgerSelector.getDevice());
 		System.out.println("Instantiated");
 		System.out.println("Opening device");
 		ledgerDevice.open();

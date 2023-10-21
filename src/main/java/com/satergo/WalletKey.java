@@ -4,6 +4,7 @@ import com.satergo.controller.ledger.AttestedBox;
 import com.satergo.controller.ledger.ErgoLedgerAppkit;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
+import com.satergo.extra.HidLedgerDevice2;
 import com.satergo.extra.LedgerPrompt;
 import com.satergo.extra.LedgerSelector;
 import com.satergo.jledger.protocol.ergo.ErgoNetworkType;
@@ -318,7 +319,7 @@ public abstract class WalletKey {
 			LedgerSelector ledgerSelector = new LedgerSelector() {
 				@Override
 				public void deviceFound(HidDevice hidDevice) {
-					ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice(hidDevice)));
+					ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice2(hidDevice)));
 					ergoLedgerAppkit.device.open();
 					Platform.runLater(() -> {
 						connectionPrompt.close();
