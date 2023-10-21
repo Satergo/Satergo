@@ -71,7 +71,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		System.out.println("Instantiated");
 		System.out.println("Opening device");
 		ledgerDevice.open();
-		ledgerSelector.getDevice().setNonBlocking(false);
+//		ledgerSelector.getDevice().setNonBlocking(false);
 		System.out.println("Opened");
 		System.out.println("Creating kit");
 		ErgoProtocol proto = new ErgoProtocol(ledgerDevice);
