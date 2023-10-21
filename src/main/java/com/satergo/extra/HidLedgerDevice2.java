@@ -80,10 +80,10 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			int dataLength = temp.dataLength,
 					sequence = temp.sequence;
 
-			short sh = chunk.getShort();
-			System.out.println(sh + " -- " + Short.toUnsignedInt(sh) + " -- " + channel);
-			if (Short.toUnsignedInt(sh) != channel) {
-//				throw new RuntimeException("Invalid channel");
+			//
+			//
+			if (Short.toUnsignedInt(chunk.getShort()) != channel) {
+				throw new RuntimeException("Invalid channel");
 			}
 
 			if (chunk.get() != TAG) {
@@ -94,6 +94,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 				throw new RuntimeException("Invalid sequence");
 			}
 
+			System.out.println("pos: " + chunk.position() + ", capacity: " + chunk.capacity());
 			if (acc == null) {
 				dataLength = Short.toUnsignedInt(chunk.getShort());
 			}
