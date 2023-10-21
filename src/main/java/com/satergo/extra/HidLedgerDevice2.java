@@ -74,6 +74,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			public static final ResponseAcc INITIAL = new ResponseAcc(new byte[0], 0, 0);
 		}
 		public ResponseAcc reduceResponse(ResponseAcc acc, ByteBuffer chunk) {
+			System.out.println(chunk + " = " + Arrays.toString(chunk.array()));
 			ResponseAcc temp = acc == null ? ResponseAcc.INITIAL : acc;
 			byte[] data = temp.data;
 			int dataLength = temp.dataLength,
@@ -82,7 +83,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			short sh = chunk.getShort();
 			System.out.println(sh + " -- " + Short.toUnsignedInt(sh) + " -- " + channel);
 			if (Short.toUnsignedInt(sh) != channel) {
-				throw new RuntimeException("Invalid channel");
+//				throw new RuntimeException("Invalid channel");
 			}
 
 			if (chunk.get() != TAG) {
