@@ -68,6 +68,11 @@ dependencies {
 	// ledger
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 	implementation 'org.hid4java:hid4java:0.7.0'
+	implementation 'net.codecrete.usb:java-does-usb:0.6.1'
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs += ['--enable-preview']
 }
 
 jar {
@@ -97,7 +102,8 @@ satergoRuntime {
 		name = "Satergo"
 		mainClass = application.mainClass.get()
 		defaultJvmOpts = ['-Dsatergo.launcher={APP_HOME}/bin/Satergo',
-						  '-Dsatergo.platform=' + platform ]
+						  '-Dsatergo.platform=' + platform,
+						  '--enable-preview']
 		windowsConsole = false
 	}
 	if (buildInstaller)
