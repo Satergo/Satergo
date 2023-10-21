@@ -122,7 +122,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	public int write(byte[] bytes) {
 		List<byte[]> blocks = new HidFraming(channel, packetSize).makeBlocks(bytes);
 		for (byte[] block : blocks) {
-			hidDevice.sendFeatureReport(block, (byte) 0);
+			hidDevice.write(block, block.length, (byte) 0);
 		}
 		return hidDevice.write(bytes, bytes.length, (byte) 0);
 	}
