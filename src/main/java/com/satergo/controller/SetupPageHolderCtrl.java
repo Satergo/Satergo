@@ -41,6 +41,7 @@ public class SetupPageHolderCtrl implements Initializable {
 		language.setValue(Main.get().translations.getEntry(Main.programData().language.get()));
 		language.valueProperty().addListener((observable, oldValue, newValue) -> {
 			Main.get().setLanguage(newValue);
+			left.setText(Main.lang("back"));
 			content.getChildren().set(0, configureContent(page.recreate()));
 		});
 		content.getChildren().add(configureContent(page.content()));
