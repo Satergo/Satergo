@@ -18,6 +18,7 @@
 						<CheckBox onAction="#changeAutoUpdate" fx:id="autoUpdateOption" text="%autoUpdateNode"/>
 					</content>
 				</CustomMenuItem>
+				<MenuItem fx:id="soloMiningMenuItem" onAction="#setupSoloMiningPool" text="%setupSoloMiningPool"/>
 			</items>
 		</ContextMenu>
 	</fx:define>

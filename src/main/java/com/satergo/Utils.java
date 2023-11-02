@@ -1,5 +1,6 @@
 package com.satergo;
 
+import com.google.gson.*;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
@@ -21,6 +22,7 @@ import org.ergoplatform.appkit.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URL;
@@ -320,5 +322,14 @@ public class Utils {
 			}
 		}
 		return config.toString();
+	}
+
+	public static final class AddressCnv implements JsonSerializer<Address>, JsonDeserializer<Address> {
+		@Override public JsonElement serialize(Address src, Type typeOfSrc, JsonSerializationContext context) {
+			return new JsonPrimitive(src.toString());
+		}
+		@Override public Address deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+			return Address.create(json.getAsString());
+		}
 	}
 }

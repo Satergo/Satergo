@@ -38,7 +38,7 @@ public class ErgoPay {
 
 
 	private static final Gson GSON = new GsonBuilder()
-			.registerTypeAdapter(Address.class, new AddressCnv())
+			.registerTypeAdapter(Address.class, new Utils.AddressCnv())
 			.registerTypeAdapter(ReducedTransaction.class, new ReducedTransactionDeser())
 			.registerTypeHierarchyAdapter(byte[].class, new ByteArrayURLBase64Cnv())
 			.create();
@@ -70,14 +70,6 @@ public class ErgoPay {
 		}
 	}
 
-	private static final class AddressCnv implements JsonSerializer<Address>, JsonDeserializer<Address> {
-		@Override public JsonElement serialize(Address src, Type typeOfSrc, JsonSerializationContext context) {
-			return new JsonPrimitive(src.toString());
-		}
-		@Override public Address deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-			return Address.create(json.getAsString());
-		}
-	}
 	private static class ByteArrayURLBase64Cnv implements JsonSerializer<byte[]>, JsonDeserializer<byte[]> {
 		@Override public JsonElement serialize(byte[] src, Type typeOfSrc, JsonSerializationContext context) {
 			return new JsonPrimitive(Base64.getUrlEncoder().encodeToString(src));

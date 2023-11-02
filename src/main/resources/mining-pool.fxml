@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.MiningPoolCtrl">
+	<padding><Insets topRightBottomLeft="20"/></padding>
+	<columnConstraints>
+		<ColumnConstraints hgrow="ALWAYS"/>
+		<ColumnConstraints halignment="RIGHT"/>
+	</columnConstraints>
+
+	<Label text="Port:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+	<Label fx:id="port" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+	<Label text="Address:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+	<Label fx:id="address" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+	<Button fx:id="changeAddress" onAction="#changeAddress" text="Change address (node restart required)" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+</GridPane>

@@ -3,6 +3,7 @@ package com.satergo;
 import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
 import com.satergo.ergo.EmbeddedNode;
+import com.satergo.ergo.ExternalPrograms;
 import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.ergo.ErgoURI;
 import com.satergo.extra.IncorrectPasswordException;
@@ -18,6 +19,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.util.Pair;
+import scorex.util.encode.Base58;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -33,6 +35,7 @@ public class Main extends Application {
 	public static final int VERSION_CODE = 8;
 
 	public static EmbeddedNode node;
+	public static ExternalPrograms extPrograms = new ExternalPrograms();
 	// from command line
 	static Path initWalletFile;
 	static ErgoURI initErgoURI;
@@ -175,6 +178,7 @@ public class Main extends Application {
 	public void stop() {
 		if (node != null && node.isRunning())
 			node.stop();
+		extPrograms.shutdownAll(true);
 		if (walletPage != null) {
 			walletPage.cancelRepeatingTasks();
 		}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.*?>
+<fx:root type="GridPane" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" hgap="8" vgap="6">
+
+	<Label text="%portC" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+	<TextField fx:id="port" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+	<Label text="%payoutAddressC" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+	<TextField fx:id="address" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+</fx:root>

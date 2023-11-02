@@ -38,6 +38,10 @@
 	-fx-background-color: -sat-background-color;
 }
 
+.label.strikethrough .text {
+	-fx-strikethrough: true;
+}
+
 /* INPUT */
 
 .text-area .content {

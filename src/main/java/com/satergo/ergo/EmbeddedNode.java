@@ -16,6 +16,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import org.ergoplatform.appkit.Address;
 import org.ergoplatform.appkit.NetworkType;
 
 import java.io.*;
@@ -29,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -36,7 +38,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 
-public class EmbeddedNode {
+public class EmbeddedNode implements ExternalProgram {
 
 	public enum LogLevel { ERROR, WARN, INFO, DEBUG, TRACE, OFF }
 
@@ -119,17 +121,10 @@ public class EmbeddedNode {
 		}
 	}
 
-	private static Path findJavaBinary() {
-		Path javaInstallation = Path.of(System.getProperty("java.home"));
-		Path binDirectory = javaInstallation.resolve("bin");
-		if (Files.exists(binDirectory.resolve("java.exe")))
-			return binDirectory.resolve("java.exe");
-		return binDirectory.resolve("java");
-	}
-
 	private void scheduleRepeatingTasks() {
 		scheduler = Executors.newScheduledThreadPool(0);
 		scheduler.scheduleAtFixedRate(() -> {
+//			System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 			ErgoNodeAccess.Status status = nodeAccess.getStatus();
 			int networkHeight = status.networkHeight() == 0
 					? ErgoInterface.getNetworkBlockHeight(info.networkType())
@@ -143,6 +138,14 @@ public class EmbeddedNode {
 				nodeHeaderSyncProgress.set((double) status.headerHeight() / (double) networkHeight);
 				headersSynced.set(Math.abs(status.networkHeight() - status.headerHeight()) <= 5);
 			});
+			if (Main.extPrograms.miningPool != null && !Main.extPrograms.miningPool.isRunning()) {
+				try {
+					Main.extPrograms.miningPool.start();
+				} catch (IOException e) {
+					e.printStackTrace();
+					Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), e);
+				}
+			}
 		}, 10, 2, TimeUnit.SECONDS);
 		scheduler.scheduleAtFixedRate(this::checkForUpdate, 5, Duration.ofHours(4).toSeconds(), TimeUnit.SECONDS);
 	}
@@ -198,7 +201,11 @@ public class EmbeddedNode {
 						throw new RuntimeException(ex);
 					}
 					Main.node = Main.get().nodeFromInfo();
-					Main.node.start();
+					try {
+						Main.node.start();
+					} catch (IOException ex) {
+						throw new RuntimeException(ex);
+					}
 					if (nodeTab != null) {
 						nodeTab.bindToProperties();
 						nodeTab.transferLog();
@@ -241,31 +248,28 @@ public class EmbeddedNode {
 		}
 	}
 
-	public void start() {
+	@Override
+	public void start() throws IOException {
 		if (isRunning()) throw new IllegalStateException("this node is already running");
-		try {
-			Optional<Object> prop = getConfValue("scorex.logging.level");
-			if (prop.isEmpty() || !prop.get().equals(logLevel().toString())) {
-				setConfValue("scorex.logging.level", logLevel().toString());
-			}
-			String[] command = new String[6 + info.vmArguments().size()];
-			command[0] = findJavaBinary().toString();
-			int i = 1;
-			for (; (i - 1) < info.vmArguments().size(); i++) {
-				command[i] = info.vmArguments().get(i - 1);
-			}
-			command[i++] = "-jar";
-			command[i++] = nodeJar.getAbsolutePath();
-			command[i++] = "--" + info.networkType().toString().toLowerCase(Locale.ROOT);
-			command[i++] = "-c";
-			command[i] = confFile.getName();
-			System.out.println("running node with command: " + Arrays.toString(command));
-			process = new ProcessBuilder().command(command).directory(nodeDirectory).start();
-			scheduleRepeatingTasks();
-			startedTime = System.currentTimeMillis();
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
+		Optional<Object> prop = getConfValue("scorex.logging.level");
+		if (prop.isEmpty() || !prop.get().equals(logLevel().toString())) {
+			setConfValue("scorex.logging.level", logLevel().toString());
 		}
+		String[] command = new String[6 + info.vmArguments().size()];
+		command[0] = ExternalProgram.findJavaBinary().toString();
+		int i = 1;
+		for (; (i - 1) < info.vmArguments().size(); i++) {
+			command[i] = info.vmArguments().get(i - 1);
+		}
+		command[i++] = "-jar";
+		command[i++] = nodeJar.getAbsolutePath();
+		command[i++] = "--" + info.networkType().toString().toLowerCase(Locale.ROOT);
+		command[i++] = "-c";
+		command[i] = confFile.getName();
+		System.out.println("running node with command: " + Arrays.toString(command));
+		process = new ProcessBuilder().command(command).directory(nodeDirectory).start();
+		scheduleRepeatingTasks();
+		startedTime = System.currentTimeMillis();
 	}
 
 	public Optional<Object> getConfValue(String propertyPath) {
@@ -283,27 +287,38 @@ public class EmbeddedNode {
 						.setJson(false)));
 	}
 
+	public void configureMining(Address payoutAddress, boolean externalMiner) throws IOException {
+		setConfValue("ergo.node.mining", true);
+		setConfValue("ergo.node.useExternalMiner", externalMiner);
+		setConfValue("ergo.node.miningPubKeyHex", HexFormat.of().formatHex(payoutAddress.asP2PK().contentBytes()));
+	}
+
 	public void writeInfo() throws IOException {
 		Files.writeString(infoFile.toPath(), info.toJson());
 	}
 
+	@Override
 	public InputStream standardOutput() {
 		return process.getInputStream();
 	}
 
+	@Override
 	public boolean isRunning() {
 		return process != null && process.isAlive();
 	}
 
+	@Override
 	public void stop() {
 		process.destroy();
 		scheduler.shutdown();
 	}
-	
+
+	@Override
 	public void waitForExit() {
 		process.onExit().join();
 	}
 
+	@Override
 	public long startedTime() {
 		return startedTime;
 	}

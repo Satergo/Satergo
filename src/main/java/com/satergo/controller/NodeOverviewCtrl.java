@@ -1,11 +1,15 @@
 package com.satergo.controller;
 
+import com.google.gson.GsonBuilder;
 import com.satergo.Icon;
 import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.EmbeddedNode;
+import com.satergo.ergo.EmbeddedNodeInfo;
 import com.satergo.ergo.ErgoNodeAccess;
+import com.satergo.ergo.MiningPoolInfo;
+import com.satergo.extra.DownloadTask;
 import com.satergo.extra.VMArguments;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
@@ -23,13 +27,17 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.util.Pair;
+import org.ergoplatform.appkit.Address;
 import scorex.crypto.hash.Blake2b256;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
+import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static com.satergo.Utils.HTTP;
@@ -51,6 +59,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 
 	@FXML private ContextMenu extra;
 	@FXML private Menu logLevelMenu;
+	@FXML private MenuItem soloMiningMenuItem;
 
 	public void transferLog() {
 		new Thread(() -> {
@@ -72,7 +81,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	}
 
 	@FXML
-	public void restart(ActionEvent e) {
+	public void restart(ActionEvent e) throws IOException {
 		Main.node.stop();
 		Main.node.waitForExit();
 		appendText("\n-------- " + Main.lang("nodeWasRestartedLog") + " --------\n\n");
@@ -126,6 +135,8 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		log.setWrapText(true);
 		bindToProperties();
 		autoUpdateOption.setSelected(Main.node.info.autoUpdate());
+		if (Main.node.info.miningPoolInfo() != null)
+			extra.getItems().remove(soloMiningMenuItem);
 	}
 
 	public void bindToProperties() {
@@ -369,6 +380,82 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 				throw new RuntimeException(ex);
 			}
 		}
+	}
+
+	private static final URI stratum4ergoDownload = URI.create("https://github.com/Satergo/stratum4ergo/releases/download/v0.0.1/stratum4ergo-0.0.1-all.jar");
+	@FXML
+	public void setupSoloMiningPool(ActionEvent e) throws IOException {
+		SatPromptDialog<Pair<Integer, Address>> dialog = new SatPromptDialog<>();
+		dialog.initOwner(Main.get().stage());
+		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+		Main.get().applySameTheme(dialog.getScene());
+		dialog.setTitle(Main.lang("setupSoloMiningPool"));
+		dialog.setHeaderText(Main.lang("setupSoloMiningPool"));
+		var content = new GridPane() {
+			@FXML TextField port, address;
+			{ Load.thisFxml(this, "/dialog/solo-mining-pool-info.fxml"); }
+		};
+		dialog.getDialogPane().setContent(content);
+		dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+		dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+		Runnable checkFieldValidity = () -> {
+			try {
+				Integer.parseInt(content.port.getText());
+				Address.create(content.address.getText());
+				dialog.getDialogPane().lookupButton(ButtonType.OK)
+						.setDisable(false);
+			} catch (Exception ex) {
+				dialog.getDialogPane().lookupButton(ButtonType.OK)
+						.setDisable(true);
+			}
+		};
+		content.port.textProperty().addListener((observable, oldValue, newValue) -> checkFieldValidity.run());
+		content.address.textProperty().addListener((observable, oldValue, newValue) -> checkFieldValidity.run());
+		dialog.setResultConverter(t -> {
+			if (t == ButtonType.OK) {
+				return new Pair<>(Integer.parseInt(content.port.getText()), Address.create(content.address.getText()));
+			} return null;
+		});
+		var v = dialog.showForResult().orElse(null);
+		if (v == null) return;
+		String fileName = stratum4ergoDownload.getPath().substring(stratum4ergoDownload.getPath().lastIndexOf('/') + 1);
+		Path outPath = Main.node.nodeDirectory.toPath().resolve(fileName);
+		Path infoPath = Main.node.nodeDirectory.toPath().resolve("mining-pool-info.json");
+		MiningPoolInfo info = new MiningPoolInfo(fileName, v.getKey(), v.getValue());
+		SatVoidDialog progressDialog = new SatVoidDialog();
+		progressDialog.initOwner(Main.get().stage());
+		progressDialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+		Main.get().applySameTheme(progressDialog.getScene());
+		ProgressBar progressBar = new ProgressBar();
+		progressDialog.getDialogPane().setContent(progressBar);
+		DownloadTask task = new DownloadTask(
+				HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build(),
+				Utils.httpRequestBuilder().uri(stratum4ergoDownload).build(),
+				Files.newOutputStream(outPath));
+		progressBar.progressProperty().bind(task.progressProperty());
+		progressDialog.show();
+		task.setOnSucceeded(event -> {
+			progressDialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+			progressDialog.close();
+			EmbeddedNodeInfo i = Main.node.info;
+			Main.node.info = new EmbeddedNodeInfo(i.networkType(), i.jarFileName(), i.logLevel(), i.confFileName(), i.autoUpdate(), i.vmArguments(), infoPath.getFileName());
+			try {
+				// create mining-pool-info.json
+				Files.writeString(infoPath, new GsonBuilder().registerTypeAdapter(Address.class, new Utils.AddressCnv()).create().toJson(info));
+				// update the node-info.json to include the mining-pool-info.json
+				Main.node.writeInfo();
+				// update the node's ergo.conf to enable mining and specify address
+				Main.node.configureMining(info.address(), true);
+				// restart node
+				restart(null);
+				// add the mining pool tab
+				Main.get().getWalletPage().addMiningPoolTab(info);
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
+		});
+		new Thread(task).start();
+
 	}
 
 	private static String toSocketAddress(String host, int port) {

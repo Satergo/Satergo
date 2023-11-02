@@ -33,6 +33,7 @@
 						<ToggleButton fx:id="transactions" text="%transactions" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="about" text="%about" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="node" text="%node" toggleGroup="$group" maxWidth="Infinity"/>
+						<ToggleButton fx:id="miningPool" text="%soloMiningPool" managed="${miningPool.visible}" focusTraversable="${miningPool.visible}" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="settings" text="%settings" toggleGroup="$group" maxWidth="Infinity"/>
 					</VBox>
 				</VBox>
@@ -41,7 +42,7 @@
 				<VBox spacing="6" alignment="TOP_CENTER" pickOnBounds="false">
 					<Label fx:id="networkStatusLabel" text="%networkStatus" managed="${networkStatusLabel.visible}"/>
 					<ProgressBar fx:id="networkProgress" progress="1" managed="${networkProgress.visible}"/>
-					<Label fx:id="thingLeft" alignment="TOP_CENTER" opacity="0.6"/>
+					<Label fx:id="thingLeft" alignment="TOP_CENTER" textAlignment="CENTER" opacity="0.6" wrapText="true"/>
 				</VBox>
 			</bottom>
 		</BorderPane>

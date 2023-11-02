@@ -1,7 +1,10 @@
 package com.satergo.controller;
 
+import com.google.gson.GsonBuilder;
 import com.satergo.*;
 import com.satergo.ergo.Balance;
+import com.satergo.ergo.MiningPool;
+import com.satergo.ergo.MiningPoolInfo;
 import com.satergo.ergopay.ErgoPay;
 import com.satergo.ergopay.ErgoPayPrompt;
 import com.satergo.ergopay.ErgoPayURI;
@@ -37,6 +40,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.ConnectException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.ResourceBundle;
@@ -80,7 +84,7 @@ public class WalletCtrl implements Initializable {
 	@FXML private Label thingLeft;
 	@FXML private ToggleGroup group;
 
-	@FXML private ToggleButton home, account, transactions, node, settings;
+	@FXML private ToggleButton home, account, transactions, node, miningPool, settings;
 
 	private final HashMap<String, Pair<Pane, WalletTab>> tabs = new HashMap<>();
 
@@ -107,14 +111,32 @@ public class WalletCtrl implements Initializable {
 		}
 	}
 
+	void addMiningPoolTab(MiningPoolInfo poolInfo) throws IOException {
+		if (Main.extPrograms.miningPool == null || poolInfo != null) {
+			MiningPoolInfo info = poolInfo == null
+					? new GsonBuilder().registerTypeAdapter(Address.class, new Utils.AddressCnv()).create().fromJson(
+					Files.newBufferedReader(Main.node.nodeDirectory.toPath().resolve(Main.node.info.miningPoolInfo())), MiningPoolInfo.class)
+					: poolInfo;
+			Main.extPrograms.miningPool = new MiningPool(Main.node.nodeDirectory, info);
+		}
+		MiningPoolCtrl ctrl = new MiningPoolCtrl(Main.extPrograms.miningPool);
+		tabs.put("miningPool", new Pair<>((Pane) Load.fxmlControllerFactory("/mining-pool.fxml", ctrl), ctrl));
+	}
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		Main.get().setWalletPageInternal(this);
 		format.setMaximumFractionDigits(4);
 		format.setRoundingMode(RoundingMode.FLOOR);
 		if (Main.programData().blockchainNodeKind.get().embedded) {
-			if (!Main.node.isRunning()) // a refresh due to language change will not stop the node (see SettingsCtrl), so check if it is running
-				Main.node.start();
+			// a refresh due to language change will not stop the node (see SettingsCtrl), so check if it is already running
+			if (!Main.node.isRunning()) {
+				try {
+					Main.node.start();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
 			bindToNodeProperties();
 		} else {
 			networkStatusLabel.setVisible(false);
@@ -147,9 +169,19 @@ public class WalletCtrl implements Initializable {
 		tabs.put("about", Load.fxmlNodeAndController("/about.fxml"));
 		if (Main.programData().blockchainNodeKind.get().embedded) {
 			tabs.put("node", Load.fxmlNodeAndController("/node-overview.fxml"));
+			if (Main.node.info.miningPoolInfo() != null) {
+				try {
+					addMiningPoolTab(null);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			} else {
+				miningPool.setVisible(false);
+			}
 		} else {
 			((Pane) node.getParent()).getChildren().remove(node);
-			group.getToggles().remove(node);
+			((Pane) miningPool.getParent()).getChildren().remove(miningPool);
+			group.getToggles().removeAll(node, miningPool);
 		}
 		// I don't know how to bind to controller properties from FXML, it does not work
 		connectionWarning.visibleProperty().bind(offlineMode);
@@ -364,6 +396,7 @@ public class WalletCtrl implements Initializable {
 		Main.get().displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 		if (Main.programData().blockchainNodeKind.get().embedded)
 			Main.node.stop();
+		Main.extPrograms.shutdownAll(false);
 	}
 
 //	@FXML

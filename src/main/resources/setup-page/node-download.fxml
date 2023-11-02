@@ -11,7 +11,7 @@
 		<ProgressBar fx:id="progressBar" progress="0" prefWidth="100"/>
 	</HBox>
 
-	<HBox alignment="CENTER" visible="false" managed="false"><Label text="%networkTypeC"/><Label text=" "/><ComboBox fx:id="networkType"/></HBox>
+	<HBox alignment="CENTER"><Label text="%networkTypeC"/><Label text=" "/><ComboBox fx:id="networkType"/></HBox>
 
 	<Region prefHeight="120"/>
 
