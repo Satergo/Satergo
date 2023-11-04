@@ -159,10 +159,12 @@ public class HidLedgerDevice2 implements LedgerDevice {
 				break;
 			length += responseAcc.dataLength;
 			packets.add(responseAcc);
-			first = false;
+			System.out.println("got a single-packet " + responseAcc.dataLength);
 		}
 		byte[] full = new byte[length];
+		System.out.println("full length = " + length);
 		for (HidFraming.ResponseAcc packet : packets) {
+			System.out.println("packet sequence = " + packet.sequence + ", data length = " + packet.data.length + " (" + packet.dataLength + "). writing to " + ((packet.sequence - 1) * PACKET_SIZE));
 			System.arraycopy(packet.data, 0, full, (packet.sequence - 1) * PACKET_SIZE, packet.dataLength);
 		}
 		return full;
