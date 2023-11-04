@@ -130,17 +130,17 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	private HidFraming.ResponseAcc readSinglePacket() {
 		HidFraming framing = new HidFraming(channel, PACKET_SIZE);
 		HidFraming.ResponseAcc acc = null;
-		hidDevice.setNonBlocking(true);
+//		hidDevice.setNonBlocking(true);
 		while (framing.getReducedResult(acc) == null) {
 			byte[] buffer = new byte[PACKET_SIZE];
 			System.out.println("reading " + PACKET_SIZE + " bytes");
-			int bytesRead = hidDevice.read(buffer);
+			int bytesRead = hidDevice.read(buffer, 1000);
 			System.out.println("got " + bytesRead + " bytes");
 			if (bytesRead == 0) break;
 			acc = framing.reduceResponse(acc, ByteBuffer.wrap(buffer));
-			System.out.println("acc = " + acc);
+			System.out.println("acc = " + acc + ", acc.data.length = " + acc.data.length);
 		}
-		hidDevice.setNonBlocking(false);
+//		hidDevice.setNonBlocking(false);
 		return acc;
 	}
 
