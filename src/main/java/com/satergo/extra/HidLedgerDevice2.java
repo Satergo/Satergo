@@ -127,14 +127,18 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	}
 
 	/** Reads a packet with a maximum size of 64 bytes */
-	private HidFraming.ResponseAcc readSinglePacket() {
+	private HidFraming.ResponseAcc readSinglePacket(boolean isFirst) {
 		HidFraming framing = new HidFraming(channel, PACKET_SIZE);
 		HidFraming.ResponseAcc acc = null;
 //		hidDevice.setNonBlocking(true);
 		while (framing.getReducedResult(acc) == null) {
 			byte[] buffer = new byte[PACKET_SIZE];
 			System.out.println("reading " + PACKET_SIZE + " bytes");
-			int bytesRead = hidDevice.read(buffer, 1000);
+			// if this is the first packet of a complete response, we need to wait for it to be received
+			// this can take time because the user might have to confirm an action
+			// but if it isn't the first packet of the response, we cannot wait because if the response
+			// has ended then it would wait forever
+			int bytesRead = isFirst ? hidDevice.read(buffer) : hidDevice.read(buffer, 1000);
 			System.out.println("got " + bytesRead + " bytes");
 			if (bytesRead == 0) break;
 			acc = framing.reduceResponse(acc, ByteBuffer.wrap(buffer));
@@ -148,12 +152,14 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	private byte[] readResponse() {
 		ArrayList<HidFraming.ResponseAcc> packets = new ArrayList<>();
 		int length = 0;
+		boolean first = true;
 		while (true) {
-			HidFraming.ResponseAcc responseAcc = readSinglePacket();
+			HidFraming.ResponseAcc responseAcc = readSinglePacket(first);
 			if (responseAcc == null)
 				break;
 			length += responseAcc.dataLength;
 			packets.add(responseAcc);
+			first = false;
 		}
 		byte[] full = new byte[length];
 		for (HidFraming.ResponseAcc packet : packets) {
