@@ -10,7 +10,6 @@ import com.satergo.extra.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
-import com.satergo.jledger.transport.hid.HidLedgerDevice;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
