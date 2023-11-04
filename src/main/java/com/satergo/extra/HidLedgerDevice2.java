@@ -97,7 +97,8 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			}
 
 			sequence++;
-			byte[] chunkData = chunk.slice(acc != null ? 5 : 7, chunk.capacity()).array();
+			byte[] chunkData = new byte[chunk.remaining()];
+			chunk.get(chunkData);
 			data = concat(data, chunkData);
 
 			if (data.length > dataLength) {
