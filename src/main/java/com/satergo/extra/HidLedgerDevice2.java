@@ -160,6 +160,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			length += responseAcc.dataLength;
 			packets.add(responseAcc);
 			System.out.println("got a single-packet " + responseAcc.dataLength);
+			first = false;
 		}
 		byte[] full = new byte[length];
 		System.out.println("full length = " + length);
