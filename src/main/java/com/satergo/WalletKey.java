@@ -10,7 +10,6 @@ import com.satergo.extra.LedgerSelector;
 import com.satergo.jledger.protocol.ergo.ErgoNetworkType;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.protocol.ergo.ErgoResponse;
-import com.satergo.jledger.transport.hid.HidLedgerDevice;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
