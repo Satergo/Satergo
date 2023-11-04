@@ -151,24 +151,36 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	/** Reads all available packets into one response */
 	private byte[] readResponse() {
 		ArrayList<HidFraming.ResponseAcc> packets = new ArrayList<>();
-		int length = 0;
+//		int length = 0;
+//		// each apdu can only contain 255 bytes of data so this is probably too high
+//		// but the content of each packet can vary so there is no exact length to know beforehand
+//		byte[] buffer = new byte[1000];
+//		hidDevice.read(buffer);
+//		int index = 0;
+//		while (true) {
+//			ByteBuffer chunk = ByteBuffer.wrap(buffer, index * PACKET_SIZE, Math.min((index + 1) * PACKET_SIZE, buffer.length));
+//
+//			index++;
+//		}
 		boolean first = true;
+		HidFraming.ResponseAcc last = null;
 		while (true) {
 			HidFraming.ResponseAcc responseAcc = readSinglePacket(first);
 			if (responseAcc == null)
 				break;
-			length += responseAcc.dataLength;
+//			length += responseAcc.dataLength;
 			packets.add(responseAcc);
 			System.out.println("got a single-packet " + responseAcc.dataLength);
 			first = false;
+			last = responseAcc;
 		}
-		byte[] full = new byte[length];
-		System.out.println("full length = " + length);
-		for (HidFraming.ResponseAcc packet : packets) {
-			System.out.println("packet sequence = " + packet.sequence + ", data length = " + packet.data.length + " (" + packet.dataLength + "). writing to " + ((packet.sequence - 1) * PACKET_SIZE));
-			System.arraycopy(packet.data, 0, full, (packet.sequence - 1) * PACKET_SIZE, packet.dataLength);
-		}
-		return full;
+//		byte[] full = new byte[length];
+//		System.out.println("full length = " + length);
+//		for (HidFraming.ResponseAcc packet : packets) {
+//			System.out.println("packet sequence = " + packet.sequence + ", data length = " + packet.data.length + " (" + packet.dataLength + "). writing to " + ((packet.sequence - 1) * PACKET_SIZE));
+//			System.arraycopy(packet.data, 0, full, (packet.sequence - 1) * PACKET_SIZE, packet.dataLength);
+//		}
+		return last == null ? null : last.data;
 	}
 
 	@Override
