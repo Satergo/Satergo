@@ -1,11 +1,13 @@
 package com.satergo.extra.hw.ledger;
 
+import com.satergo.Main;
 import com.satergo.controller.ledger.ErgoLedgerAppkit;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import javafx.event.ActionEvent;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import org.ergoplatform.wallet.secrets.ExtendedPublicKey;
 
@@ -18,12 +20,12 @@ public sealed interface LedgerPrompt {
 
 	final class Connection extends SatVoidDialog implements LedgerPrompt {
 		public Connection(int productId) {
-			setHeaderText("Please connect a " + LedgerSelector.getModelName(productId) + " device.");
+			setHeaderText(Main.lang("ledger.pleaseConnectA_deviceName_device").formatted(LedgerSelector.getModelName(productId)));
 		}
 	}
 
 	final class ExtPubKey extends SatPromptDialog<ExtendedPublicKey> implements LedgerPrompt {
-		private final ButtonType askAgain = new ButtonType("Ask again");
+		private final ButtonType askAgain = new ButtonType(Main.lang("ledger.askAgain"), ButtonBar.ButtonData.BACK_PREVIOUS);
 		private final ErgoLedgerAppkit ergoLedgerAppkit;
 
 		public ExtPubKey(ErgoLedgerAppkit ergoLedgerAppkit) {
@@ -38,7 +40,7 @@ public sealed interface LedgerPrompt {
 					.onFail(t -> {
 						if (t instanceof ErgoLedgerException e) {
 							if (e.getSW() == ErgoLedgerException.SW_DENY) {
-								setHeaderText("You denied the request");
+								setHeaderText(Main.lang("ledger.youDeniedTheRequest"));
 								getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CANCEL);
 								getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
 									request();
@@ -48,7 +50,7 @@ public sealed interface LedgerPrompt {
 									throw e;
 								});
 							} else {
-								setHeaderText("Unknown error (" + t.getMessage() + ")");
+								setHeaderText(Main.lang("ledger.unknownError").formatted(t.getMessage()));
 								setResult(null);
 								throw e;
 							}
@@ -60,7 +62,7 @@ public sealed interface LedgerPrompt {
 	}
 
 	final class Signing extends SatPromptDialog<byte[]> implements LedgerPrompt {
-		private final ButtonType askAgain = new ButtonType("Ask again");
+		private final ButtonType askAgain = new ButtonType(Main.lang("ledger.askAgain"), ButtonBar.ButtonData.BACK_PREVIOUS);
 
 		public Signing(Callable<byte[]> request) {
 			setHeaderText("Please accept the request");
@@ -73,7 +75,7 @@ public sealed interface LedgerPrompt {
 					.onFail(t -> {
 						if (t instanceof ErgoLedgerException e) {
 							if (e.getSW() == ErgoLedgerException.SW_DENY) {
-								setHeaderText("You denied the request");
+								setHeaderText(Main.lang("ledger.youDeniedTheRequest"));
 								getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CANCEL);
 								getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
 									request(request);
@@ -83,7 +85,7 @@ public sealed interface LedgerPrompt {
 									throw e;
 								});
 							} else {
-								setHeaderText("Unknown error (" + t.getMessage() + ")");
+								setHeaderText(Main.lang("ledger.unknownError").formatted(t.getMessage()));
 								setResult(null);
 								throw e;
 							}
