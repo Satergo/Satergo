@@ -8,9 +8,7 @@ import com.satergo.jledger.protocol.ergo.ErgoResponse;
 import com.satergo.jledger.protocol.ergo.ErgoResponse.AttestedBoxFrame;
 import org.ergoplatform.ErgoBox;
 import org.ergoplatform.ErgoScriptPredef;
-import org.ergoplatform.appkit.Address;
-import org.ergoplatform.appkit.JavaHelpers;
-import org.ergoplatform.appkit.NetworkType;
+import org.ergoplatform.appkit.*;
 import org.ergoplatform.wallet.secrets.DerivationPath;
 import org.ergoplatform.wallet.secrets.ExtendedPublicKey;
 import scala.collection.JavaConverters;
@@ -70,7 +68,7 @@ public class ErgoLedgerAppkit {
 			map.forEach((id, amount) -> tokens.put(HexFormat.of().parseHex(id), amount));
 			protocol.attestAddTokens(sessionId, tokens);
 		}
-		if (box.additionalRegisters().size() > 0) {
+		if (!box.additionalRegisters().isEmpty()) {
 			writeInChunks(protocol::attestAddRegistersChunk, sessionId, registers);
 		}
 		AttestedBoxFrame[] attestedBoxFrames = new AttestedBoxFrame[frameCount];
@@ -86,17 +84,16 @@ public class ErgoLedgerAppkit {
 	 * @param changePath The derivation path of the change address. Can be null.
 	 * @return The signature of this transaction
 	 */
-	public byte[] signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, List<ErgoBox> dataBoxes, List<ErgoBox> outputBoxes, Address changeAddress, long[] changePath) throws ErgoLedgerException {
+	public byte[] signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, List<ErgoBox> dataBoxes, List<OutBox> outputBoxes, Address changeAddress, long[] changePath) throws ErgoLedgerException {
 		int sessionId = protocol.startP2PKSigning(networkType, new long[] { h(44), h(429), h(0), 0, 0 }, null);
 
 		ArrayList<byte[]> distinctTokenIds = new ArrayList<>();
-		for (ErgoBox outputBox : outputBoxes) {
-			outputBox.tokens().foreach(v1 -> {
-				byte[] id = HexFormat.of().parseHex((String) v1._1());
+		for (OutBox outputBox : outputBoxes) {
+			for (ErgoToken token : outputBox.getTokens()) {
+				byte[] id = token.getId().getBytes();
 				if (distinctTokenIds.stream().noneMatch(a -> Arrays.equals(a, id)))
 					distinctTokenIds.add(id);
-				return null;
-			});
+			}
 		}
 		if (!distinctTokenIds.isEmpty())
 			protocol.addTokenIds(sessionId, distinctTokenIds.toArray(new byte[0][0]));
@@ -129,13 +126,13 @@ public class ErgoLedgerAppkit {
 		protocol.addDataInputs(sessionId, dataBoxes.stream().map(box -> (byte[]) box.id()).toArray(byte[][]::new));
 	}
 
-	private void addOutputs(int sessionId, List<ErgoBox> boxes, ErgoNetworkType networkType, ArrayList<byte[]> distinctTokenIds, Address changeAddress, long[] changePath) {
-		for (ErgoBox box : boxes) {
-			Values.ErgoTree ergoTree = box.ergoTree();
+	private void addOutputs(int sessionId, List<OutBox> boxes, ErgoNetworkType networkType, ArrayList<byte[]> distinctTokenIds, Address changeAddress, long[] changePath) {
+		for (OutBox box : boxes) {
+			Values.ErgoTree ergoTree = box.getErgoTree();
 			byte[] treeBytes = ergoTree.bytes();
 			if (treeBytes.length == 0) throw new IllegalArgumentException("unsupported route"); // todo can it be empty?
-			byte[] registers = serializeRegisters(box.additionalRegisters());
-			protocol.addOutputBoxStart(sessionId, box.value(), treeBytes.length, box.creationHeight(), distinctTokenIds.size(), registers.length);
+			byte[] registers = serializeRegisters(box.getRegisters());
+			protocol.addOutputBoxStart(sessionId, box.getValue(), treeBytes.length, box.getCreationHeight(), distinctTokenIds.size(), registers.length);
 			if (ergoTree.equals(MINER_FEE_TREE)) {
 				protocol.addOutputBoxMinersFeeTree(sessionId);
 			} else if (Address.fromErgoTree(ergoTree, networkType == ErgoNetworkType.MAINNET ? NetworkType.MAINNET : NetworkType.TESTNET).equals(changeAddress)) {
@@ -144,10 +141,9 @@ public class ErgoLedgerAppkit {
 				writeInChunks(protocol::addOutputBoxErgoTreeChunk, sessionId, treeBytes);
 			}
 			LinkedHashMap<Integer, Long> tokens = new LinkedHashMap<>();
-			box.tokens().foreach(v1 -> {
-				tokens.put(indexOf(distinctTokenIds, HexFormat.of().parseHex((String) v1._1())), (long) v1._2());
-				return null;
-			});
+			for (ErgoToken token : box.getTokens()) {
+				tokens.put(indexOf(distinctTokenIds, token.getId().getBytes()), token.getValue());
+			}
 			if (!tokens.isEmpty())
 				protocol.addOutputBoxTokens(sessionId, tokens);
 			// write registers
@@ -171,6 +167,17 @@ public class ErgoLedgerAppkit {
 			sbw.putValue(entry._2());
 			return null;
 		});
+		return sbw.toBytes();
+	}
+
+	private static byte[] serializeRegisters(List<ErgoValue<?>> registers) {
+		SigmaByteWriter sbw = SigmaSerializer.startWriter();
+		for (int i = 0; i < registers.size(); i++) {
+			// first entry, R4 is index 0, so + 4
+			int id = i + 4;
+			sbw.putUByte(id);
+			sbw.putValue(Iso.isoErgoValueToSValue().to(registers.get(i)));
+		}
 		return sbw.toBytes();
 	}
 
