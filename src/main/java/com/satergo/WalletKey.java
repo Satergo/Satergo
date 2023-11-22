@@ -370,14 +370,13 @@ public abstract class WalletKey {
 						return new AttestedBox(inputBox, attestedBoxFrames, ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension()));
 					}).toList();
 
-			byte[] bytes;
-			LedgerPrompt.Signing prompt = new LedgerPrompt.Signing();
-			prompt.show();
-			bytes = ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
-					case MAINNET -> ErgoNetworkType.MAINNET;
-					case TESTNET -> ErgoNetworkType.TESTNET;
-				}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(), null, null);
-			prompt.close();
+			LedgerPrompt.Signing prompt = new LedgerPrompt.Signing(() ->
+					ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
+						case MAINNET -> ErgoNetworkType.MAINNET;
+						case TESTNET -> ErgoNetworkType.TESTNET;
+					}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(), null, null));
+			// not sure if this occurs
+			byte[] bytes = prompt.showForResult().orElse(null);
 
 			ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
 			return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);
