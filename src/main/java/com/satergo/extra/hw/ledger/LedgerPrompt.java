@@ -9,6 +9,8 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.ButtonType;
 import org.ergoplatform.wallet.secrets.ExtendedPublicKey;
 
+import java.util.concurrent.Callable;
+
 public sealed interface LedgerPrompt {
 
 	void setHeaderText(String text);
@@ -33,33 +35,62 @@ public sealed interface LedgerPrompt {
 		private void request() {
 			new SimpleTask<>(ergoLedgerAppkit::requestParentExtendedPublicKey)
 					.onSuccess(this::setResult)
-					.onFail(e -> {
-						if (e instanceof ErgoLedgerException el) {
-							if (el.getSW() == ErgoLedgerException.SW_DENY) {
+					.onFail(t -> {
+						if (t instanceof ErgoLedgerException e) {
+							if (e.getSW() == ErgoLedgerException.SW_DENY) {
 								setHeaderText("You denied the request");
-								getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CLOSE);
+								getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CANCEL);
 								getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
 									request();
 									event.consume();
 								});
-								getDialogPane().lookupButton(ButtonType.CLOSE).addEventFilter(ActionEvent.ACTION, event -> {
-									throw el;
+								getDialogPane().lookupButton(ButtonType.CANCEL).addEventFilter(ActionEvent.ACTION, event -> {
+									throw e;
 								});
 							} else {
-								setHeaderText("Unknown error (" + e.getMessage() + ")");
+								setHeaderText("Unknown error (" + t.getMessage() + ")");
 								setResult(null);
-								throw el;
+								throw e;
 							}
 						} else {
-							throw new RuntimeException(e);
+							throw new RuntimeException(t);
 						}
 					}).newThread();
 		}
 	}
 
-	final class Signing extends SatVoidDialog implements LedgerPrompt {
-		public Signing() {
+	final class Signing extends SatPromptDialog<byte[]> implements LedgerPrompt {
+		private final ButtonType askAgain = new ButtonType("Ask again");
+
+		public Signing(Callable<byte[]> request) {
 			setHeaderText("Please accept the request");
+			setOnShown(event -> request(request));
+		}
+
+		private void request(Callable<byte[]> request) {
+			new SimpleTask<>(request)
+					.onSuccess(this::setResult)
+					.onFail(t -> {
+						if (t instanceof ErgoLedgerException e) {
+							if (e.getSW() == ErgoLedgerException.SW_DENY) {
+								setHeaderText("You denied the request");
+								getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CANCEL);
+								getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
+									request(request);
+									event.consume();
+								});
+								getDialogPane().lookupButton(ButtonType.CANCEL).addEventFilter(ActionEvent.ACTION, event -> {
+									throw e;
+								});
+							} else {
+								setHeaderText("Unknown error (" + t.getMessage() + ")");
+								setResult(null);
+								throw e;
+							}
+						} else {
+							throw new RuntimeException(t);
+						}
+					}).newThread();
 		}
 	}
 
