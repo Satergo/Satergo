@@ -1,4 +1,4 @@
-package com.satergo.extra;
+package com.satergo.extra.hw.ledger;
 
 import com.satergo.jledger.APDUCommand;
 import com.satergo.jledger.APDUResponse;
