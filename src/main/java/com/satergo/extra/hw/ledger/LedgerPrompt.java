@@ -1,6 +1,7 @@
-package com.satergo.extra;
+package com.satergo.extra.hw.ledger;
 
 import com.satergo.controller.ledger.ErgoLedgerAppkit;
+import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
@@ -8,7 +9,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.ButtonType;
 import org.ergoplatform.wallet.secrets.ExtendedPublicKey;
 
-public interface LedgerPrompt {
+public sealed interface LedgerPrompt {
 
 	void setHeaderText(String text);
 	void close();
@@ -20,7 +21,7 @@ public interface LedgerPrompt {
 	}
 
 	final class ExtPubKey extends SatPromptDialog<ExtendedPublicKey> implements LedgerPrompt {
-		private ButtonType askAgain = new ButtonType("Ask again"), exit = new ButtonType("Exit");
+		private final ButtonType askAgain = new ButtonType("Ask again");
 		private final ErgoLedgerAppkit ergoLedgerAppkit;
 
 		public ExtPubKey(ErgoLedgerAppkit ergoLedgerAppkit) {
@@ -30,26 +31,29 @@ public interface LedgerPrompt {
 		}
 
 		private void request() {
-			try {
-				ExtendedPublicKey extendedPublicKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
-				setResult(extendedPublicKey);
-			} catch (ErgoLedgerException e) {
-				if (e.getSW() == ErgoLedgerException.SW_DENY) {
-					setHeaderText("You denied the request");
-					getDialogPane().getButtonTypes().addAll(askAgain, exit);
-					getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
-						request();
-						event.consume();
-					});
-					getDialogPane().lookupButton(exit).addEventFilter(ActionEvent.ACTION, event -> {
-						throw e;
-					});
-				}
-				setHeaderText("Unknown error (" + e.getMessage() + ")");
-				setResult(null);
-				throw e;
-			}
-
+			new SimpleTask<>(ergoLedgerAppkit::requestParentExtendedPublicKey)
+					.onSuccess(this::setResult)
+					.onFail(e -> {
+						if (e instanceof ErgoLedgerException el) {
+							if (el.getSW() == ErgoLedgerException.SW_DENY) {
+								setHeaderText("You denied the request");
+								getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CLOSE);
+								getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
+									request();
+									event.consume();
+								});
+								getDialogPane().lookupButton(ButtonType.CLOSE).addEventFilter(ActionEvent.ACTION, event -> {
+									throw el;
+								});
+							} else {
+								setHeaderText("Unknown error (" + e.getMessage() + ")");
+								setResult(null);
+								throw el;
+							}
+						} else {
+							throw new RuntimeException(e);
+						}
+					}).newThread();
 		}
 	}
 
