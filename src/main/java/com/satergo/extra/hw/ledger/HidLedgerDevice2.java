@@ -17,6 +17,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	private static final byte TAG = 0x05;
 
 	private final int channel = (int) Math.floor(Math.random() * 0xffff);
+	private final HidFraming framing = new HidFraming(channel, PACKET_SIZE);
 
 	private final HidDevice hidDevice;
 
@@ -118,19 +119,16 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	}
 
 	@Override
-	public int write(byte[] bytes) {
-		List<byte[]> blocks = new HidFraming(channel, PACKET_SIZE).makeBlocks(bytes);
+	public void writeAPDU(APDUCommand command) {
+		List<byte[]> blocks = framing.makeBlocks(command.getBytes());
 		for (byte[] block : blocks) {
 			hidDevice.write(block, block.length, (byte) 0);
 		}
-		return 0;
 	}
 
 	/** Reads a packet with a maximum size of 64 bytes */
 	private HidFraming.ResponseAcc readSinglePacket(boolean isFirst) {
-		HidFraming framing = new HidFraming(channel, PACKET_SIZE);
 		HidFraming.ResponseAcc acc = null;
-//		hidDevice.setNonBlocking(true);
 		while (framing.getReducedResult(acc) == null) {
 			byte[] buffer = new byte[PACKET_SIZE];
 			System.out.println("reading " + PACKET_SIZE + " bytes");
@@ -144,13 +142,11 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			acc = framing.reduceResponse(acc, ByteBuffer.wrap(buffer));
 			System.out.println("acc = " + acc + ", acc.data.length = " + acc.data.length);
 		}
-//		hidDevice.setNonBlocking(false);
 		return acc;
 	}
 
 	/** Reads all available packets into one response */
 	private byte[] readResponse() {
-		ArrayList<HidFraming.ResponseAcc> packets = new ArrayList<>();
 //		int length = 0;
 //		// each apdu can only contain 255 bytes of data so this is probably too high
 //		// but the content of each packet can vary so there is no exact length to know beforehand
@@ -168,51 +164,26 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			HidFraming.ResponseAcc responseAcc = readSinglePacket(first);
 			if (responseAcc == null)
 				break;
-//			length += responseAcc.dataLength;
-			packets.add(responseAcc);
 			System.out.println("got a single-packet " + responseAcc.dataLength);
 			first = false;
 			last = responseAcc;
 		}
-//		byte[] full = new byte[length];
-//		System.out.println("full length = " + length);
-//		for (HidFraming.ResponseAcc packet : packets) {
-//			System.out.println("packet sequence = " + packet.sequence + ", data length = " + packet.data.length + " (" + packet.dataLength + "). writing to " + ((packet.sequence - 1) * PACKET_SIZE));
-//			System.arraycopy(packet.data, 0, full, (packet.sequence - 1) * PACKET_SIZE, packet.dataLength);
-//		}
 		return last == null ? null : last.data;
 	}
 
 	@Override
-	public int read(byte[] bytes) {
-		throw new UnsupportedOperationException();
-//		HidFraming framing = new HidFraming(channel, PACKET_SIZE);
-//		byte[] result;
-//		HidFraming.ResponseAcc acc = null;
-//		int read = -1;
-//		while ((result = framing.getReducedResult(acc)) == null) {
-//			byte[] buffer = new byte[bytes.length];
-//			read = hidDevice.read(buffer);
-//			System.out.println("read (count " + read + ") = " + toStringUnsigned(buffer));
-//			acc = framing.reduceResponse(acc, ByteBuffer.wrap(buffer));
-//		}
-//		System.arraycopy(result, 0, bytes, 0, result.length);
-//		return read;
-	}
-
-	@Override
-	public APDUResponse readAPDU(int dataSize) {
+	public APDUResponse readAPDU() {
 		return new APDUResponse(readResponse());
 	}
 
 	private final ReentrantLock lock = new ReentrantLock();
 
 	@Override
-	public APDUResponse exchange(APDUCommand apdu, int responseSize) {
+	public APDUResponse exchange(APDUCommand apdu) {
 		lock.lock();
 		try {
 			writeAPDU(apdu);
-			return readAPDU(responseSize);
+			return readAPDU();
 		} finally {
 			lock.unlock();
 		}
