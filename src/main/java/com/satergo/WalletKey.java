@@ -17,6 +17,7 @@ import org.ergoplatform.ErgoLikeTransaction;
 import org.ergoplatform.P2PKAddress;
 import org.ergoplatform.appkit.*;
 import org.ergoplatform.appkit.impl.BlockchainContextBase;
+import org.ergoplatform.appkit.impl.InputBoxImpl;
 import org.ergoplatform.appkit.impl.SignedTransactionImpl;
 import org.ergoplatform.appkit.impl.UnsignedTransactionImpl;
 import org.ergoplatform.wallet.secrets.DerivationPath;
@@ -361,13 +362,12 @@ public abstract class WalletKey {
 
 		@Override
 		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
-			UnsignedTransactionImpl unsignedTxImpl = (UnsignedTransactionImpl) unsignedTx;
-
-			List<AttestedBox> inputBoxes = unsignedTxImpl.getBoxesToSpend().stream()
-					.filter(box -> unsignedTx.getInputs().stream().anyMatch(in -> Arrays.equals(in.getId().getBytes(), (byte[]) box.box().id())))
-					.map(extInBox -> {
-						ErgoResponse.AttestedBoxFrame[] attestedBoxFrames = ergoLedgerAppkit.getAttestedBoxFrames(extInBox.box());
-						return new AttestedBox(extInBox.box(), attestedBoxFrames, ErgoLedgerAppkit.serializeContextExtension(extInBox.extension()));
+			List<InputBox> inputs = unsignedTx.getInputs();
+			List<AttestedBox> inputBoxes = inputs.stream()
+					.filter(box -> inputs.stream().anyMatch(in -> Arrays.equals(in.getId().getBytes(), box.getId().getBytes())))
+					.map(inputBox -> {
+						ErgoResponse.AttestedBoxFrame[] attestedBoxFrames = ergoLedgerAppkit.getAttestedBoxFrames(inputBox);
+						return new AttestedBox(inputBox, attestedBoxFrames, ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension()));
 					}).toList();
 
 			byte[] bytes;
@@ -376,10 +376,10 @@ public abstract class WalletKey {
 			bytes = ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
 					case MAINNET -> ErgoNetworkType.MAINNET;
 					case TESTNET -> ErgoNetworkType.TESTNET;
-				}, inputBoxes, unsignedTxImpl.getDataBoxes(), unsignedTx.getOutputs(), null, null);
+				}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(), null, null);
 			prompt.close();
 
-			ErgoLikeTransaction signed = unsignedTxImpl.getTx().toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
+			ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
 			return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);
 		}
 

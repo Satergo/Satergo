@@ -1,11 +1,11 @@
 package com.satergo.controller.ledger;
 
 import com.satergo.jledger.protocol.ergo.ErgoResponse;
-import org.ergoplatform.ErgoBox;
+import org.ergoplatform.appkit.InputBox;
 
 import java.util.Objects;
 
-public record AttestedBox(ErgoBox box, ErgoResponse.AttestedBoxFrame[] frames, byte[] extension) {
+public record AttestedBox(InputBox box, ErgoResponse.AttestedBoxFrame[] frames, byte[] extension) {
 	public AttestedBox {
 		Objects.requireNonNull(box, "box");
 		Objects.requireNonNull(frames, "frames");
