@@ -15,7 +15,6 @@ import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.ErgoLikeTransaction;
 import org.ergoplatform.P2PKAddress;
-import org.ergoplatform.UnsignedErgoLikeTransaction;
 import org.ergoplatform.appkit.*;
 import org.ergoplatform.appkit.impl.BlockchainContextBase;
 import org.ergoplatform.appkit.impl.SignedTransactionImpl;
@@ -363,13 +362,9 @@ public abstract class WalletKey {
 		@Override
 		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
 			UnsignedTransactionImpl unsignedTxImpl = (UnsignedTransactionImpl) unsignedTx;
-			// This is only used to access the reduce method of ErgoProver, which does not use the mnemonic at all.
-			ErgoProver dummyProver = ctx.newProverBuilder().build();
-			// Reduce transaction (to get access to reducedTx.outputs())
-			UnsignedErgoLikeTransaction reducedTx = ctx.newProverBuilder().build().reduce(unsignedTxImpl, 0).getTx().unsignedTx();
 
 			List<AttestedBox> inputBoxes = unsignedTxImpl.getBoxesToSpend().stream()
-					.filter(b -> reducedTx.inputIds().contains(b.box().id()))
+					.filter(box -> unsignedTx.getInputs().stream().anyMatch(in -> Arrays.equals(in.getId().getBytes(), (byte[]) box.box().id())))
 					.map(extInBox -> {
 						ErgoResponse.AttestedBoxFrame[] attestedBoxFrames = ergoLedgerAppkit.getAttestedBoxFrames(extInBox.box());
 						return new AttestedBox(extInBox.box(), attestedBoxFrames, ErgoLedgerAppkit.serializeContextExtension(extInBox.extension()));
@@ -379,13 +374,12 @@ public abstract class WalletKey {
 			LedgerPrompt.Signing prompt = new LedgerPrompt.Signing();
 			prompt.show();
 			bytes = ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
-						case MAINNET -> ErgoNetworkType.MAINNET;
-						case TESTNET -> ErgoNetworkType.TESTNET;
-					},
-					inputBoxes, unsignedTxImpl.getDataBoxes(), JavaConverters.seqAsJavaList(reducedTx.outputs()), null, null);
+					case MAINNET -> ErgoNetworkType.MAINNET;
+					case TESTNET -> ErgoNetworkType.TESTNET;
+				}, inputBoxes, unsignedTxImpl.getDataBoxes(), unsignedTx.getOutputs(), null, null);
 			prompt.close();
 
-			ErgoLikeTransaction signed = reducedTx.toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
+			ErgoLikeTransaction signed = unsignedTxImpl.getTx().toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
 			return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);
 		}
 
