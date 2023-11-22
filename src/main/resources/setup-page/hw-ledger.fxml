@@ -11,7 +11,7 @@
 	<Label fx:id="status" text="%loading..."/>
 
 	<VBox fx:id="found" visible="false" managed="${found.visible}" spacing="4" alignment="BASELINE_CENTER">
-		<HBox><Button onAction="#rescan" text="%rescan"/></HBox>
+		<HBox><Button onAction="#rescan" text="%ledger.rescan"/></HBox>
 
 		<VBox spacing="12.5" alignment="TOP_CENTER">
 			<VBox>
