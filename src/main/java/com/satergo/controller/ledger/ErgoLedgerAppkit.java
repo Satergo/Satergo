@@ -60,11 +60,22 @@ public class ErgoLedgerAppkit {
 			if (result.isPresent()) frameCount = result.get();
 		}
 		if (!boxTokens.isEmpty()) {
-			LinkedHashMap<byte[], Long> tokens = new LinkedHashMap<>();
-			for (ErgoToken boxToken : boxTokens) {
-				tokens.put(boxToken.getId().getBytes(), boxToken.getValue());
+			if (boxTokens.size() > 20) {
+				throw new IllegalArgumentException("Max 20 tokens");
 			}
-			protocol.attestAddTokens(sessionId, tokens);
+			ArrayList<Map.Entry<byte[], Long>> tokens = new ArrayList<>();
+			for (ErgoToken boxToken : boxTokens) {
+				tokens.add(Map.entry(boxToken.getId().getBytes(), boxToken.getValue()));
+			}
+			// max 6 tokens per exchange, so do it in chunks
+			int cs = 6;
+			for (int i = 0; i < Math.ceil(tokens.size() / (double) cs); i++) {
+				LinkedHashMap<byte[], Long> chunk = new LinkedHashMap<>();
+				for (int j = i; j < Math.min(i + cs, tokens.size()); j++) {
+					chunk.put(tokens.get(j).getKey(), tokens.get(j).getValue());
+				}
+				protocol.attestAddTokens(sessionId, chunk);
+			}
 		}
 		if (!box.getRegisters().isEmpty()) {
 			writeInChunks(protocol::attestAddRegistersChunk, sessionId, registers);
@@ -93,8 +104,16 @@ public class ErgoLedgerAppkit {
 					distinctTokenIds.add(id);
 			}
 		}
-		if (!distinctTokenIds.isEmpty())
-			protocol.addTokenIds(sessionId, distinctTokenIds.toArray(new byte[0][0]));
+		if (!distinctTokenIds.isEmpty()) {
+			if (distinctTokenIds.size() > 20) {
+				throw new IllegalArgumentException("Max 20 tokens");
+			}
+			// max 7 tokens IDs per exchange, so do it in chunks
+			int cs = 7;
+			for (int i = 0; i < Math.ceil(distinctTokenIds.size() / (double) cs); i++) {
+				protocol.addTokenIds(sessionId, distinctTokenIds.subList(i * cs, Math.min((i + 1) * cs, distinctTokenIds.size())).toArray(new byte[0][0]));
+			}
+		}
 
 		protocol.startTransaction(sessionId, inputBoxes.size(), dataBoxes.size(), distinctTokenIds.size(), outputBoxes.size());
 

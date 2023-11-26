@@ -16,14 +16,13 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	private static final int PACKET_SIZE = 64;
 	private static final byte TAG = 0x05;
 
-	private final int channel = (int) Math.floor(Math.random() * 0xffff);
-	private final HidFraming framing = new HidFraming(channel, PACKET_SIZE);
-
 	private final HidDevice hidDevice;
+	private final HidFraming framing;
 
 	public HidLedgerDevice2(HidDevice hidDevice) {
 		this.hidDevice = hidDevice;
-		System.out.println(channel);
+		int channel = (int) Math.floor(Math.random() * 0xffff);
+		this.framing = new HidFraming(channel, PACKET_SIZE);
 	}
 
 	@Override
