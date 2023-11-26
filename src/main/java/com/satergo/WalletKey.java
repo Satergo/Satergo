@@ -4,6 +4,7 @@ import com.satergo.controller.ledger.AttestedBox;
 import com.satergo.controller.ledger.ErgoLedgerAppkit;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
+import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.hw.ledger.HidLedgerDevice2;
 import com.satergo.extra.hw.ledger.LedgerPrompt;
 import com.satergo.extra.hw.ledger.LedgerSelector;
@@ -314,6 +315,9 @@ public abstract class WalletKey {
 			storedKeyBytes = new byte[KEY_LENGTH];
 			data.get(storedKeyBytes);
 			LedgerPrompt.Connection connectionPrompt = new LedgerPrompt.Connection(productId);
+			connectionPrompt.initOwner(Main.get().stage());
+			connectionPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+			Main.get().applySameTheme(connectionPrompt.getDialogPane().getScene());
 			connectionPrompt.show();
 			LedgerSelector ledgerSelector = new LedgerSelector() {
 				@Override
@@ -323,6 +327,9 @@ public abstract class WalletKey {
 					Platform.runLater(() -> {
 						connectionPrompt.close();
 						LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
+						prompt.initOwner(Main.get().stage());
+						prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+						Main.get().applySameTheme(prompt.getDialogPane().getScene());
 						ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
 						// not sure if this occurs
 						if (parentExtPubKey == null) throw new RuntimeException();
@@ -375,6 +382,9 @@ public abstract class WalletKey {
 						case MAINNET -> ErgoNetworkType.MAINNET;
 						case TESTNET -> ErgoNetworkType.TESTNET;
 					}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(), null, null));
+			prompt.initOwner(Main.get().stage());
+			prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+			Main.get().applySameTheme(prompt.getDialogPane().getScene());
 			// not sure if this occurs
 			byte[] bytes = prompt.showForResult().orElse(null);
 
