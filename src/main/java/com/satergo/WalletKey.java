@@ -312,6 +312,7 @@ public abstract class WalletKey {
 
 		@Override
 		public void initCaches(ByteBuffer data) {
+			System.out.println("INIT CACHES");
 			productId = data.getInt();
 			storedKeyBytes = new byte[KEY_LENGTH];
 			data.get(storedKeyBytes);
@@ -320,15 +321,20 @@ public abstract class WalletKey {
 			connectionPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
 			Main.get().applySameTheme(connectionPrompt.getDialogPane().getScene());
 			connectionPrompt.show();
+			System.out.println("SHOWED CONNECTION PROMPT");
 			Thread main = Thread.currentThread();
 			LedgerSelector ledgerSelector = new LedgerSelector() {
 				@Override
 				public void deviceFound(HidDevice hidDevice) {
+					System.out.println("DEVICE FOUND");
 					ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice2(hidDevice)));
 					ergoLedgerAppkit.device.open();
+					System.out.println("U;");
 					LockSupport.unpark(main);
+					System.out.println(";U");
 					Platform.runLater(() -> {
 						connectionPrompt.close();
+						System.out.println("SHOWING EXTPUBKEY PROMPT");
 						LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
 						prompt.initOwner(Main.get().stage());
 						prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
@@ -343,7 +349,9 @@ public abstract class WalletKey {
 					});
 				}
 			};
+			System.out.println("Start listener");
 			ledgerSelector.startListener();
+			System.out.println("Park");
 			LockSupport.park();
 		}
 
@@ -403,6 +411,7 @@ public abstract class WalletKey {
 
 		@Override
 		public Address derivePublicAddress(NetworkType networkType, int index) throws Failure {
+			System.out.println("LEDGER DERIVE FROM CACHE");
 			return new Address(P2PKAddress.apply(parentExtPubKey.child(index).key(), new ErgoAddressEncoder(networkType.networkPrefix)));
 		}
 
