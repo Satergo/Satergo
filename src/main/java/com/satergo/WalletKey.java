@@ -375,27 +375,34 @@ public abstract class WalletKey {
 
 		@Override
 		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
-			List<InputBox> inputs = unsignedTx.getInputs();
-			List<AttestedBox> inputBoxes = inputs.stream()
-					.filter(box -> inputs.stream().anyMatch(in -> Arrays.equals(in.getId().getBytes(), box.getId().getBytes())))
-					.map(inputBox -> {
-						ErgoResponse.AttestedBoxFrame[] attestedBoxFrames = ergoLedgerAppkit.getAttestedBoxFrames(inputBox);
-						return new AttestedBox(inputBox, attestedBoxFrames, ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension()));
-					}).toList();
+			try {
+				List<InputBox> inputs = unsignedTx.getInputs();
+				List<AttestedBox> inputBoxes = inputs.stream()
+						.filter(box -> inputs.stream().anyMatch(in -> Arrays.equals(in.getId().getBytes(), box.getId().getBytes())))
+						.map(inputBox -> {
+							ErgoResponse.AttestedBoxFrame[] attestedBoxFrames = ergoLedgerAppkit.getAttestedBoxFrames(inputBox);
+							return new AttestedBox(inputBox, attestedBoxFrames, ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension()));
+						}).toList();
 
-			LedgerPrompt.Signing prompt = new LedgerPrompt.Signing(() ->
-					ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
-						case MAINNET -> ErgoNetworkType.MAINNET;
-						case TESTNET -> ErgoNetworkType.TESTNET;
-					}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(), null, null));
-			prompt.initOwner(Main.get().stage());
-			prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-			Main.get().applySameTheme(prompt.getDialogPane().getScene());
-			// not sure if this occurs
-			byte[] bytes = prompt.showForResult().orElse(null);
+				LedgerPrompt.Signing prompt = new LedgerPrompt.Signing(() ->
+						ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
+							case MAINNET -> ErgoNetworkType.MAINNET;
+							case TESTNET -> ErgoNetworkType.TESTNET;
+						}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(), null, null));
+				prompt.initOwner(Main.get().stage());
+				prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+				Main.get().applySameTheme(prompt.getDialogPane().getScene());
+				// not sure if this occurs
+				byte[] bytes = prompt.showForResult().orElse(null);
 
-			ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
-			return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);
+				ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
+				return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);
+			} catch (HidLedgerDevice2.InvalidChannelException e) {
+				if (e.received == 0) {
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("ledger.deviceIsLocked"));
+					throw new Failure();
+				} else throw e;
+			}
 		}
 
 		@Override
