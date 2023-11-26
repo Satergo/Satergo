@@ -1,4 +1,4 @@
-package com.satergo.controller.ledger;
+package com.satergo.extra.hw.ledger;
 
 import com.satergo.jledger.protocol.ergo.ErgoResponse;
 import org.ergoplatform.appkit.InputBox;
