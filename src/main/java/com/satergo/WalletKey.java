@@ -336,6 +336,7 @@ public abstract class WalletKey {
 			});
 			connectionPrompt.close();
 			ergoLedgerAppkit = connectionPrompt.showForResult().orElse(null);
+			ergoLedgerAppkit.device.open();
 			System.out.println("SHOWING EXTPUBKEY PROMPT");
 			LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
 			prompt.initOwner(Main.get().stage());
