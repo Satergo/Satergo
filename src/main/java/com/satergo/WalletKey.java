@@ -41,6 +41,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
 /**
@@ -319,11 +320,13 @@ public abstract class WalletKey {
 			connectionPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
 			Main.get().applySameTheme(connectionPrompt.getDialogPane().getScene());
 			connectionPrompt.show();
+			Thread main = Thread.currentThread();
 			LedgerSelector ledgerSelector = new LedgerSelector() {
 				@Override
 				public void deviceFound(HidDevice hidDevice) {
 					ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice2(hidDevice)));
 					ergoLedgerAppkit.device.open();
+					LockSupport.unpark(main);
 					Platform.runLater(() -> {
 						connectionPrompt.close();
 						LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
@@ -341,6 +344,7 @@ public abstract class WalletKey {
 				}
 			};
 			ledgerSelector.startListener();
+			LockSupport.park();
 		}
 
 		private void initStoredKeyBytes(byte[] storedKeyBytes) {
