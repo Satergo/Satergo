@@ -337,7 +337,6 @@ public abstract class WalletKey {
 			connectionPrompt.close();
 			ergoLedgerAppkit = connectionPrompt.showForResult().orElse(null);
 			ergoLedgerAppkit.device.open();
-			System.out.println("SHOWING EXTPUBKEY PROMPT");
 			LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
 			prompt.initOwner(Main.get().stage());
 			prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
@@ -348,7 +347,6 @@ public abstract class WalletKey {
 			if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
 				throw new IllegalStateException("This wallet does not belong to this device");
 			this.parentExtPubKey = parentExtPubKey;
-			System.out.println("SHOWED CONNECTION PROMPT");
 		}
 
 		private void initStoredKeyBytes(byte[] storedKeyBytes) {
@@ -407,7 +405,6 @@ public abstract class WalletKey {
 
 		@Override
 		public Address derivePublicAddress(NetworkType networkType, int index) throws Failure {
-			System.out.println("LEDGER DERIVE FROM CACHE");
 			return new Address(P2PKAddress.apply(parentExtPubKey.child(index).key(), new ErgoAddressEncoder(networkType.networkPrefix)));
 		}
 
