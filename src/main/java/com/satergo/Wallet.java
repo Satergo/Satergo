@@ -101,7 +101,7 @@ public final class Wallet {
 		} catch (RuntimeException e) {
 			if (e.getCause() instanceof ConnectException ce)
 				throw ce;
-			if (e.getCause().getCause() instanceof ConnectException ce)
+			if (e.getCause() != null && e.getCause().getCause() instanceof ConnectException ce)
 				throw ce;
 			throw e;
 		}
