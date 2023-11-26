@@ -32,6 +32,17 @@ public sealed interface LedgerPrompt {
 			setOnShown(event -> request());
 		}
 
+		private void displayAskAgain(RuntimeException e) {
+			getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CANCEL);
+			getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
+				request();
+				event.consume();
+			});
+			getDialogPane().lookupButton(ButtonType.CANCEL).addEventFilter(ActionEvent.ACTION, event -> {
+				throw e;
+			});
+		}
+
 		private void request() {
 			new SimpleTask<>(ergoLedgerAppkit::requestParentExtendedPublicKey)
 					.onSuccess(this::setResult)
@@ -39,18 +50,16 @@ public sealed interface LedgerPrompt {
 						if (t instanceof ErgoLedgerException e) {
 							if (e.getSW() == ErgoLedgerException.SW_DENY) {
 								setHeaderText(Main.lang("ledger.youDeniedTheRequest"));
-								getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CANCEL);
-								getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
-									request();
-									event.consume();
-								});
-								getDialogPane().lookupButton(ButtonType.CANCEL).addEventFilter(ActionEvent.ACTION, event -> {
-									throw e;
-								});
+								displayAskAgain(e);
 							} else {
 								setHeaderText(Main.lang("ledger.unknownError").formatted(t.getMessage()));
 								setResult(null);
 								throw e;
+							}
+						} else if (t instanceof HidLedgerDevice2.InvalidChannelException e) {
+							if (e.received == 0) {
+								setHeaderText(Main.lang("ledger.deviceIsLocked"));
+								displayAskAgain(e);
 							}
 						} else {
 							throw new RuntimeException(t);
