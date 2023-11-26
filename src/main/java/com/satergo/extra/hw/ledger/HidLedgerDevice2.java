@@ -40,6 +40,19 @@ public class HidLedgerDevice2 implements LedgerDevice {
 		hidDevice.close();
 	}
 
+	/**
+	 * Thrown when an incorrect channel is received from the Ledger device,
+	 * it is known to be 0 when the device is locked.
+	 */
+	public static class InvalidChannelException extends IllegalStateException {
+		public final int received;
+
+		public InvalidChannelException(String s, int received) {
+			super(s);
+			this.received = received;
+		}
+	}
+
 	private static class HidFraming {
 		private final int channel, packetSize;
 
@@ -85,7 +98,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 
 			int ch = Short.toUnsignedInt(chunk.getShort());
 			if (ch != channel)
-				throw new RuntimeException("Invalid channel ---- " + ch);
+				throw new InvalidChannelException("Invalid channel", ch);
 
 			if (chunk.get() != TAG)
 				throw new RuntimeException("Invalid tag");
