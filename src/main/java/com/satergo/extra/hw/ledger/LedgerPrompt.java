@@ -18,7 +18,7 @@ public sealed interface LedgerPrompt {
 	void setHeaderText(String text);
 	void close();
 
-	final class Connection extends SatVoidDialog implements LedgerPrompt {
+	final class Connection extends SatPromptDialog<ErgoLedgerAppkit> implements LedgerPrompt {
 		public Connection(int productId) {
 			setHeaderText(Main.lang("ledger.pleaseConnectA_deviceName_device").formatted(LedgerSelector.getModelName(productId)));
 		}

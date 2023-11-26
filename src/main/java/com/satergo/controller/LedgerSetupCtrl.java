@@ -52,6 +52,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 					}
 					found.setVisible(true);
 				});
+				stop();
 			}
 		};
 		ledgerSelector.startListener();

@@ -41,7 +41,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
 /**
@@ -320,39 +319,35 @@ public abstract class WalletKey {
 			connectionPrompt.initOwner(Main.get().stage());
 			connectionPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
 			Main.get().applySameTheme(connectionPrompt.getDialogPane().getScene());
-			connectionPrompt.show();
-			System.out.println("SHOWED CONNECTION PROMPT");
-			Thread main = Thread.currentThread();
-			LedgerSelector ledgerSelector = new LedgerSelector() {
-				@Override
-				public void deviceFound(HidDevice hidDevice) {
-					System.out.println("DEVICE FOUND");
-					ergoLedgerAppkit = new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice2(hidDevice)));
-					ergoLedgerAppkit.device.open();
-					System.out.println("U;");
-					LockSupport.unpark(main);
-					System.out.println(";U");
-					Platform.runLater(() -> {
-						connectionPrompt.close();
-						System.out.println("SHOWING EXTPUBKEY PROMPT");
-						LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
-						prompt.initOwner(Main.get().stage());
-						prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-						Main.get().applySameTheme(prompt.getDialogPane().getScene());
-						ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
-						// not sure if this occurs
-						if (parentExtPubKey == null) throw new RuntimeException();
-						if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
-							throw new IllegalStateException("This wallet does not belong to this device");
-						Ledger.this.parentExtPubKey = parentExtPubKey;
+			connectionPrompt.setOnShown(event -> {
+				LedgerSelector ledgerSelector = new LedgerSelector() {
+					@Override
+					public void deviceFound(HidDevice hidDevice) {
+						System.out.println("DEVICE FOUND");
+						Platform.runLater(() -> {
+							connectionPrompt.setResult(new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice2(hidDevice))));
+							connectionPrompt.close();
+						});
 						stop();
-					});
-				}
-			};
-			System.out.println("Start listener");
-			ledgerSelector.startListener();
-			System.out.println("Park");
-			LockSupport.park();
+					}
+				};
+				System.out.println("Start listener");
+				ledgerSelector.startListener();
+			});
+			connectionPrompt.close();
+			ergoLedgerAppkit = connectionPrompt.showForResult().orElse(null);
+			System.out.println("SHOWING EXTPUBKEY PROMPT");
+			LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
+			prompt.initOwner(Main.get().stage());
+			prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+			Main.get().applySameTheme(prompt.getDialogPane().getScene());
+			ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
+			// not sure if this occurs
+			if (parentExtPubKey == null) throw new RuntimeException();
+			if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
+				throw new IllegalStateException("This wallet does not belong to this device");
+			this.parentExtPubKey = parentExtPubKey;
+			System.out.println("SHOWED CONNECTION PROMPT");
 		}
 
 		private void initStoredKeyBytes(byte[] storedKeyBytes) {
