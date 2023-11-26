@@ -83,8 +83,9 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			int dataLength = temp.dataLength,
 					sequence = temp.sequence;
 
-			if (Short.toUnsignedInt(chunk.getShort()) != channel)
-				throw new RuntimeException("Invalid channel");
+			int ch = Short.toUnsignedInt(chunk.getShort());
+			if (ch != channel)
+				throw new RuntimeException("Invalid channel ---- " + ch);
 
 			if (chunk.get() != TAG)
 				throw new RuntimeException("Invalid tag");

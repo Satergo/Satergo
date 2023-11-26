@@ -1,10 +1,8 @@
 package com.satergo.extra.hw.ledger;
 
 import com.satergo.Main;
-import com.satergo.controller.ledger.ErgoLedgerAppkit;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
-import com.satergo.extra.dialog.SatVoidDialog;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ButtonBar;

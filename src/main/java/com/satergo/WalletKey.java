@@ -1,7 +1,7 @@
 package com.satergo;
 
-import com.satergo.controller.ledger.AttestedBox;
-import com.satergo.controller.ledger.ErgoLedgerAppkit;
+import com.satergo.extra.hw.ledger.AttestedBox;
+import com.satergo.extra.hw.ledger.ErgoLedgerAppkit;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
 import com.satergo.extra.dialog.MoveStyle;

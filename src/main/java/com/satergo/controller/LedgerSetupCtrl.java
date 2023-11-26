@@ -4,7 +4,7 @@ import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.Wallet;
 import com.satergo.WalletKey;
-import com.satergo.controller.ledger.ErgoLedgerAppkit;
+import com.satergo.extra.hw.ledger.ErgoLedgerAppkit;
 import com.satergo.extra.hw.ledger.HidLedgerDevice2;
 import com.satergo.extra.hw.ledger.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
