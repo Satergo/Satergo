@@ -216,7 +216,6 @@ public class HomeCtrl implements WalletTab, Initializable {
 		TextField address = sendAddress, amount = sendAmount, fee = sendFee;
 
 		if (address.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
-		else if (amount.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
 		else {
 			Address recipient;
 			try {
@@ -234,15 +233,25 @@ public class HomeCtrl implements WalletTab, Initializable {
 				return;
 			}
 			BigDecimal amountFullErg;
-			try {
-				amountFullErg = new BigDecimal(amount.getText());
-			} catch (NumberFormatException ex) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("amountInvalid"));
-				return;
-			}
-			if (!ErgoInterface.hasValidNumberOfDecimals(amountFullErg)) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("amountHasTooManyDecimals"));
-				return;
+			if (!tokenList.getChildren().isEmpty() && amount.getText().isBlank()) {
+				// Default value of 0.001 ERG when none is specified but there are tokens specified
+				amountFullErg = new BigDecimal("0.001");
+			} else {
+				if (amount.getText().isBlank()) {
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
+					return;
+				} else {
+					try {
+						amountFullErg = new BigDecimal(amount.getText());
+					} catch (NumberFormatException ex) {
+						Utils.alert(Alert.AlertType.ERROR, Main.lang("amountInvalid"));
+						return;
+					}
+					if (!ErgoInterface.hasValidNumberOfDecimals(amountFullErg)) {
+						Utils.alert(Alert.AlertType.ERROR, Main.lang("amountHasTooManyDecimals"));
+						return;
+					}
+				}
 			}
 			long amountNanoErg = ErgoInterface.toNanoErg(amountFullErg);
 			ErgoToken[] tokensToSend = new ErgoToken[tokenList.getChildren().size()];

@@ -40,7 +40,7 @@ public class LightNodeSourceCtrl implements SetupPage.WithExtra {
 
 	@FXML
 	public void useExisting(ActionEvent e) {
-		FullNodeSourceCtrl.useExisting(ProgramData.NodeKind.EMBEDDED_LIGHT_NODE);
+		FullNodeSourceCtrl.useExisting();
 	}
 
 	@Override

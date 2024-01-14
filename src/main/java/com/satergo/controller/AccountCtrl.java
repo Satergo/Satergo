@@ -386,7 +386,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		qrCodeImage.setImage(img);
 
 		saveQrCode.setOnAction(e -> {
-			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("saveQrCode"), "qr-code.png",
+			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("saveQrCode"), null, "qr-code.png",
 					new FileChooser.ExtensionFilter(Main.lang("pngImage"), "*.png"),
 					new FileChooser.ExtensionFilter(Main.lang("jpegImage"), "*.jpg"));
 			if (path == null) return;

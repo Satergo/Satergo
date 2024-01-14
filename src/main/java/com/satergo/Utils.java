@@ -206,9 +206,11 @@ public class Utils {
 		Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectPassword"));
 	}
 
-	public static Path fileChooserSave(Window owner, String title, String initialFileName, FileChooser.ExtensionFilter... extensionFilters) {
+	public static Path fileChooserSave(Window owner, String title, Path initialDirectory, String initialFileName, FileChooser.ExtensionFilter... extensionFilters) {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle(title);
+		if (initialDirectory != null)
+			fileChooser.setInitialDirectory(initialDirectory.toFile());
 		fileChooser.setInitialFileName(initialFileName);
 		fileChooser.getExtensionFilters().addAll(extensionFilters);
 		File file = fileChooser.showSaveDialog(owner);

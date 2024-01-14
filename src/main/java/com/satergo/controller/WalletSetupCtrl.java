@@ -43,6 +43,9 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 	@FXML
 	public void openWalletFile(ActionEvent e) {
 		FileChooser fileChooser = new FileChooser();
+		if (Main.programData().lastWalletDirectory.get() != null) {
+			fileChooser.setInitialDirectory(Main.programData().lastWalletDirectory.get().toFile());
+		}
 		fileChooser.setTitle(Main.lang("walletFile"));
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(Main.lang("wallet"), "*." + Wallet.FILE_EXTENSION));
 		File file = fileChooser.showOpenDialog(Main.get().stage());
@@ -50,6 +53,7 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 		String password = Utils.requestPassword(Main.lang("passwordOf_s").formatted(file.getName()));
 		if (password != null) {
 			try {
+				Main.programData().lastWalletDirectory.set(file.toPath().getParent());
 				Main.get().setWallet(Wallet.load(file.toPath(), password));
 				Main.get().displayWalletPage();
 			} catch (IncorrectPasswordException ex) {

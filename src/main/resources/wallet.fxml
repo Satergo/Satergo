@@ -41,7 +41,7 @@
 				<VBox spacing="6" alignment="TOP_CENTER" pickOnBounds="false">
 					<Label fx:id="networkStatusLabel" text="%networkStatus" managed="${networkStatusLabel.visible}"/>
 					<ProgressBar fx:id="networkProgress" progress="1" managed="${networkProgress.visible}"/>
-					<Label fx:id="thingLeft" alignment="TOP_CENTER" opacity="0.6"/>
+					<Label fx:id="thingLeft" alignment="TOP_CENTER" textAlignment="CENTER" wrapText="true" opacity="0.6"/>
 				</VBox>
 			</bottom>
 		</BorderPane>

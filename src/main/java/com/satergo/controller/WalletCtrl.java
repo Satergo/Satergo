@@ -178,6 +178,9 @@ public class WalletCtrl implements Initializable {
 			try {
 				Balance totalBalance = Main.get().getWallet().totalBalance();
 				Platform.runLater(() -> {
+					// This seems very unlikely but it appears to have happened
+					if (Main.get().getWallet() != null)
+						return;
 					revertOfflineMode();
 					updateBalance(totalBalance);
 				});

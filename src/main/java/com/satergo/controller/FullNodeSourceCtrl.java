@@ -3,6 +3,7 @@ package com.satergo.controller;
 import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.ProgramData;
+import com.satergo.Utils;
 import com.satergo.ergo.EmbeddedNode;
 import com.satergo.ergo.EmbeddedNodeInfo;
 import com.satergo.extra.dialog.MoveStyle;
@@ -10,6 +11,7 @@ import com.satergo.extra.dialog.SatPromptDialog;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
@@ -35,17 +37,32 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 
 	@FXML
 	public void useExisting(ActionEvent e) {
-		useExisting(ProgramData.NodeKind.EMBEDDED_FULL_NODE);
+		useExisting();
 	}
 
+	/**
+	 * The node being selected can be a light node as well. It is determined from the conf file.
+	 */
 	@SuppressWarnings("unchecked")
-	public static void useExisting(ProgramData.NodeKind nodeKind) {
+	public static void useExisting() {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setTitle(Main.lang("nodeDirectory"));
-		File nodeDirectory = directoryChooser.showDialog(Main.get().stage());
-		if (nodeDirectory == null || !nodeDirectory.exists()) return;
+		File nodeDirectory;
+		File selectedDirectory = directoryChooser.showDialog(Main.get().stage());
+		if (selectedDirectory == null || !selectedDirectory.exists()) return;
+		// If the .ergo directory inside the node directory was selected by accident,
+		// use the parent directory instead
+		if (selectedDirectory.getName().equals(".ergo")) {
+			nodeDirectory = selectedDirectory.getParentFile();
+		} else {
+			nodeDirectory = selectedDirectory;
+		}
+		// If the selected directory does not contain a .ergo directory
+		if (!Files.exists(nodeDirectory.toPath().resolve(".ergo"))) {
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("selectedDirectoryNotNode"));
+			return;
+		}
 		File nodeJar;
-		File[] existingNodeConfFile = { null };
 		File nodeInfoFile = new File(nodeDirectory, EmbeddedNodeInfo.FILE_NAME);
 		// ask for required EmbeddedNodeInfo values if it doesn't exist
 		if (!nodeInfoFile.exists()) {
@@ -72,6 +89,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 			ComboBox<NetworkType> networkType = (ComboBox<NetworkType>) root.lookup("#networkType");
 			networkType.getItems().addAll(NetworkType.values());
 			networkType.setValue(NetworkType.MAINNET);
+			File[] existingNodeConfFile = { null };
 			Button confFile = (Button) root.lookup("#confFile");
 			confFile.setText(Main.lang("select"));
 			confFile.setOnAction(ae -> {
@@ -103,8 +121,8 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 		} else {
 			Main.programData().embeddedNodeInfo.set(nodeInfoFile.toPath());
 		}
-		Main.programData().blockchainNodeKind.set(nodeKind);
 		Main.node = Main.get().nodeFromInfo();
+		Main.programData().blockchainNodeKind.set(Main.node.isConfigLightNode() ? ProgramData.NodeKind.EMBEDDED_LIGHT_NODE : ProgramData.NodeKind.EMBEDDED_FULL_NODE);
 		Main.programData().nodeAddress.set(Main.node.localApiHttpAddress());
 		Main.programData().nodeNetworkType.set(Main.node.info.networkType());
 		Main.get().displaySetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));

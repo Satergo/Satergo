@@ -46,6 +46,9 @@ public class ProgramData {
 			nodeLogAutoScroll = new SimpleBooleanProperty(null, "nodeLogAutoScroll", true);
 	public final SimpleLongProperty
 			skippedUpdate = new SimpleLongProperty(null, "skippedUpdate", -1);
+	/** @since 1.7.0 */
+	public final SimplePathProperty
+			lastWalletDirectory = new SimplePathProperty(null, "lastWalletDirectory", null);
 
 	// settings
 	public final SimpleStringProperty
@@ -65,7 +68,7 @@ public class ProgramData {
 
 	private final List<ObservableValue<?>> allSettings = List.of(
 			blockchainNodeKind, nodeAddress, lastWallet, embeddedNodeInfo, nodeNetworkType, nodeLogAutoScroll, skippedUpdate,
-			language, showPrice, priceSource, priceCurrency, lightTheme, requirePasswordForSending);
+			language, showPrice, priceSource, priceCurrency, lightTheme, requirePasswordForSending, lastWalletDirectory);
 
 	public ProgramData(Path path) {
 		this.path = path;

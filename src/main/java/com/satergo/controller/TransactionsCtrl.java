@@ -1,6 +1,7 @@
 package com.satergo.controller;
 
 import com.satergo.Main;
+import com.satergo.Wallet;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.TransactionCell;
@@ -56,7 +57,10 @@ public class TransactionsCtrl implements Initializable, WalletTab {
 					.toList();
 		}).onSuccess(list -> {
 			finished.getChildren().clear();
-			List<Address> myAddresses = Main.get().getWallet().addressStream().toList();
+			Wallet wallet = Main.get().getWallet();
+			// the wallet could have been closed before the transactions loaded
+			if (wallet == null) return;
+			List<Address> myAddresses = wallet.addressStream().toList();
 			for (TransactionInfo t : list) {
 				finished.getChildren().add(new TransactionCell(t, myAddresses));
 			}

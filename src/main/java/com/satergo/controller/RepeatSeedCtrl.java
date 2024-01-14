@@ -58,7 +58,7 @@ public class RepeatSeedCtrl implements Initializable, SetupPage.WithoutExtra {
 		} else if (!SecretString.create(mnemonicPassword.getText()).equals(mnemonic.getPassword())) {
 			Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectMnemonicPassword"));
 		} else {
-			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), walletName + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
+			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 			if (path == null) return;
 			Main.get().setWallet(Wallet.create(path, mnemonic, walletName, password.getData()));
 			Main.get().displayWalletPage();

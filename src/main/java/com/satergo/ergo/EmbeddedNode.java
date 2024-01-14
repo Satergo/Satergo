@@ -268,6 +268,12 @@ public class EmbeddedNode {
 		}
 	}
 
+	public boolean isConfigLightNode() {
+		Optional<Object> utxoBootstrap = getConfValue("ergo.node.utxo.utxoBootstrap");
+		Optional<Object> nipopowBootstrap = getConfValue("ergo.node.nipopow.nipopowBootstrap");
+		return (utxoBootstrap.isPresent() && (boolean) utxoBootstrap.get()) || (nipopowBootstrap.isPresent() && (boolean) nipopowBootstrap.get());
+	}
+
 	public Optional<Object> getConfValue(String propertyPath) {
 		Config config = ConfigFactory.parseFile(confFile);
 		if (!config.hasPath(propertyPath))

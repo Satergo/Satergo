@@ -178,6 +178,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 			byte[] hashBytes = (byte[]) Blake2b256.hash(key);
 			String hash = HexFormat.of().formatHex(hashBytes);
 			Main.node.setConfValue("scorex.restApi.apiKeyHash", hash);
+			restartNeededNote.setVisible(true);
 		}
 	}
 
@@ -275,6 +276,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		Pair<String, Integer> result = dialog.showForResult().orElse(null);
 		if (result != null) {
 			Main.node.setConfValue("scorex.network.declaredAddress", toSocketAddress(result.getKey(), result.getValue()));
+			restartNeededNote.setVisible(true);
 		}
 	}
 
