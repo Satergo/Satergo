@@ -85,6 +85,7 @@ public class ErgoInterface {
 					.withAmountToSpend(amountToSend)
 					.withFeeAmount(feeAmount)
 					.withTokensToSpend(List.of(tokensToSend))
+					.withInputBoxesLoader(new ExplorerAndPoolUnspentBoxesLoader().withAllowChainedTx(true))
 					.loadTop();
 			UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
 			OutBoxBuilder newBoxBuilder = txBuilder.outBoxBuilder();
