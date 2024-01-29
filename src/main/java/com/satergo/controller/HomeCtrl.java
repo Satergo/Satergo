@@ -1,11 +1,7 @@
 package com.satergo.controller;
 
 import com.satergo.*;
-import com.satergo.ergo.Balance;
-import com.satergo.ergo.ErgoInterface;
-import com.satergo.ergo.TokenBalance;
-import com.satergo.ergo.TokenSummary;
-import com.satergo.ergo.ErgoURI;
+import com.satergo.ergo.*;
 import com.satergo.extra.PriceCurrency;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
@@ -212,18 +208,16 @@ public class HomeCtrl implements WalletTab, Initializable {
 	}
 
 	@FXML
-	public void send(ActionEvent e) {
+	public void send(ActionEvent event) {
 		TextField address = sendAddress, amount = sendAmount, fee = sendFee;
 
-		if (address.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
-		else {
-			Address recipient;
-			try {
-				recipient = Address.create(address.getText());
-			} catch (RuntimeException ex) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("invalidAddress"));
-				return;
-			}
+		if (address.getText().isBlank()) {
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
+			return;
+		}
+		Address recipient;
+		try {
+			recipient = Address.create(address.getText());
 			if (recipient.isMainnet() && Main.programData().nodeNetworkType.get() != NetworkType.MAINNET) {
 				Utils.alert(Alert.AlertType.ERROR, Main.lang("recipientIsAMainnetAddress"));
 				return;
@@ -232,130 +226,140 @@ public class HomeCtrl implements WalletTab, Initializable {
 				Utils.alert(Alert.AlertType.ERROR, Main.lang("recipientIsATestnetAddress"));
 				return;
 			}
-			BigDecimal amountFullErg;
-			if (!tokenList.getChildren().isEmpty() && amount.getText().isBlank()) {
-				// Default value of 0.001 ERG when none is specified but there are tokens specified
-				amountFullErg = new BigDecimal("0.001");
-			} else {
-				if (amount.getText().isBlank()) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
-					return;
-				} else {
-					try {
-						amountFullErg = new BigDecimal(amount.getText());
-					} catch (NumberFormatException ex) {
-						Utils.alert(Alert.AlertType.ERROR, Main.lang("amountInvalid"));
-						return;
-					}
-					if (!ErgoInterface.hasValidNumberOfDecimals(amountFullErg)) {
-						Utils.alert(Alert.AlertType.ERROR, Main.lang("amountHasTooManyDecimals"));
-						return;
-					}
-				}
-			}
-			long amountNanoErg = ErgoInterface.toNanoErg(amountFullErg);
-			ErgoToken[] tokensToSend = new ErgoToken[tokenList.getChildren().size()];
-			HashMap<ErgoId, String> tokenNames = new HashMap<>(tokenList.getChildren().size());
-			for (int i = 0; i < tokenList.getChildren().size(); i++) {
-				TokenLine tokenLine = (TokenLine) tokenList.getChildren().get(i);
-				if (!tokenLine.hasAmount()) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_needsAmount").formatted(tokenLine.tokenSummary.name()));
-					return;
-				}
-				if (!tokenLine.amountIsValid()) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_hasInvalidAmount").formatted(tokenLine.tokenSummary.name()));
-					return;
-				}
-				tokensToSend[i] = new ErgoToken(tokenLine.tokenSummary.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenSummary.decimals()));
-				tokenNames.put(ErgoId.create(tokenLine.tokenSummary.id()), tokenLine.tokenSummary.name());
-			}
-			BigDecimal feeFullErg = null;
-			if (!fee.getText().isBlank()) {
-				try {
-					feeFullErg = new BigDecimal(fee.getText());
-				} catch (NumberFormatException ex) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("feeInvalid"));
-					return;
-				}
-				if (!ErgoInterface.hasValidNumberOfDecimals(feeFullErg)) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("feeHasTooManyDecimals"));
-					return;
-				}
-			}
-			long feeNanoErg = feeFullErg == null ? Parameters.MinFee : ErgoInterface.toNanoErg(feeFullErg);
-			if (feeNanoErg < Parameters.MinFee) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("feeTooLow").formatted(ErgoInterface.toFullErg(Parameters.MinFee)));
+		} catch (RuntimeException e) {
+			// Invalid address, check if it is a stealth address instead
+			try {
+				ErgoStealthAddress stealth = new ErgoStealthAddress(address.getText());
+				recipient = stealth.generatePaymentAddress(Main.programData().nodeNetworkType.get());
+			} catch (Exception ex) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("invalidAddress"));
 				return;
 			}
-			Wallet wallet = Main.get().getWallet();
-			send.setDisable(true);
-			Task<UnsignedTransaction> unsignedTxTask = new Task<>() {
-				@Override
-				protected UnsignedTransaction call() {
-					return ErgoInterface.createUnsignedTransaction(Utils.createErgoClient(),
-							candidates.stream().map(index -> {
-								try {
-									return Main.get().getWallet().publicAddress(index);
-								} catch (WalletKey.Failure ex) {
-									throw new RuntimeException(ex);
-								}
-							}).toList(),
-							recipient, amountNanoErg, feeNanoErg, change, tokensToSend);
-				}
-			};
-			unsignedTxTask.setOnSucceeded(s -> {
-				UnsignedTransaction unsignedTx = unsignedTxTask.getValue();
-				SignedTransaction signedTx = Utils.createErgoClient().execute(ctx -> {
-					try {
-						return wallet.key().sign(ctx, unsignedTx, candidates);
-					} catch (WalletKey.Failure ex) {
-						return null;
-					}
-				});
-				if (signedTx == null) {
-					send.setDisable(false);
+		}
+		BigDecimal amountFullErg;
+		if (!tokenList.getChildren().isEmpty() && amount.getText().isBlank()) {
+			// Default value of 0.001 ERG when no ERG is specified but there are tokens specified
+			amountFullErg = new BigDecimal("0.001");
+		} else {
+			if (amount.getText().isBlank()) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
+				return;
+			} else {
+				try {
+					amountFullErg = new BigDecimal(amount.getText());
+				} catch (NumberFormatException ex) {
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("amountInvalid"));
 					return;
 				}
-				Task<String> transactTask = new Task<>() {
-					@Override
-					protected String call() {
-						return wallet.transact(signedTx);
-					}
-				};
-				transactTask.setOnSucceeded(ts -> {
-					send.setDisable(false);
-					String transactionId = transactTask.getValue();
-					txLink.setText(transactionId);
-					txLink.setOnAction(te -> Main.get().getHostServices().showDocument(Utils.explorerTransactionUrl(transactionId)));
-					copyTxId.setOnAction(ce -> {
-						Utils.copyStringToClipboard(transactionId);
-						Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), 400);
-					});
-					txIdContainer.setVisible(true);
-				});
-				transactTask.setOnFailed(te -> {
-					// Not sure if it can be null
-					if (transactTask.getException() != null) {
-						Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), transactTask.getException());
-						transactTask.getException().printStackTrace();
-					}
-					send.setDisable(false);
-				});
-				new Thread(transactTask).start();
-			});
-			unsignedTxTask.setOnFailed(f -> {
-				send.setDisable(false);
-				if (unsignedTxTask.getException() instanceof InputBoxesSelectionException.NotEnoughErgsException ex) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(FormatNumber.ergExact(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
-				} else if (unsignedTxTask.getException() instanceof InputBoxesSelectionException.NotEnoughTokensException ex) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughOf_s").formatted(ex.tokenBalances.keySet().stream().map(ErgoId::create).map(tokenNames::get).map(name -> '"' + name + '"').collect(Collectors.joining(", "))));
-				} else if (unsignedTxTask.getException() != null) {
-					Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), unsignedTxTask.getException());
-					unsignedTxTask.getException().printStackTrace();
+				if (!ErgoInterface.hasValidNumberOfDecimals(amountFullErg)) {
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("amountHasTooManyDecimals"));
+					return;
+				}
+			}
+		}
+		long amountNanoErg = ErgoInterface.toNanoErg(amountFullErg);
+		ErgoToken[] tokensToSend = new ErgoToken[tokenList.getChildren().size()];
+		HashMap<ErgoId, String> tokenNames = new HashMap<>(tokenList.getChildren().size());
+		for (int i = 0; i < tokenList.getChildren().size(); i++) {
+			TokenLine tokenLine = (TokenLine) tokenList.getChildren().get(i);
+			if (!tokenLine.hasAmount()) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_needsAmount").formatted(tokenLine.tokenSummary.name()));
+				return;
+			}
+			if (!tokenLine.amountIsValid()) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_hasInvalidAmount").formatted(tokenLine.tokenSummary.name()));
+				return;
+			}
+			tokensToSend[i] = new ErgoToken(tokenLine.tokenSummary.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenSummary.decimals()));
+			tokenNames.put(ErgoId.create(tokenLine.tokenSummary.id()), tokenLine.tokenSummary.name());
+		}
+		BigDecimal feeFullErg = null;
+		if (!fee.getText().isBlank()) {
+			try {
+				feeFullErg = new BigDecimal(fee.getText());
+			} catch (NumberFormatException ex) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("feeInvalid"));
+				return;
+			}
+			if (!ErgoInterface.hasValidNumberOfDecimals(feeFullErg)) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("feeHasTooManyDecimals"));
+				return;
+			}
+		}
+		long feeNanoErg = feeFullErg == null ? Parameters.MinFee : ErgoInterface.toNanoErg(feeFullErg);
+		if (feeNanoErg < Parameters.MinFee) {
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("feeTooLow").formatted(ErgoInterface.toFullErg(Parameters.MinFee)));
+			return;
+		}
+		Wallet wallet = Main.get().getWallet();
+		send.setDisable(true);
+		Address rec = recipient;
+		Task<UnsignedTransaction> unsignedTxTask = new Task<>() {
+			@Override
+			protected UnsignedTransaction call() {
+				return ErgoInterface.createUnsignedTransaction(Utils.createErgoClient(),
+						candidates.stream().map(index -> {
+							try {
+								return Main.get().getWallet().publicAddress(index);
+							} catch (WalletKey.Failure ex) {
+								throw new RuntimeException(ex);
+							}
+						}).toList(),
+						rec, amountNanoErg, feeNanoErg, change, tokensToSend);
+			}
+		};
+		unsignedTxTask.setOnSucceeded(s -> {
+			UnsignedTransaction unsignedTx = unsignedTxTask.getValue();
+			SignedTransaction signedTx = Utils.createErgoClient().execute(ctx -> {
+				try {
+					return wallet.key().sign(ctx, unsignedTx, candidates);
+				} catch (WalletKey.Failure ex) {
+					return null;
 				}
 			});
-			new Thread(unsignedTxTask).start();
-		}
+			if (signedTx == null) {
+				send.setDisable(false);
+				return;
+			}
+			Task<String> transactTask = new Task<>() {
+				@Override
+				protected String call() {
+					return wallet.transact(signedTx);
+				}
+			};
+			transactTask.setOnSucceeded(ts -> {
+				send.setDisable(false);
+				String transactionId = transactTask.getValue();
+				txLink.setText(transactionId);
+				txLink.setOnAction(te -> Main.get().getHostServices().showDocument(Utils.explorerTransactionUrl(transactionId)));
+				copyTxId.setOnAction(ce -> {
+					Utils.copyStringToClipboard(transactionId);
+					Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), 400);
+				});
+				txIdContainer.setVisible(true);
+			});
+			transactTask.setOnFailed(te -> {
+				// Not sure if it can be null
+				if (transactTask.getException() != null) {
+					Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), transactTask.getException());
+					transactTask.getException().printStackTrace();
+				}
+				send.setDisable(false);
+			});
+			new Thread(transactTask).start();
+		});
+		unsignedTxTask.setOnFailed(f -> {
+			send.setDisable(false);
+			if (unsignedTxTask.getException() instanceof InputBoxesSelectionException.NotEnoughErgsException ex) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(FormatNumber.ergExact(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
+			} else if (unsignedTxTask.getException() instanceof InputBoxesSelectionException.NotEnoughTokensException ex) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughOf_s").formatted(ex.tokenBalances.keySet().stream().map(ErgoId::create).map(tokenNames::get).map(name -> '"' + name + '"').collect(Collectors.joining(", "))));
+			} else if (unsignedTxTask.getException() != null) {
+				Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), unsignedTxTask.getException());
+				unsignedTxTask.getException().printStackTrace();
+			}
+		});
+		new Thread(unsignedTxTask).start();
 	}
 
 	@FXML

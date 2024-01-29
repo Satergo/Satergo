@@ -92,9 +92,7 @@ public class ErgoInterface {
 			if (tokensToSend.length > 0) {
 				newBoxBuilder.tokens(tokensToSend);
 			}
-			newBoxBuilder.contract(ctx.compileContract(ConstantsBuilder.create()
-					.item("recipientPk", recipient.getPublicKey())
-					.build(), "{ recipientPk }")).build();
+			newBoxBuilder.contract(recipient.toErgoContract());
 			OutBox newBox = newBoxBuilder.build();
 			return txBuilder
 					.addInputs(boxesToSpend.toArray(new InputBox[0])).addOutputs(newBox)
