@@ -22,7 +22,7 @@ public class ErgoInterface {
 	public static String getExplorerUrl(NetworkType networkType) {
 		return switch (networkType) {
 			case MAINNET -> SystemProperties.mainnetExplorerApi().orElse("https://api.ergoplatform.com");
-			case TESTNET -> SystemProperties.testnetExplorerApi().orElse("https://tn-ergo-explorer-api.anetabtc.io");
+			case TESTNET -> SystemProperties.testnetExplorerApi().orElse("https://api-testnet.ergoplatform.com");
 		};
 	}
 

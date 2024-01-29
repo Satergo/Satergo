@@ -1,4 +1,4 @@
-package com.satergo.extra;
+package com.satergo.node;
 
 import com.satergo.Main;
 import javafx.collections.FXCollections;

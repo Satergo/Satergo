@@ -1,8 +1,8 @@
 package com.satergo.controller;
 
 import com.satergo.*;
-import com.satergo.ergo.EmbeddedNode;
-import com.satergo.ergo.EmbeddedNodeInfo;
+import com.satergo.node.EmbeddedNode;
+import com.satergo.node.EmbeddedNodeInfo;
 import com.satergo.extra.DownloadTask;
 import com.satergo.extra.SimpleTask;
 import javafx.event.ActionEvent;

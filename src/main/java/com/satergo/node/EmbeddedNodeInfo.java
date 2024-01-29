@@ -1,4 +1,4 @@
-package com.satergo.ergo;
+package com.satergo.node;
 
 import com.grack.nanojson.*;
 import org.ergoplatform.appkit.NetworkType;

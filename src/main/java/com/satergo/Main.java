@@ -2,7 +2,7 @@ package com.satergo;
 
 import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
-import com.satergo.ergo.EmbeddedNode;
+import com.satergo.node.EmbeddedNode;
 import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.ergo.ErgoURI;
 import com.satergo.extra.IncorrectPasswordException;

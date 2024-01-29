@@ -1,9 +1,10 @@
-package com.satergo.ergo;
+package com.satergo.node;
 
 import com.grack.nanojson.JsonObject;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.controller.NodeOverviewCtrl;
+import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.DownloadTask;
 import com.satergo.extra.dialog.SatVoidDialog;
 import com.typesafe.config.Config;

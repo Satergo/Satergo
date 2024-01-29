@@ -6,6 +6,7 @@ import javafx.scene.control.ProgressBar;
 /**
  * Adds a :zero pseudo-class to progress bars.
  */
+@SuppressWarnings("unused")
 public class ProgressBarSkin extends javafx.scene.control.skin.ProgressBarSkin {
 
 	private static final PseudoClass ZERO = PseudoClass.getPseudoClass("zero");

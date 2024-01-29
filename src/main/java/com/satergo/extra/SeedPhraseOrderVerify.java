@@ -21,7 +21,6 @@ public class SeedPhraseOrderVerify extends TilePane {
 		getStyleClass().add("seed-phrase-tiles");
 		ArrayList<String> shuffled = new ArrayList<>(List.of(words));
 		Collections.shuffle(shuffled);
-		int col = 0, row = 0;
 		for (String word : shuffled) {
 			ToggleButton button = new ToggleButton(word);
 			button.getStyleClass().add("seed-phrase-word");

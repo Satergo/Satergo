@@ -15,47 +15,53 @@
 		</Button>
 	</HBox>
 
-	<ScrollPane fitToWidth="true" fitToHeight="true" vbarPolicy="NEVER" hbarPolicy="NEVER">
-		<GridPane vgap="4" hgap="8">
-			<columnConstraints>
-				<ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-				<ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-			</columnConstraints>
+	<GridPane vgap="4" hgap="20">
+		<columnConstraints>
+			<ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+			<ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+		</columnConstraints>
 
-			<VBox id="account-total-balance" styleClass="section" GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="4">
-				<Label fx:id="totalBalanceLabel" text="%totalBalance" textAlignment="CENTER" maxWidth="Infinity" alignment="CENTER" style="-fx-font-size: 11px;"/>
-				<BorderPane>
-					<left>
-						<Label BorderPane.alignment="CENTER_LEFT" fx:id="totalBalance" text="0.0 ERG" style="-fx-font-size: 18px;"/>
-					</left>
-					<right>
-						<Button BorderPane.alignment="CENTER_RIGHT" text="%settings" onAction="#openSettingsDialog" contentDisplay="RIGHT" graphicTextGap="16" styleClass="transparent" style="-fx-cursor: HAND;">
-							<graphic><Icon icon="gear" height="12" style="-fill: white;"/></graphic>
-						</Button>
-					</right>
-				</BorderPane>
+		<ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" GridPane.columnIndex="0" GridPane.rowIndex="0">
+			<VBox spacing="4">
+				<VBox id="account-total-balance" styleClass="section" spacing="4">
+					<Label fx:id="totalBalanceLabel" text="%totalBalance" textAlignment="CENTER" maxWidth="Infinity" alignment="CENTER" style="-fx-font-size: 11px;"/>
+					<BorderPane>
+						<left>
+							<Label BorderPane.alignment="CENTER_LEFT" fx:id="totalBalance" text="0.0 ERG" style="-fx-font-size: 18px;"/>
+						</left>
+						<right>
+							<Button BorderPane.alignment="CENTER_RIGHT" text="%settings" onAction="#openSettingsDialog" contentDisplay="RIGHT" graphicTextGap="16" styleClass="transparent" style="-fx-cursor: HAND;">
+								<graphic><Icon icon="gear" height="12" style="-fill: white;"/></graphic>
+							</Button>
+						</right>
+					</BorderPane>
+				</VBox>
+
+				<VBox fx:id="tokens" spacing="5" managed="${tokens.visible}"/>
 			</VBox>
+		</ScrollPane>
 
-			<VBox GridPane.columnIndex="0" GridPane.rowIndex="1" fx:id="tokens" spacing="5" managed="${tokens.visible}"/>
+		<ScrollPane fitToWidth="true" fitToHeight="true" GridPane.columnIndex="1" GridPane.rowIndex="0">
+			<VBox spacing="4">
+				<VBox styleClass="section" alignment="TOP_CENTER" spacing="14">
+					<Label text="%receive"/>
 
-			<VBox GridPane.columnIndex="0" GridPane.rowIndex="2" spacing="4">
-				<HBox alignment="CENTER_LEFT" spacing="4">
-					<Label text="%yourAddresses"/>
-					<Button onAction="#addAddress" styleClass="small" text="%plus_Add"/>
-				</HBox>
-				<VBox fx:id="addresses" spacing="2"/>
+					<ImageView fx:id="qrCodeImage"/>
+
+					<Hyperlink fx:id="saveQrCode" text="%saveQrCode"/>
+
+					<ComboBox fx:id="qrCodeAddress"/>
+				</VBox>
+
+				<VBox spacing="4">
+					<HBox alignment="CENTER_LEFT" spacing="4">
+						<Label text="%yourAddresses"/>
+						<Button onAction="#addAddress" styleClass="small" text="%plus_Add"/>
+					</HBox>
+					<VBox fx:id="addresses" spacing="2"/>
+				</VBox>
 			</VBox>
+		</ScrollPane>
 
-
-			<VBox styleClass="section" alignment="TOP_CENTER" spacing="14" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.rowSpan="3">
-				<Label text="%receive"/>
-
-				<ImageView fx:id="qrCodeImage"/>
-
-				<Hyperlink fx:id="saveQrCode" text="%saveQrCode"/>
-
-				<ComboBox fx:id="qrCodeAddress"/>
-			</VBox>
-		</GridPane>
-	</ScrollPane>
+	</GridPane>
 </VBox>

@@ -2,10 +2,10 @@
 .idea/
 /build/
 /buildSrc/build/
-runtimes/
-installers/
+/runtimes/
+/installers/
 
 # running
-node/
-program-data.json
+/node/
+/program-data.json
 *.erg
