@@ -12,7 +12,7 @@
 			</left>
 			<right>
 				<HBox spacing="10" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
-					<Hyperlink fx:id="tokens" text="%[tokens]" managed="${tokens.visible}"/>
+					<Hyperlink fx:id="tokens" text="%[tokens]" managed="${tokens.visible}" styleClass="text-color"/>
 					<Label fx:id="totalCoins"/>
 					<StackPane styleClass="arrow-button">
 						<StackPane fx:id="arrow" styleClass="arrow" StackPane.alignment="CENTER"/>

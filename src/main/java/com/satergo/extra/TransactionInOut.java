@@ -52,13 +52,6 @@ public final class TransactionInOut extends HBox {
 		Utils.addCopyContextMenu(this.address);
 		if (isMyAddress) this.address.setUnderline(true);
 		this.amount.setText(amount);
-		setOnContextMenuRequested(e -> {
-			ContextMenu menu = new ContextMenu();
-			MenuItem copyAddress = new MenuItem("Copy address");
-			menu.getItems().add(copyAddress);
-			menu.show(this, Side.BOTTOM, getWidth(), 0);
-			menu.setX(menu.getX() - menu.prefWidth(-1));
-		});
 		this.tokens.setVisible(hasTokens);
 		this.tokens.setOnAction(e -> showTokens.run());
 	}

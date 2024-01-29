@@ -1,10 +1,11 @@
 package com.satergo.extra;
 
-import com.satergo.Load;
 import com.satergo.FormatNumber;
+import com.satergo.Load;
+import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
-import com.satergo.ergo.TokenBalance;
+import com.satergo.ergo.TokenSummary;
 import javafx.animation.*;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
@@ -15,9 +16,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -25,6 +24,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 import org.ergoplatform.appkit.Address;
+import org.ergoplatform.explorer.client.model.AssetInstanceInfo;
 import org.ergoplatform.explorer.client.model.InputInfo;
 import org.ergoplatform.explorer.client.model.OutputInfo;
 import org.ergoplatform.explorer.client.model.TransactionInfo;
@@ -40,10 +40,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TransactionCell extends BorderPane implements Initializable {
@@ -94,6 +91,15 @@ public class TransactionCell extends BorderPane implements Initializable {
 			if (e.getButton() == MouseButton.PRIMARY)
 				setExpanded(!isExpanded());
 		});
+		// context menu
+		MenuItem copyTxId = new MenuItem(Main.lang("copyTransactionId"));
+		copyTxId.setOnAction(e -> Utils.copyStringToClipboard(tx.getId()));
+		ContextMenu context = new ContextMenu(copyTxId);
+		top.setOnContextMenuRequested(e -> {
+			if (context.isShowing()) context.hide();
+			context.show(top, e.getScreenX(), e.getScreenY());
+		});
+		// expansion
 		arrow.rotateProperty().bind(new DoubleBinding() {
 			{ bind(transitionProperty()); }
 
@@ -192,17 +198,23 @@ public class TransactionCell extends BorderPane implements Initializable {
 		dateTime.setText(time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
 		long diff = totalReceived(tx, myAddresses) - totalSent(tx, myAddresses);
 		totalCoins.setText(FORMAT_TOTAL.format(ErgoInterface.toFullErg(diff)) + " ERG");
-		Map<String, List<TokenBalance>> tokensSent = totalSentTokens(tx, myAddresses).stream().collect(Collectors.groupingBy(TokenBalance::id));
-		List<TokenBalance> totalTokens = totalReceivedTokens(tx, myAddresses).stream().map(tb -> {
-			if (!tokensSent.containsKey(tb.id())) return tb;
-			return tb.withAmount(tb.amount() - tokensSent.get(tb.id()).stream().mapToLong(TokenBalance::amount).sum());
-		}).toList();
-		// TODO the total calculation is wrong!
-		// tokens.setVisible(!totalTokens.isEmpty());
-		tokens.setVisible(false);
-		tokens.setOnAction(e -> {
-			Utils.alert(Alert.AlertType.INFORMATION, totalTokens.stream().map(tb -> {
-				return tb.name() + ": " + (tb.fullAmount().compareTo(BigDecimal.ZERO) > 0 ? "+" : "") + tb.fullAmount().toPlainString();
+		Map<TokenSummary, Long> tokensSent = totalTokens(tx, TransactionInOut.Type.INPUT, myAddresses);
+		Map<TokenSummary, Long> tokensReceived = totalTokens(tx, TransactionInOut.Type.OUTPUT, myAddresses);
+		HashMap<TokenSummary, Long> totalTokens = new HashMap<>(tokensReceived);
+		tokensSent.forEach((t, a) -> {
+			if (totalTokens.containsKey(t)) {
+				totalTokens.put(t, totalTokens.get(t) - a);
+			} else {
+				totalTokens.put(t, -a);
+			}
+		});
+		totalTokens.values().removeIf(amount -> amount == 0L);
+		tokens.setVisible(!totalTokens.isEmpty());
+		tokens.setOnAction(event -> {
+			Utils.alert(Alert.AlertType.INFORMATION, totalTokens.entrySet().stream().map(e -> {
+				BigDecimal amount = ErgoInterface.fullTokenAmount(e.getValue(), e.getKey().decimals());
+				String name = e.getKey().name().isBlank() ? Main.lang("unnamed_parentheses") : e.getKey().name();
+				return name + ": " + (amount.compareTo(BigDecimal.ZERO) > 0 ? "+" : "") + amount.toPlainString();
 			}).collect(Collectors.joining("\n")));
 		});
 	}
@@ -216,17 +228,29 @@ public class TransactionCell extends BorderPane implements Initializable {
 		return tx.getOutputs().stream().filter(info -> myAddresses.contains(getAddress(info))).mapToLong(OutputInfo::getValue).sum();
 	}
 
-	private static List<TokenBalance> totalReceivedTokens(TransactionInfo tx, List<Address> myAddresses) {
-		return tx.getOutputs().stream().filter(info -> myAddresses.contains(getAddress(info))).flatMap(o ->
-				o.getAssets().stream().map(a -> new TokenBalance(a.getTokenId(), a.getAmount(), Objects.requireNonNullElse(a.getDecimals(), 0), a.getName()))).toList();
-	}
-
 	private static long totalSent(TransactionInfo tx, List<Address> myAddresses) {
 		return tx.getInputs().stream().filter(info -> myAddresses.contains(getAddress(info))).mapToLong(InputInfo::getValue).sum();
 	}
 
-	private static List<TokenBalance> totalSentTokens(TransactionInfo tx, List<Address> myAddresses) {
-		return tx.getInputs().stream().filter(info -> myAddresses.contains(getAddress(info))).flatMap(o ->
-				o.getAssets().stream().map(a -> new TokenBalance(a.getTokenId(), a.getAmount(), Objects.requireNonNullElse(a.getDecimals(), 0), a.getName()))).toList();
+	private static Map<TokenSummary, Long> totalTokens(TransactionInfo tx, TransactionInOut.Type dir, List<Address> myAddresses) {
+		record TokenSummaryInfo(String id, int decimals, String name) implements TokenSummary {}
+
+		HashMap<TokenSummary, Long> total = new HashMap<>();
+		List<?> list = switch (dir) {
+			case INPUT -> tx.getInputs();
+			case OUTPUT -> tx.getOutputs();
+		};
+		for (Object ioput : list) {
+			if (!myAddresses.contains((dir == TransactionInOut.Type.INPUT ? getAddress((InputInfo) ioput) : getAddress((OutputInfo) ioput))))
+				continue;
+			for (AssetInstanceInfo a : (dir == TransactionInOut.Type.INPUT ? ((InputInfo) ioput).getAssets() : ((OutputInfo) ioput).getAssets())) {
+				TokenSummary tokenSummary = new TokenSummaryInfo(a.getTokenId(), Objects.requireNonNullElse(a.getDecimals(), 0), a.getName());
+				if (total.containsKey(tokenSummary)) {
+					total.put(tokenSummary, total.get(tokenSummary) + a.getAmount());
+				} else total.put(tokenSummary, a.getAmount());
+			}
+		}
+		return Collections.unmodifiableMap(total);
 	}
+
 }
