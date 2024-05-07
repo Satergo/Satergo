@@ -51,6 +51,7 @@ public class ErgoLedgerAppkit {
 		byte[] registers = serializeRegisters(box.getRegisters());
 		List<ErgoToken> boxTokens = box.getTokens();
 		int sessionId = protocol.attestBoxStart(txId, box.getTransactionIndex(), box.getValue(), ergoTree.length, box.getCreationHeight(), boxTokens.size(), registers.length, null);
+		System.out.println("sessionId = " + sessionId);
 		int frameCount = 0;
 		double chunkCount = Math.ceil(ergoTree.length / 255.0);
 		for (int i = 0; i < chunkCount; i++) {
