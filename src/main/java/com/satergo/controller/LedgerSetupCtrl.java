@@ -91,7 +91,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			System.out.println("Didn't get it, error " + ex.getMessage());
 			return;
 		}
-		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
+		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 		if (path == null) return;
 		char[] pass = password.getText().toCharArray();
 		WalletKey.Ledger key = WalletKey.Ledger.create(parentExtPubKey, ergoLedgerAppkit, pass);
