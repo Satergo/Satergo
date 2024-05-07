@@ -72,7 +72,10 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			byte[] data = ByteBuffer.allocate(2 + apdu.length).putShort((short) apdu.length).put(apdu).array();
 			int blockSize = packetSize - 5;
 			int nbBlocks = (int) Math.ceil((double) data.length / (double) blockSize);
+			byte[] idk = concat(data, new byte[nbBlocks * blockSize - data.length + 1]);
 			data = Arrays.copyOf(data, data.length + nbBlocks * blockSize - data.length + 1);
+			if (!Arrays.equals(idk, data))
+				throw new IllegalArgumentException("not logical");
 			ArrayList<byte[]> blocks = new ArrayList<>();
 
 			for (int i = 0; i < nbBlocks; i++) {
@@ -134,6 +137,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 	@Override
 	public void writeAPDU(APDUCommand command) {
 		List<byte[]> blocks = framing.makeBlocks(command.getBytes());
+		System.out.println("Writing APDU of length " + command.getBytes().length + " partitioned into " + blocks.size() + " blocks");
 		for (byte[] block : blocks) {
 			hidDevice.write(block, block.length, (byte) 0);
 		}
