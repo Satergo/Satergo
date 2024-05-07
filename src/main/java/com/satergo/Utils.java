@@ -8,7 +8,8 @@ import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPasswordInputDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
 import com.sun.management.OperatingSystemMXBean;
-import javafx.application.Platform;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -17,6 +18,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import org.ergoplatform.appkit.*;
 
 import java.io.*;
@@ -259,14 +261,9 @@ public class Utils {
 	}
 
 	public static void fxRunDelayed(Runnable runnable, long ms) {
-		new Thread(() -> {
-			try {
-				Thread.sleep(ms);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			Platform.runLater(runnable);
-		}).start();
+		KeyFrame keyFrame = new KeyFrame(Duration.millis(ms), e -> runnable.run());
+		Timeline timeline = new Timeline(keyFrame);
+		timeline.play();
 	}
 
 	public static String explorerTransactionUrl(String transactionId) {

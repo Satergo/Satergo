@@ -16,7 +16,7 @@ More can easily be added.
 - Windows (x64)
 - Linux (x64 and aarch64)
 - Mac (x64 and aarch64)
-- Universal (Java 20+)
+- Universal (Java 22+)
 
 ## Translating
 To translate the program, open the directory src/main/resources/lang and duplicate Lang.properties.
@@ -31,7 +31,7 @@ Put the language code in place of the question marks.
 ## Build setup
 If you don't want to download the prebuilt runtimes, you can build the wallet for yourself.
 
-Java is not needed for running the prebuilt runtimes, because it is included in the runtime. But for building or running from sources, Java 20+ is required. The easiest way to download and install it is from [adoptium.net](https://adoptium.net/temurin/releases/?version=20).
+Java is not needed for running the prebuilt runtimes, because it is included in the runtime. But for building or running from sources, Java 22+ is required. The easiest way to download and install it is from [adoptium.net](https://adoptium.net/temurin/releases/?version=latest).
 
 To run the wallet from the sources, run the command `./gradlew run`.
 

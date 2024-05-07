@@ -9,9 +9,9 @@ plugins {
 apply plugin: SatergoBuildPlugin
 
 java {
-	sourceCompatibility = JavaLanguageVersion.of(20)
+	sourceCompatibility = JavaLanguageVersion.of(22)
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(20)
+		languageVersion = JavaLanguageVersion.of(22)
 	}
 }
 
@@ -46,7 +46,7 @@ if (platformProvided && project.findProperty("platform") != "auto") {
 	if (arch != "amd64") platform += "-" + arch
 }
 
-def javaFxVersion = '20.0.2'
+def javaFxVersion = '22.0.1'
 def javaFxModules = [ 'base', 'controls', 'fxml', 'graphics' ]
 
 dependencies {
@@ -54,15 +54,15 @@ dependencies {
 		exclude group: 'org.openjfx'
 		exclude group: 'org.controlsfx'
 	}
-	implementation 'org.fxmisc.flowless:flowless:0.7.0'
+	implementation 'org.fxmisc.flowless:flowless:0.7.2'
 
 	implementation 'org.ergoplatform:ergo-appkit_2.12:5.0.1'
-	implementation 'com.typesafe:config:1.4.2'
-	implementation 'org.slf4j:slf4j-simple:1.7.36'
-	implementation 'com.grack:nanojson:1.8' // used for numerous HTTP APIs and ProgramData saving
+	implementation 'com.typesafe:config:1.4.3'
+	implementation 'org.slf4j:slf4j-simple:2.0.13'
+	implementation 'com.grack:nanojson:1.9' // used for numerous HTTP APIs and ProgramData saving
 	implementation 'com.google.code.gson:gson:2.10.1'
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
-	implementation 'com.google.zxing:core:3.5.1' // used for qr codes
+	implementation 'com.google.zxing:core:3.5.3' // used for qr codes
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 }
 
@@ -102,28 +102,28 @@ satergoRuntime {
 	switch (platform) {
 		case "linux": {
 			platformName = "linux-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_linux-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_x64_linux_hotspot_22.0.1_8.tar.gz")
 			break
 		}
 		case "linux-aarch64": {
 			platformName = "linux-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_linux-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_aarch64_linux_hotspot_22.0.1_8.tar.gz")
 			break
 		}
 		case "win": {
 			platformName = "windows-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_windows-x64_bin.zip")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_x64_windows_hotspot_22.0.1_8.zip")
 			break
 		}
 		case "mac": {
 			platformName = "mac-x64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_macos-x64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_x64_mac_hotspot_22.0.1_8.tar.gz")
 			jdkRuntimeRoot = "Contents/Home/"
 			break
 		}
 		case "mac-aarch64": {
 			platformName = "mac-aarch64"
-			jdkRuntimeURI = URI.create("https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_macos-aarch64_bin.tar.gz")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_aarch64_mac_hotspot_22.0.1_8.tar.gz")
 			jdkRuntimeRoot = "Contents/Home/"
 			break
 		}
@@ -141,7 +141,7 @@ satergoRuntime {
 		} else {
 			def runFile = file("${buildDir}/${runtimeDirectoryName}/run.${platform.startsWith("mac") ? "command" : "sh"}")
 			runFile.write('#!/bin/sh\n' +
-					'eval "\\"$(dirname "$0")/bin/' + project.name + '\\" $*"')
+					'"$(dirname "$0")/bin/Satergo" "$@"')
 			runFile.setExecutable(true)
 		}
 	}

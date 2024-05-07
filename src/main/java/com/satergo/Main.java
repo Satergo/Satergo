@@ -2,6 +2,7 @@ package com.satergo;
 
 import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
+import com.satergo.extra.SimpleTask;
 import com.satergo.node.EmbeddedNode;
 import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.ergo.ErgoURI;
@@ -113,9 +114,6 @@ public class Main extends Application {
 		Icon.icons = ResourceBundle.getBundle("icons");
 		Icon.defaultHeight = 16;
 
-		// For Pty4J
-		System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "WARN");
-
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
 			try {
 				Platform.runLater(() -> Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable));
@@ -158,15 +156,12 @@ public class Main extends Application {
 			}
 		}
 
-		new Thread(() -> {
-			try {
-				UpdateChecker.VersionInfo latest = UpdateChecker.fetchLatestInfo();
-				if (UpdateChecker.isNewer(latest.versionCode())) {
-					Platform.runLater(() -> UpdateChecker.showUpdatePopup(latest));
-				}
-			} catch (IOException ignored) {
-			}
-		}).start();
+		new SimpleTask<>(UpdateChecker::fetchLatestInfo)
+				.onSuccess(latest -> {
+					if (UpdateChecker.isNewer(latest.versionCode())) {
+						UpdateChecker.showUpdatePopup(latest);
+					}
+				}).newThread();
 
 		programData.lightTheme.addListener((observable, oldValue, newValue) -> themeStyle.set(newValue ? ThemeStyle.LIGHT : ThemeStyle.DARK));
 	}

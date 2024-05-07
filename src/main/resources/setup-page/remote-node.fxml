@@ -11,5 +11,6 @@
 		<ComboBox fx:id="networkType"/>
 	</VBox>
 
-	<Button styleClass="large" onAction="#continueSetup" text="%continue"/>
+	<Button fx:id="continueButton" styleClass="large" onAction="#continueSetup" text="%continue"/>
+	<Label fx:id="testingConnection" text="%testingConnection" visible="false" managed="${testingConnection.visible}"/>
 </VBox>

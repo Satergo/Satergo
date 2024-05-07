@@ -3,6 +3,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'com.guardsquare:proguard-base:7.3.2'
-	implementation 'org.apache.commons:commons-compress:1.21'
+	implementation 'com.guardsquare:proguard-base:7.4.2'
+	implementation 'com.guardsquare:proguard-core:9.1.3'
+	implementation 'org.apache.commons:commons-compress:1.26.1'
 }

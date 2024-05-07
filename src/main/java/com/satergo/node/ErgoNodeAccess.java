@@ -24,8 +24,12 @@ public class ErgoNodeAccess {
 
 	public record Status(int blockHeight, int headerHeight, int networkHeight, int peerCount) {}
 
+	protected HttpRequest.Builder httpRequestBuilder() {
+		return Utils.httpRequestBuilder();
+	}
+
 	public Status getStatus() {
-		HttpRequest request = Utils.httpRequestBuilder().uri(apiAddress.resolve("/info")).build();
+		HttpRequest request = httpRequestBuilder().uri(apiAddress.resolve("/info")).build();
 		try {
 			JsonObject o = JsonParser.object().from(HTTP.send(request, ofString()).body());
 			return new Status(o.getInt("fullHeight"), o.getInt("headersHeight"), o.getInt("maxPeerHeight"), o.getInt("peersCount"));
@@ -37,7 +41,7 @@ public class ErgoNodeAccess {
 	public enum UnlockingResult { INCORRECT_API_KEY, INCORRECT_PASSWORD, NOT_INITIALIZED, UNKNOWN, SUCCESS }
 
 	public UnlockingResult unlockWallet(String apiKey, String password) {
-		HttpRequest request = Utils.httpRequestBuilder().uri(apiAddress.resolve("/wallet/unlock"))
+		HttpRequest request = httpRequestBuilder().uri(apiAddress.resolve("/wallet/unlock"))
 				.header("Content-Type", "application/json")
 				.header("api_key", apiKey)
 				.POST(HttpRequest.BodyPublishers.ofString(JsonWriter.string().object().value("pass", password).end().done())).build();
