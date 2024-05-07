@@ -39,7 +39,7 @@ public class ErgoLedgerAppkit {
 	}
 
 	public ExtendedPublicKey requestParentExtendedPublicKey() throws ErgoLedgerException {
-		ErgoResponse.ExtendedPublicKey extPubKeyData = protocol.getExtendedPublicKey(new long[] { h(44), h(429), h(0) }, null);
+		ErgoResponse.ExtendedPublicKey extPubKeyData = protocol.getExtendedPublicKey(new int[] { h(44), h(429), h(0) }, null);
 		DerivationPath path = new DerivationPath(JavaHelpers.toIndexedSeq(List.of((int) h(44), (int) h(429), (int) h(0))), false);
 		return new ExtendedPublicKey(extPubKeyData.compressedPublicKey(), extPubKeyData.chainCode(), path)
 				.child(0);
@@ -93,8 +93,8 @@ public class ErgoLedgerAppkit {
 	 * @param changePath The derivation path of the change address. Can be null.
 	 * @return The signature of this transaction
 	 */
-	public byte[] signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, List<InputBox> dataBoxes, List<OutBox> outputBoxes, Address changeAddress, long[] changePath) throws ErgoLedgerException {
-		int sessionId = protocol.startP2PKSigning(networkType, new long[] { h(44), h(429), h(0), 0, 0 }, null);
+	public byte[] signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, List<InputBox> dataBoxes, List<OutBox> outputBoxes, Address changeAddress, int[] changePath) throws ErgoLedgerException {
+		int sessionId = protocol.startP2PKSigning(networkType, new int[] { h(44), h(429), h(0), 0, 0 }, null);
 
 		ArrayList<byte[]> distinctTokenIds = new ArrayList<>();
 		for (OutBox outputBox : outputBoxes) {
@@ -111,7 +111,7 @@ public class ErgoLedgerAppkit {
 			// max 7 tokens IDs per exchange, so do it in chunks
 			int cs = 7;
 			for (int i = 0; i < Math.ceil(distinctTokenIds.size() / (double) cs); i++) {
-				protocol.addTokenIds(sessionId, distinctTokenIds.subList(i * cs, Math.min((i + 1) * cs, distinctTokenIds.size())).toArray(new byte[0][0]));
+				protocol.addTokenIds(sessionId, distinctTokenIds.subList(i * cs, Math.min((i + 1) * cs, distinctTokenIds.size())));
 			}
 		}
 
@@ -140,10 +140,10 @@ public class ErgoLedgerAppkit {
 	}
 
 	private void addDataInputs(int sessionId, List<InputBox> dataBoxes) {
-		protocol.addDataInputs(sessionId, dataBoxes.stream().map(box -> box.getId().getBytes()).toArray(byte[][]::new));
+		protocol.addDataInputs(sessionId, dataBoxes.stream().map(box -> box.getId().getBytes()).toList());
 	}
 
-	private void addOutputs(int sessionId, List<OutBox> boxes, ErgoNetworkType networkType, ArrayList<byte[]> distinctTokenIds, Address changeAddress, long[] changePath) {
+	private void addOutputs(int sessionId, List<OutBox> boxes, ErgoNetworkType networkType, ArrayList<byte[]> distinctTokenIds, Address changeAddress, int[] changePath) {
 		for (OutBox box : boxes) {
 			ErgoTree ergoTree = box.getErgoTree();
 			byte[] treeBytes = ergoTree.bytes();
@@ -196,9 +196,9 @@ public class ErgoLedgerAppkit {
 		return -1;
 	}
 
-	private static final long HARDENED = 0x80000000L;
+	private static final int HARDENED = 0x80000000;
 
-	public static long h(long x) {
+	public static int h(int x) {
 		return x + HARDENED;
 	}
 }
