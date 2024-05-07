@@ -83,7 +83,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 				head.putShort((short) channel);
 				head.put(TAG);
 				head.putShort((short) i);
-				byte[] chunk = Arrays.copyOfRange(data, i * blockSize, (i + 1) * blockSize);
+				byte[] chunk = Arrays.copyOfRange(data, i * blockSize, Math.min(data.length, (i + 1) * blockSize));
 				blocks.add(concat(head.array(), chunk));
 			}
 

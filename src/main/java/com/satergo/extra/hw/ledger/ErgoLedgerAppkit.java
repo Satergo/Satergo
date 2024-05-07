@@ -58,7 +58,10 @@ public class ErgoLedgerAppkit {
 			int start = i * 255;
 			byte[] chunk = Arrays.copyOfRange(ergoTree, start, Math.min(start + 255, ergoTree.length));
 			Optional<Integer> result = protocol.attestAddErgoTreeChunk(sessionId, chunk);
-			if (result.isPresent()) frameCount = result.get();
+			if (result.isPresent()) {
+				frameCount = result.get();
+				break;
+			}
 		}
 		if (!boxTokens.isEmpty()) {
 			if (boxTokens.size() > 20) {
@@ -81,6 +84,7 @@ public class ErgoLedgerAppkit {
 		if (!box.getRegisters().isEmpty()) {
 			writeInChunks(protocol::attestAddRegistersChunk, sessionId, registers);
 		}
+		System.out.println("frameCount = " + frameCount);
 		AttestedBoxFrame[] attestedBoxFrames = new AttestedBoxFrame[frameCount];
 		for (int i = 0; i < frameCount; i++) {
 			AttestedBoxFrame attestedBoxFrame = protocol.getAttestedBoxFrame(sessionId, i);
