@@ -1,15 +1,13 @@
 package com.satergo.controller;
 
-import com.satergo.Main;
-import com.satergo.Utils;
-import com.satergo.Wallet;
-import com.satergo.WalletKey;
+import com.satergo.*;
 import com.satergo.extra.hw.ledger.ErgoLedgerAppkit;
 import com.satergo.extra.hw.ledger.HidLedgerDevice2;
 import com.satergo.extra.hw.ledger.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
+import com.satergo.jledger.transport.speculos.EmulatorLedgerDevice;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -39,8 +37,16 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 	@FXML private TextField walletName;
 	@FXML private PasswordField password;
 
+	private boolean emulator;
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		emulator = SystemProperties.ledgerEmulator().isPresent() && SystemProperties.ledgerEmulatorPort().isPresent();
+		if (emulator) {
+			status.setText("Found emulator");
+			found.setVisible(true);
+			return;
+		}
 		ledgerSelector = new LedgerSelector() {
 			@Override
 			public void deviceFound(HidDevice device) {
@@ -64,10 +70,10 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 	@FXML
 	public void continueProcess(ActionEvent e) {
 		System.out.println("Stopping selector");
-		ledgerSelector.stop();
+		if (!emulator) ledgerSelector.stop();
 		System.out.println("Stopped");
 		System.out.println("Instantiating device");
-		LedgerDevice ledgerDevice = new HidLedgerDevice2(ledgerSelector.getDevice());
+		LedgerDevice ledgerDevice = emulator ? new EmulatorLedgerDevice(SystemProperties.ledgerEmulator().get(), SystemProperties.ledgerEmulatorPort().get(), LedgerDevice.NANO_S_PRODUCT_ID) : new HidLedgerDevice2(ledgerSelector.getDevice());
 		System.out.println("Instantiated");
 		System.out.println("Opening device");
 		ledgerDevice.open();
@@ -115,6 +121,6 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 	@Override
 	public void cleanup() {
-		ledgerSelector.stop();
+		if (!emulator) ledgerSelector.stop();
 	}
 }

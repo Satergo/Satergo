@@ -72,10 +72,7 @@ public class HidLedgerDevice2 implements LedgerDevice {
 			byte[] data = ByteBuffer.allocate(2 + apdu.length).putShort((short) apdu.length).put(apdu).array();
 			int blockSize = packetSize - 5;
 			int nbBlocks = (int) Math.ceil((double) data.length / (double) blockSize);
-			byte[] idk = concat(data, new byte[nbBlocks * blockSize - data.length + 1]);
 			data = Arrays.copyOf(data, data.length + nbBlocks * blockSize - data.length + 1);
-			if (!Arrays.equals(idk, data))
-				throw new IllegalArgumentException("not logical");
 			ArrayList<byte[]> blocks = new ArrayList<>();
 
 			for (int i = 0; i < nbBlocks; i++) {
@@ -164,17 +161,6 @@ public class HidLedgerDevice2 implements LedgerDevice {
 
 	/** Reads all available packets into one response */
 	private byte[] readResponse() {
-//		int length = 0;
-//		// each apdu can only contain 255 bytes of data so this is probably too high
-//		// but the content of each packet can vary so there is no exact length to know beforehand
-//		byte[] buffer = new byte[1000];
-//		hidDevice.read(buffer);
-//		int index = 0;
-//		while (true) {
-//			ByteBuffer chunk = ByteBuffer.wrap(buffer, index * PACKET_SIZE, Math.min((index + 1) * PACKET_SIZE, buffer.length));
-//
-//			index++;
-//		}
 		boolean first = true;
 		HidFraming.ResponseAcc last = null;
 		while (true) {

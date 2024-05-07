@@ -72,10 +72,10 @@ public class ErgoLedgerAppkit {
 				tokens.add(Map.entry(boxToken.getId().getBytes(), boxToken.getValue()));
 			}
 			// max 6 tokens per exchange, so do it in chunks
-			int cs = 6;
-			for (int i = 0; i < Math.ceil(tokens.size() / (double) cs); i++) {
+			int perChunk = 6;
+			for (int i = 0; i < Math.ceil(tokens.size() / (double) perChunk); i++) {
 				LinkedHashMap<byte[], Long> chunk = new LinkedHashMap<>();
-				for (int j = i; j < Math.min(i + cs, tokens.size()); j++) {
+				for (int j = i; j < Math.min(i + perChunk, tokens.size()); j++) {
 					chunk.put(tokens.get(j).getKey(), tokens.get(j).getValue());
 				}
 				protocol.attestAddTokens(sessionId, chunk);
