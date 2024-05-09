@@ -1,8 +1,10 @@
 package com.satergo.controller;
 
 import com.satergo.*;
+import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.hw.ledger.ErgoLedgerAppkit;
 import com.satergo.extra.hw.ledger.HidLedgerDevice2;
+import com.satergo.extra.hw.ledger.LedgerPrompt;
 import com.satergo.extra.hw.ledger.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
@@ -68,7 +70,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 	}
 
 	@FXML
-	public void continueProcess(ActionEvent e) {
+	public void createWallet(ActionEvent e) {
 		System.out.println("Stopping selector");
 		if (!emulator) ledgerSelector.stop();
 		System.out.println("Stopped");
@@ -84,26 +86,20 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		System.out.println("proto.getVersion() = " + proto.getVersion());
 		ErgoLedgerAppkit ergoLedgerAppkit = new ErgoLedgerAppkit(proto);
 		System.out.println("Created");
-		ExtendedPublicKey parentExtPubKey;
 		status.setText(Main.lang("ledger.pleaseAcceptRequest"));
-		try {
-			System.out.println("Requesting parent ext pub key");
-			parentExtPubKey = ergoLedgerAppkit.requestParentExtendedPublicKey();
-			System.out.println("Got it");
-		} catch (ErgoLedgerException ex) {
-			if (ex.getSW() == ErgoLedgerException.SW_DENY) {
-				status.setText("Rejected");
-			}
-			System.out.println("Didn't get it, error " + ex.getMessage());
-			return;
-		}
-		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
-		if (path == null) return;
-		char[] pass = password.getText().toCharArray();
-		WalletKey.Ledger key = WalletKey.Ledger.create(parentExtPubKey, ergoLedgerAppkit, pass);
-		Wallet wallet = Wallet.create(path, key, walletName.getText(), pass);
-		Main.get().setWallet(wallet);
-		Main.get().displayWalletPage();
+		LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
+		prompt.initOwner(Main.get().stage());
+		prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+		Main.get().applySameTheme(prompt.getDialogPane().getScene());
+		prompt.showForResult().ifPresent(parentExtPubKey -> {
+			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
+			if (path == null) return;
+			char[] pass = password.getText().toCharArray();
+			WalletKey.Ledger key = WalletKey.Ledger.create(parentExtPubKey, ergoLedgerAppkit, pass);
+			Wallet wallet = Wallet.create(path, key, walletName.getText(), pass);
+			Main.get().setWallet(wallet);
+			Main.get().displayWalletPage();
+		});
 	}
 
 	@FXML

@@ -10,7 +10,6 @@ import com.satergo.extra.hw.ledger.LedgerPrompt;
 import com.satergo.extra.hw.ledger.LedgerSelector;
 import com.satergo.jledger.protocol.ergo.ErgoNetworkType;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
-import com.satergo.jledger.protocol.ergo.ErgoResponse;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
@@ -18,7 +17,6 @@ import org.ergoplatform.ErgoLikeTransaction;
 import org.ergoplatform.P2PKAddress;
 import org.ergoplatform.appkit.*;
 import org.ergoplatform.appkit.impl.BlockchainContextBase;
-import org.ergoplatform.appkit.impl.InputBoxImpl;
 import org.ergoplatform.appkit.impl.SignedTransactionImpl;
 import org.ergoplatform.appkit.impl.UnsignedTransactionImpl;
 import org.ergoplatform.wallet.secrets.DerivationPath;
@@ -48,7 +46,12 @@ import java.util.function.Supplier;
  */
 public abstract class WalletKey {
 
-	public static class Failure extends Exception {}
+	public static class Failure extends Exception {
+		public Failure() {}
+		public Failure(String message) {
+			super(message);
+		}
+	}
 
 	private static final HashMap<Integer, Type<?>> types = new HashMap<>();
 
@@ -127,6 +130,7 @@ public abstract class WalletKey {
 	 */
 	public void initCaches(ByteBuffer data) {}
 
+	/** @apiNote May return null, for example if a request was sent to an external device but the user denied it. */
 	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure;
 	public abstract SignedTransaction signReduced(BlockchainContext ctx, ReducedTransaction reducedTx, int baseCost, Collection<Integer> addressIndexes) throws Failure;
 	public abstract Address derivePublicAddress(NetworkType networkType, int index) throws Failure;
@@ -315,7 +319,7 @@ public abstract class WalletKey {
 			productId = data.getInt();
 			storedKeyBytes = new byte[KEY_LENGTH];
 			data.get(storedKeyBytes);
-			LedgerPrompt.Connection connectionPrompt = new LedgerPrompt.Connection(productId);
+			LedgerPrompt.Connect connectionPrompt = new LedgerPrompt.Connect(productId);
 			connectionPrompt.initOwner(Main.get().stage());
 			connectionPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
 			Main.get().applySameTheme(connectionPrompt.getDialogPane().getScene());
@@ -342,7 +346,7 @@ public abstract class WalletKey {
 			prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
 			Main.get().applySameTheme(prompt.getDialogPane().getScene());
 			ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
-			// not sure if this occurs
+			// not approved
 			if (parentExtPubKey == null) throw new RuntimeException();
 			if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
 				throw new IllegalStateException("This wallet does not belong to this device");
@@ -376,15 +380,15 @@ public abstract class WalletKey {
 		@Override
 		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
 			try {
-				List<InputBox> inputs = unsignedTx.getInputs();
-				List<AttestedBox> inputBoxes = inputs.stream()
-						.filter(box -> inputs.stream().anyMatch(in -> Arrays.equals(in.getId().getBytes(), box.getId().getBytes())))
-						.map(inputBox -> {
-							ErgoResponse.AttestedBoxFrame[] attestedBoxFrames = ergoLedgerAppkit.getAttestedBoxFrames(inputBox);
-							return new AttestedBox(inputBox, attestedBoxFrames, ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension()));
-						}).toList();
+				LedgerPrompt.Attest attestPrompt = new LedgerPrompt.Attest(ergoLedgerAppkit, unsignedTx.getInputs());
+				attestPrompt.initOwner(Main.get().stage());
+				attestPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+				Main.get().applySameTheme(attestPrompt.getDialogPane().getScene());
+				List<AttestedBox> inputBoxes = attestPrompt.showForResult().orElse(null);
+				// not approved
+				if (inputBoxes == null) return null;
 
-				LedgerPrompt.Signing prompt = new LedgerPrompt.Signing(() ->
+				LedgerPrompt.Sign prompt = new LedgerPrompt.Sign(() ->
 						ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
 							case MAINNET -> ErgoNetworkType.MAINNET;
 							case TESTNET -> ErgoNetworkType.TESTNET;
@@ -392,8 +396,9 @@ public abstract class WalletKey {
 				prompt.initOwner(Main.get().stage());
 				prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
 				Main.get().applySameTheme(prompt.getDialogPane().getScene());
-				// not sure if this occurs
 				byte[] bytes = prompt.showForResult().orElse(null);
+				// not approved
+				if (bytes == null) return null;
 
 				ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
 				return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);

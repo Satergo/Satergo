@@ -7,8 +7,11 @@ import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import org.ergoplatform.appkit.InputBox;
+import org.ergoplatform.appkit.impl.InputBoxImpl;
 import org.ergoplatform.wallet.secrets.ExtendedPublicKey;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 
 public sealed interface LedgerPrompt {
@@ -16,92 +19,132 @@ public sealed interface LedgerPrompt {
 	void setHeaderText(String text);
 	void close();
 
-	final class Connection extends SatPromptDialog<ErgoLedgerAppkit> implements LedgerPrompt {
-		public Connection(int productId) {
+	final class Connect extends SatPromptDialog<ErgoLedgerAppkit> implements LedgerPrompt {
+		public Connect(int productId) {
 			setHeaderText(Main.lang("ledger.pleaseConnectA_deviceName_device").formatted(LedgerSelector.getModelName(productId)));
 		}
 	}
 
-	final class ExtPubKey extends SatPromptDialog<ExtendedPublicKey> implements LedgerPrompt {
+	abstract sealed class WithRetry<T> extends SatPromptDialog<T> implements LedgerPrompt {
 		private final ButtonType askAgain = new ButtonType(Main.lang("ledger.askAgain"), ButtonBar.ButtonData.BACK_PREVIOUS);
+
+		protected WithRetry() {
+			setResultConverter(buttonType -> {
+				if (buttonType == ButtonType.CANCEL)
+					return null;
+				return getResult();
+			});
+		}
+
+		private void displayAskAgain(RuntimeException e) {
+			getDialogPane().getButtonTypes().setAll(askAgain, ButtonType.CANCEL);
+			getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
+				resetState();
+				request();
+				event.consume();
+			});
+		}
+
+		protected final void handleException(Throwable t) {
+			if (t instanceof ErgoLedgerException e) {
+				if (e.getSW() == ErgoLedgerException.SW_DENY) {
+					setHeaderText(Main.lang("ledger.youDeniedTheRequest"));
+					displayAskAgain(e);
+				} else {
+					setHeaderText(Main.lang("ledger.unknownError").formatted(t.getMessage()));
+					setResult(null);
+					throw e;
+				}
+			} else if (t instanceof HidLedgerDevice2.InvalidChannelException e) {
+				if (e.received == 0) {
+					setHeaderText(Main.lang("ledger.deviceIsLocked"));
+					displayAskAgain(e);
+				}
+			} else {
+				setHeaderText(Main.lang("ledger.unknownError").formatted(t.getMessage()));
+				throw t instanceof RuntimeException r ? r : new RuntimeException(t);
+			}
+		}
+
+		protected abstract void resetState();
+		protected abstract void request();
+	}
+
+	final class ExtPubKey extends WithRetry<ExtendedPublicKey> implements LedgerPrompt {
 		private final ErgoLedgerAppkit ergoLedgerAppkit;
 
 		public ExtPubKey(ErgoLedgerAppkit ergoLedgerAppkit) {
 			this.ergoLedgerAppkit = ergoLedgerAppkit;
-			setHeaderText("Please accept the request");
+			resetState();
 			setOnShown(event -> request());
 		}
 
-		private void displayAskAgain(RuntimeException e) {
-			getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CANCEL);
-			getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
-				request();
-				event.consume();
-			});
-			getDialogPane().lookupButton(ButtonType.CANCEL).addEventFilter(ActionEvent.ACTION, event -> {
-				throw e;
-			});
+		@Override
+		protected void resetState() {
+			setHeaderText("Please approve the request on your Ledger device");
+			getDialogPane().getButtonTypes().clear();
 		}
 
-		private void request() {
+		@Override
+		protected void request() {
 			new SimpleTask<>(ergoLedgerAppkit::requestParentExtendedPublicKey)
 					.onSuccess(this::setResult)
-					.onFail(t -> {
-						if (t instanceof ErgoLedgerException e) {
-							if (e.getSW() == ErgoLedgerException.SW_DENY) {
-								setHeaderText(Main.lang("ledger.youDeniedTheRequest"));
-								displayAskAgain(e);
-							} else {
-								setHeaderText(Main.lang("ledger.unknownError").formatted(t.getMessage()));
-								setResult(null);
-								throw e;
-							}
-						} else if (t instanceof HidLedgerDevice2.InvalidChannelException e) {
-							if (e.received == 0) {
-								setHeaderText(Main.lang("ledger.deviceIsLocked"));
-								displayAskAgain(e);
-							}
-						} else {
-							throw new RuntimeException(t);
-						}
-					}).newThread();
+					.onFail(this::handleException)
+					.newThread();
 		}
 	}
 
-	final class Signing extends SatPromptDialog<byte[]> implements LedgerPrompt {
-		private final ButtonType askAgain = new ButtonType(Main.lang("ledger.askAgain"), ButtonBar.ButtonData.BACK_PREVIOUS);
+	final class Attest extends WithRetry<List<AttestedBox>> implements LedgerPrompt {
+		private final ErgoLedgerAppkit ergoLedgerAppkit;
+		private final List<InputBox> inputBoxes;
 
-		public Signing(Callable<byte[]> request) {
-			setHeaderText("Please accept the request");
-			setOnShown(event -> request(request));
+		public Attest(ErgoLedgerAppkit ergoLedgerAppkit, List<InputBox> inputBoxes) {
+			this.ergoLedgerAppkit = ergoLedgerAppkit;
+			this.inputBoxes = inputBoxes;
+			resetState();
+			setOnShown(event -> request());
 		}
 
-		private void request(Callable<byte[]> request) {
+		@Override
+		protected void resetState() {
+			setHeaderText("Please approve the request on your Ledger device");
+			getDialogPane().getButtonTypes().clear();
+		}
+
+		@Override
+		protected void request() {
+			new SimpleTask<>(() -> inputBoxes.stream()
+					.map(inputBox -> new AttestedBox(
+							inputBox,
+							ergoLedgerAppkit.getAttestedBoxFrames(inputBox),
+							ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension()))).toList())
+					.onSuccess(this::setResult)
+					.onFail(this::handleException)
+					.newThread();
+		}
+	}
+
+	final class Sign extends WithRetry<byte[]> implements LedgerPrompt {
+		private final Callable<byte[]> request;
+
+		public Sign(Callable<byte[]> request) {
+			this.request = request;
+			resetState();
+			setOnShown(event -> request());
+		}
+
+		@Override
+		protected void resetState() {
+			setHeaderText("Please approve the signing request on your Ledger device");
+			getDialogPane().getButtonTypes().clear();
+		}
+
+		@Override
+		protected void request() {
 			new SimpleTask<>(request)
 					.onSuccess(this::setResult)
-					.onFail(t -> {
-						if (t instanceof ErgoLedgerException e) {
-							if (e.getSW() == ErgoLedgerException.SW_DENY) {
-								setHeaderText(Main.lang("ledger.youDeniedTheRequest"));
-								getDialogPane().getButtonTypes().addAll(askAgain, ButtonType.CANCEL);
-								getDialogPane().lookupButton(askAgain).addEventFilter(ActionEvent.ACTION, event -> {
-									request(request);
-									event.consume();
-								});
-								getDialogPane().lookupButton(ButtonType.CANCEL).addEventFilter(ActionEvent.ACTION, event -> {
-									throw e;
-								});
-							} else {
-								setHeaderText(Main.lang("ledger.unknownError").formatted(t.getMessage()));
-								setResult(null);
-								throw e;
-							}
-						} else {
-							throw new RuntimeException(t);
-						}
-					}).newThread();
+					.onFail(this::handleException)
+					.newThread();
 		}
 	}
-
-	final class UserRejectionException extends RuntimeException {}
 }

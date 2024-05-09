@@ -15,10 +15,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
-import org.ergoplatform.appkit.Address;
-import org.ergoplatform.appkit.NetworkType;
-import org.ergoplatform.appkit.Parameters;
-import org.ergoplatform.appkit.UnsignedTransaction;
+import org.ergoplatform.appkit.*;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -87,14 +84,17 @@ public class AboutCtrl implements Initializable, WalletTab {
 			UnsignedTransaction unsignedTx = ErgoInterface.createUnsignedTransaction(Utils.createErgoClient(),
 					wallet.addressStream().toList(),
 					DONATION_ADDRESS, ErgoInterface.toNanoErg(amountFullErg), Parameters.MinFee, Main.get().getWallet().publicAddress(0));
-			String txId = wallet.transact(Utils.createErgoClient().execute(ctx -> {
+			SignedTransaction signedTx = Utils.createErgoClient().execute(ctx -> {
 				try {
 					return wallet.key().sign(ctx, unsignedTx, wallet.myAddresses.keySet());
 				} catch (WalletKey.Failure ex) {
 					return null;
 				}
-			}));
-			if (txId != null) Utils.textDialogWithCopy(Main.lang("transactionId"), txId);
+			});
+			if (signedTx != null) {
+				String txId = wallet.transact(signedTx);
+				if (txId != null) Utils.textDialogWithCopy(Main.lang("transactionId"), txId);
+			}
 		} catch (WalletKey.Failure ignored) {
 			// user already informed
 		}

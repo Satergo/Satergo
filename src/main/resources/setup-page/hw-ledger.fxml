@@ -21,10 +21,10 @@
 
 			<VBox>
 				<Label text="%password" styleClass="fieldLabel"/>
-				<PasswordField fx:id="password" promptText="%passwordForEncryptingTheWallet" prefWidth="300"/>
+				<PasswordField fx:id="password" promptText="%ledger.passwordForEncryptingTheWalletFile" prefWidth="300"/>
 			</VBox>
 
-			<Button styleClass="large" onAction="#continueProcess" text="%createWallet">
+			<Button styleClass="large" onAction="#createWallet" text="%createWallet">
 				<VBox.margin><Insets top="10"/></VBox.margin>
 			</Button>
 		</VBox>
