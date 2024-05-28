@@ -3,7 +3,7 @@ package com.satergo.controller;
 import com.satergo.*;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.hw.ledger.ErgoLedgerAppkit;
-import com.satergo.extra.hw.ledger.HidLedgerDevice2;
+import com.satergo.extra.hw.ledger.HidLedgerDevice3;
 import com.satergo.extra.hw.ledger.LedgerPrompt;
 import com.satergo.extra.hw.ledger.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
@@ -75,7 +75,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		if (!emulator) ledgerSelector.stop();
 		System.out.println("Stopped");
 		System.out.println("Instantiating device");
-		LedgerDevice ledgerDevice = emulator ? new EmulatorLedgerDevice(SystemProperties.ledgerEmulator().get(), SystemProperties.ledgerEmulatorPort().get(), LedgerDevice.NANO_S_PRODUCT_ID) : new HidLedgerDevice2(ledgerSelector.getDevice());
+		LedgerDevice ledgerDevice = emulator ? new EmulatorLedgerDevice(SystemProperties.ledgerEmulator().get(), SystemProperties.ledgerEmulatorPort().get(), LedgerDevice.NANO_S_PRODUCT_ID) : new HidLedgerDevice3(ledgerSelector.getDevice());
 		System.out.println("Instantiated");
 		System.out.println("Opening device");
 		ledgerDevice.open();

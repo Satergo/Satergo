@@ -55,7 +55,7 @@ public sealed interface LedgerPrompt {
 					setResult(null);
 					throw e;
 				}
-			} else if (t instanceof HidLedgerDevice2.InvalidChannelException e) {
+			} else if (t instanceof HidLedgerDevice3.InvalidChannelException e) {
 				if (e.received == 0) {
 					setHeaderText(Main.lang("ledger.deviceIsLocked"));
 					displayAskAgain(e);
