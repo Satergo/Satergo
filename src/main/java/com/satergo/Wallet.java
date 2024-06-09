@@ -197,38 +197,10 @@ public final class Wallet {
 		}
 	}
 
-	private static Wallet deserializeDecryptedLegacy(long formatVersion, byte[] bytes, Path path, char[] password) throws UnsupportedOperationException, IOException {
-		try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
-			if (formatVersion == 0) {
-				String name = in.readUTF();
-				SecretString seedPhrase = SecretString.create(in.readUTF());
-				SecretString mnemonicPassword = SecretString.create(in.readUTF());
-				int myAddressesSize = in.readInt();
-				TreeMap<Integer, String> myAddresses = new TreeMap<>();
-				for (int i = 0; i < myAddressesSize; i++) {
-					myAddresses.put(in.readInt(), in.readUTF());
-				}
-				int addressBookSize = in.readInt();
-				HashMap<String, Address> addressBook = new HashMap<>();
-				for (int i = 0; i < addressBookSize; i++) {
-					addressBook.put(in.readUTF(), Address.create(in.readUTF()));
-				}
-				// nonstandardDerivation is always true because the bug in the ergo-wallet cryptography library
-				// was not discovered yet when formatVersion 0 was created
-				Wallet wallet = Wallet.create(path, Mnemonic.create(seedPhrase, mnemonicPassword), name, password, true);
-				wallet.myAddresses.putAll(myAddresses);
-				wallet.addressBook.putAll(addressBook);
-				// Upgrade wallet file right away
-				wallet.saveToFile();
-				return wallet;
-			} else throw new UnsupportedOperationException("Unsupported format version " + formatVersion + " (this release only supports " + NEWEST_SUPPORTED_FORMAT + " and older)");
-		}
-	}
-
 	/**
 	 * @throws UnsupportedOperationException Cannot deserialize this formatVersion, it is too new
 	 */
-	private static Wallet deserializeNew(long formatVersion, DataInputStream in, Path path, char[] password) throws IncorrectPasswordException, UnsupportedOperationException, IOException {
+	private static Wallet deserialize(long formatVersion, DataInputStream in, Path path, char[] password) throws IncorrectPasswordException, UnsupportedOperationException, IOException {
 		if (formatVersion == 1) {
 			WalletKey key;
 			byte[] decryptedDetails;
@@ -265,24 +237,24 @@ public final class Wallet {
 				wallet.addressBook.putAll(addressBook);
 				return wallet;
 			}
-		} else throw new UnsupportedOperationException("Unsupported format version " + formatVersion + " (this release only supports " + NEWEST_SUPPORTED_FORMAT + " and older)");
+		} else throw new UnsupportedOperationException("Unsupported format version " + formatVersion + " (this release only supports " + NEWEST_SUPPORTED_FORMAT + " and older), the file is version " + formatVersion);
 	}
 
-	public static Wallet deserializeEncrypted(byte[] bytes, Path path, char[] password) throws IncorrectPasswordException, IOException {
+	public static Wallet decrypt(byte[] bytes, Path path, char[] password) throws IncorrectPasswordException, IOException {
 		try {
 			try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
 				if (in.readInt() == MAGIC_NUMBER) {
-					return deserializeNew(in.readLong(), in, path, password);
+					return deserialize(in.readLong(), in, path, password);
 				}
 			}
-			// old format (version 0)
+			// since the magic number did not match, this might be the legacy format (version 0), which had no magic number
 			ByteBuffer buffer = ByteBuffer.wrap(bytes);
-			// skip nonce length field which is always 12 (int)
+			// skip the initialization vector length field which is always 12 (int)
 			buffer.position(4);
 			byte[] decrypted = AESEncryption.decryptData(password, buffer);
 			try (ObjectInputStream old = new ObjectInputStream(new ByteArrayInputStream(decrypted))) {
 				long formatVersion = old.readLong();
-				return deserializeDecryptedLegacy(formatVersion, old.readAllBytes(), path, password);
+				return LegacyWalletFormat.deserializeDecryptedData(formatVersion, old.readAllBytes(), path, password);
 			} catch (StreamCorruptedException | EOFException e) {
 				throw new IllegalArgumentException("Invalid wallet data");
 			}
@@ -295,7 +267,7 @@ public final class Wallet {
 
 	public static Wallet load(Path path, String password) throws IncorrectPasswordException {
 		try {
-			Wallet wallet = deserializeEncrypted(Files.readAllBytes(path), path, password.toCharArray());
+			Wallet wallet = decrypt(Files.readAllBytes(path), path, password.toCharArray());
 			wallet.saveToFile();
 			return wallet;
 		} catch (IOException e) {
