@@ -10,10 +10,10 @@
 		<ScrollPane fitToWidth="true" fitToHeight="true">
 			<VBox spacing="10">
 				<HBox alignment="BASELINE_RIGHT">
-					<Button fx:id="refreshButton" onAction="#refreshAction" text="%refresh"/>
+					<Button fx:id="refreshButton" onAction="#refresh" text="%refresh"/>
 				</HBox>
 
-				<VBox fx:id="finished" spacing="10"/>
+				<VBox fx:id="finished" spacing="10" alignment="TOP_CENTER"/>
 			</VBox>
 
 		</ScrollPane>

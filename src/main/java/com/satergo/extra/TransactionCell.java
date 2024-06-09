@@ -7,11 +7,14 @@ import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenSummary;
 import javafx.animation.*;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -20,6 +23,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
@@ -49,7 +53,7 @@ public class TransactionCell extends BorderPane implements Initializable {
 	private final DecimalFormat FORMAT_TOTAL = new DecimalFormat("+0.000000000;-0.000000000");
 
 	private final TransactionInfo tx;
-	private final List<Address> myAddresses;
+	private final Set<String> myAddresses;
 	@FXML private Label dateTime;
 	@FXML private Hyperlink tokens;
 	@FXML private Label totalCoins;
@@ -57,9 +61,6 @@ public class TransactionCell extends BorderPane implements Initializable {
 	@FXML private GridPane bottom;
 	@FXML private StackPane arrow;
 	@FXML private StackPane bottomContainer;
-
-	private final VirtualFlow<InputInfo, Cell<InputInfo, TransactionInOut>> inputFlow;
-	private final VirtualFlow<OutputInfo, Cell<OutputInfo, TransactionInOut>> outputFlow;
 
 	private final BooleanProperty expanded = new SimpleBooleanProperty(null, "expanded", false);
 	public BooleanProperty expandedProperty() { return expanded; }
@@ -82,11 +83,14 @@ public class TransactionCell extends BorderPane implements Initializable {
 		return transition;
 	}
 
-	public TransactionCell(TransactionInfo tx, List<Address> myAddresses) {
+	private final long ergDiff;
+	public TransactionCell(TransactionInfo tx, Set<Address> myAddresses) {
 		this.tx = tx;
-		this.myAddresses = myAddresses;
+		// Convert my addresses to string to avoid constantly converting the API strings into Address objects
+		this.myAddresses = myAddresses.stream().map(Address::toString).collect(Collectors.toUnmodifiableSet());
 		Load.thisFxml(this, "/tx-cell.fxml");
-		getStyleClass().add(totalReceived(tx, myAddresses) - totalSent(tx, myAddresses) >= 0 ? "green" : "red");
+		ergDiff = totalReceived(tx, this.myAddresses) - totalSent(tx, this.myAddresses);
+		getStyleClass().add(ergDiff >= 0 ? "green" : "red");
 		top.setOnMouseClicked(e -> {
 			if (e.getButton() == MouseButton.PRIMARY)
 				setExpanded(!isExpanded());
@@ -111,20 +115,37 @@ public class TransactionCell extends BorderPane implements Initializable {
 			transitionStartValue = getTransition();
 			doAnimationTransition();
 		});
+		// Create the content on the first time this cell is expanded
+		expanded.addListener(new ChangeListener<>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				if (newValue) {
+					createContent();
+					expanded.removeListener(this);
+				}
+			}
+		});
 		clipRect.widthProperty().bind(widthProperty());
 		bottomContainer.setClip(clipRect);
-		inputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getInputs()), input -> {
-			return Cell.wrapNode(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(input), FormatNumber.ergExact(ErgoInterface.toFullErg(input.getValue())), !input.getAssets().isEmpty(), () -> {
-				Utils.alert(Alert.AlertType.INFORMATION, input.getAssets().stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
-			}, myAddresses.contains(getAddress(input))));
+	}
+
+	private void createContent() {
+		var inputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getInputs()), input -> {
+			return Cell.wrapNode(createInOut(TransactionInOut.Type.INPUT, input.getAddress(), input.getValue(), input.getAssets()));
 		});
-		outputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getOutputs()), output -> {
-			return Cell.wrapNode(new TransactionInOut(TransactionInOut.Type.OUTPUT, getAddress(output), FormatNumber.ergExact(ErgoInterface.toFullErg(output.getValue())), !output.getAssets().isEmpty(), () -> {
-				Utils.alert(Alert.AlertType.INFORMATION, output.getAssets().stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
-			}, myAddresses.contains(getAddress(output))));
+		var outputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getOutputs()), output -> {
+			return Cell.wrapNode(createInOut(TransactionInOut.Type.OUTPUT, output.getAddress(), output.getValue(), output.getAssets()));
 		});
+		inputFlow.maxHeightProperty().bind(Bindings.when(expandedProperty()).then(Region.USE_COMPUTED_SIZE).otherwise(0));
+		outputFlow.maxHeightProperty().bind(Bindings.when(expandedProperty()).then(Region.USE_COMPUTED_SIZE).otherwise(0));
 		bottom.add(new VirtualizedScrollPane<>(inputFlow), 0, 0);
 		bottom.add(new VirtualizedScrollPane<>(outputFlow), 1, 0);
+	}
+
+	private TransactionInOut createInOut(TransactionInOut.Type type, String address, long value, List<AssetInstanceInfo> assets) {
+		return new TransactionInOut(type, Address.create(address), FormatNumber.ergExact(ErgoInterface.toFullErg(value)), !assets.isEmpty(), () -> {
+			Utils.alert(Alert.AlertType.INFORMATION, assets.stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
+		}, myAddresses.contains(address));
 	}
 
 	private Timeline timeline;
@@ -196,8 +217,7 @@ public class TransactionCell extends BorderPane implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		ZonedDateTime time = Instant.ofEpochMilli(tx.getTimestamp()).atZone(ZoneId.systemDefault());
 		dateTime.setText(time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
-		long diff = totalReceived(tx, myAddresses) - totalSent(tx, myAddresses);
-		totalCoins.setText(FORMAT_TOTAL.format(ErgoInterface.toFullErg(diff)) + " ERG");
+		totalCoins.setText(FORMAT_TOTAL.format(ErgoInterface.toFullErg(ergDiff)) + " ERG");
 		Map<TokenSummary, Long> tokensSent = totalTokens(tx, TransactionInOut.Type.INPUT, myAddresses);
 		Map<TokenSummary, Long> tokensReceived = totalTokens(tx, TransactionInOut.Type.OUTPUT, myAddresses);
 		HashMap<TokenSummary, Long> totalTokens = new HashMap<>(tokensReceived);
@@ -221,18 +241,15 @@ public class TransactionCell extends BorderPane implements Initializable {
 
 	// utils
 
-	private static Address getAddress(OutputInfo o) { return Address.create(o.getAddress()); }
-	private static Address getAddress(InputInfo i) { return Address.create(i.getAddress()); }
-
-	private static long totalReceived(TransactionInfo tx, List<Address> myAddresses) {
-		return tx.getOutputs().stream().filter(info -> myAddresses.contains(getAddress(info))).mapToLong(OutputInfo::getValue).sum();
+	private static long totalReceived(TransactionInfo tx, Set<String> myAddresses) {
+		return tx.getOutputs().stream().filter(info -> myAddresses.contains(info.getAddress())).mapToLong(OutputInfo::getValue).sum();
 	}
 
-	private static long totalSent(TransactionInfo tx, List<Address> myAddresses) {
-		return tx.getInputs().stream().filter(info -> myAddresses.contains(getAddress(info))).mapToLong(InputInfo::getValue).sum();
+	private static long totalSent(TransactionInfo tx, Set<String> myAddresses) {
+		return tx.getInputs().stream().filter(info -> myAddresses.contains(info.getAddress())).mapToLong(InputInfo::getValue).sum();
 	}
 
-	private static Map<TokenSummary, Long> totalTokens(TransactionInfo tx, TransactionInOut.Type dir, List<Address> myAddresses) {
+	private static Map<TokenSummary, Long> totalTokens(TransactionInfo tx, TransactionInOut.Type dir, Set<String> myAddresses) {
 		record TokenSummaryInfo(String id, int decimals, String name) implements TokenSummary {}
 
 		HashMap<TokenSummary, Long> total = new HashMap<>();
@@ -241,7 +258,7 @@ public class TransactionCell extends BorderPane implements Initializable {
 			case OUTPUT -> tx.getOutputs();
 		};
 		for (Object ioput : list) {
-			if (!myAddresses.contains((dir == TransactionInOut.Type.INPUT ? getAddress((InputInfo) ioput) : getAddress((OutputInfo) ioput))))
+			if (!myAddresses.contains((dir == TransactionInOut.Type.INPUT ? ((InputInfo) ioput).getAddress() : ((OutputInfo) ioput).getAddress())))
 				continue;
 			for (AssetInstanceInfo a : (dir == TransactionInOut.Type.INPUT ? ((InputInfo) ioput).getAssets() : ((OutputInfo) ioput).getAssets())) {
 				TokenSummary tokenSummary = new TokenSummaryInfo(a.getTokenId(), Objects.requireNonNullElse(a.getDecimals(), 0), a.getName());
