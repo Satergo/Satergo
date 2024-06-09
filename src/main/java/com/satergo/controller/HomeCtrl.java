@@ -137,13 +137,23 @@ public class HomeCtrl implements WalletTab, Initializable {
 	}
 
 	private void updateInfo(Balance bal) {
-		if (bal == null) return;
+		if (bal == null) {
+			if (Main.get().getWalletPage().priceError.get())
+				value.setText(Main.lang("(error)"));
+			return;
+		}
 		DecimalFormat balanceFormat = new DecimalFormat("0.#####");
 		balanceFormat.setRoundingMode(RoundingMode.FLOOR);
 		balance.setText(balanceFormat.format(ErgoInterface.toFullErg(bal.confirmed())) + " ERG");
-		PriceCurrency currency = Main.programData().priceCurrency.get();
-		BigDecimal converted = ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed()).multiply(Main.get().lastOneErgValue.get());
-		value.setText(FormatNumber.currencyExact(converted, currency) + " " + Main.programData().priceCurrency.get().uc());
+		if (!Main.get().getWalletPage().priceError.get()) {
+			if (Main.programData().showPrice.get() && Main.get().lastOneErgValue.get() != null) {
+				PriceCurrency currency = Main.programData().priceCurrency.get();
+				BigDecimal converted = ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed()).multiply(Main.get().lastOneErgValue.get());
+				value.setText(FormatNumber.currencyExact(converted, currency) + " " + Main.programData().priceCurrency.get().uc());
+			}
+		} else {
+			value.setText(Main.lang("(error)"));
+		}
 	}
 
 	@Override
@@ -177,6 +187,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 		Main.get().lastOneErgValue.addListener((obs, old, val) -> updateInfo(Main.get().getWallet().lastKnownBalance.get()));
 		updateInfo(Main.get().getWallet().lastKnownBalance.get());
 		info.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
+		value.visibleProperty().bind(Main.programData().showPrice);
 		if (Main.programData().blockchainNodeKind.get().embedded) {
 			Main.node.nodeBlocksLeft.addListener((observable, oldValue, newValue) -> {
 				send.setDisable((int) newValue > 150);

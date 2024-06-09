@@ -31,8 +31,8 @@
 				<Label text="%balanceC" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
 				<Label fx:id="balance" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-				<Label text="%valueC" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-				<Label fx:id="value" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+				<Label text="%valueC" GridPane.columnIndex="0" GridPane.rowIndex="1" visible="${value.visible}" managed="${value.visible}"/>
+				<Label fx:id="value" GridPane.columnIndex="1" GridPane.rowIndex="1" managed="${value.visible}"/>
 			</GridPane>
 		</center>
 	</BorderPane>

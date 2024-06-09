@@ -82,6 +82,8 @@ public class WalletCtrl implements Initializable {
 
 	@FXML private ToggleButton home, account, transactions, node, settings;
 
+	final SimpleBooleanProperty priceError = new SimpleBooleanProperty(false);
+
 	private final HashMap<String, Pair<Pane, WalletTab>> tabs = new HashMap<>();
 
 	@SuppressWarnings("unchecked")
@@ -91,19 +93,35 @@ public class WalletCtrl implements Initializable {
 
 	private final DecimalFormat format = new DecimalFormat("0");
 
-	private void updateBalance(Balance totalBalance) {
+	private void setBalance(Balance totalBalance) {
 		Main.get().getWallet().lastKnownBalance.set(totalBalance);
 	}
 
-	private void updatePriceValue(BigDecimal oneErgValue) {
+	private void setPrice(BigDecimal oneErgValue) {
 		Main.get().lastOneErgValue.set(oneErgValue);
 	}
 
+	// This method is called from one place on the FX application thread
+	// The other times it is called from another thread which is why runLaterOrNow is used.
 	private void updatePriceValue() {
+		if (!Main.programData().showPrice.get()) {
+			setPrice(null);
+			return;
+		}
 		try {
-			updatePriceValue(Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get()));
+			BigDecimal price = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
+			Utils.runLaterOrNow(() -> {
+				revertOfflineMode();
+				priceError.set(false);
+				setPrice(price);
+			});
 		} catch (IOException e) {
-			offlineMode();
+			Utils.runLaterOrNow(this::offlineMode);
+		} catch (Exception e) {
+			Utils.runLaterOrNow(() -> {
+				priceError.set(true);
+				setPrice(null);
+			});
 		}
 	}
 
@@ -133,12 +151,14 @@ public class WalletCtrl implements Initializable {
 		});
 
 		try {
-			updateBalance(Main.get().getWallet().totalBalance());
+			setBalance(Main.get().getWallet().totalBalance());
 			revertOfflineMode();
 		} catch (IOException e) {
 			offlineMode();
 		}
-		updatePriceValue();
+		Main.programData().showPrice.subscribe(show -> {
+			updatePriceValue();
+		});
 
 		tabs.put("home", Load.fxmlNodeAndController("/home.fxml"));
 		tabs.put("account", Load.fxmlNodeAndController("/account.fxml"));
@@ -163,17 +183,7 @@ public class WalletCtrl implements Initializable {
 			// Happens when the available currencies are changed. This listener gets called before the currency is selected.
 			if (newValue != null) updatePriceValue();
 		});
-		scheduler.scheduleAtFixedRate(() -> {
-			try {
-				BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
-				Platform.runLater(() -> {
-					revertOfflineMode();
-					updatePriceValue(oneErgValue);
-				});
-			} catch (IOException e) {
-				Platform.runLater(this::offlineMode);
-			}
-		}, 50, 60, TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(this::updatePriceValue, 50, 60, TimeUnit.SECONDS);
 		scheduler.scheduleAtFixedRate(() -> {
 			try {
 				Balance totalBalance = Main.get().getWallet().totalBalance();
@@ -182,10 +192,12 @@ public class WalletCtrl implements Initializable {
 					if (Main.get().getWallet() != null)
 						return;
 					revertOfflineMode();
-					updateBalance(totalBalance);
+					setBalance(totalBalance);
 				});
 			} catch (ConnectException e) {
 				Platform.runLater(this::offlineMode);
+			} catch (Exception e) {
+				Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), e);
 			}
 		}, 60, 60, TimeUnit.SECONDS);
 
@@ -264,8 +276,8 @@ public class WalletCtrl implements Initializable {
 			BigDecimal oneErgValue = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
 			return new Pair<>(totalBalance, oneErgValue);
 		}).onSuccess(v -> {
-			updateBalance(v.getKey());
-			updatePriceValue(v.getValue());
+			setBalance(v.getKey());
+			setPrice(v.getValue());
 			revertOfflineMode();
 		}).newThread();
 	}
@@ -278,7 +290,6 @@ public class WalletCtrl implements Initializable {
 
 	public void handleErgoPayURI(ErgoPayURI uri) {
 		Address address;
-		int addressIndex;
 		if (uri.needsAddress()) {
 			SatPromptDialog<Integer> addressPrompt = new SatPromptDialog<>();
 			addressPrompt.setHeaderText(Main.lang("ergoPay.selectAnAddressToProvide"));

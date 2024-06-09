@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Currency;
@@ -23,7 +24,7 @@ public enum PriceSource {
 		@Override
 		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
 			if (priceCurrency == PriceCurrency.USD || priceCurrency == PriceCurrency.EUR) {
-				HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.kucoin.com/api/v1/prices?base=" + priceCurrency.uc() + "&currencies=ERG")).build();
+				HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.kucoin.com/api/v1/prices?base=" + priceCurrency.uc() + "&currencies=ERG")).timeout(Duration.ofSeconds(10)).build();
 				try {
 					JsonObject response = JsonParser.object().from(HTTP.send(request, HttpResponse.BodyHandlers.ofString()).body());
 					return new BigDecimal(response.getObject("data").getString("ERG"));
@@ -46,7 +47,7 @@ public enum PriceSource {
 		@Override
 		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
 			if (!supportedCurrencies.contains(priceCurrency)) throw new IllegalArgumentException("unsupported price currency");
-			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coingecko.com/api/v3/simple/price?ids=ergo&vs_currencies=" + priceCurrency.lc())).build();
+			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coingecko.com/api/v3/simple/price?ids=ergo&vs_currencies=" + priceCurrency.lc())).timeout(Duration.ofSeconds(10)).build();
 			try {
 				JsonObject response = JsonParser.object().from(HTTP.send(request, HttpResponse.BodyHandlers.ofString()).body());
 				return BigDecimal.valueOf(response.getObject("ergo").getDouble(priceCurrency.lc()));
@@ -60,7 +61,7 @@ public enum PriceSource {
 		protected BigDecimal fetchPriceInternal(PriceCurrency priceCurrency) throws IOException {
 			if (!supportedCurrencies.contains(priceCurrency)) throw new IllegalArgumentException("unsupported price currency");
 			String crypto = priceCurrency == PriceCurrency.USD ? "USDT" : "BTC";
-			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coinex.com/v1/market/ticker?market=ERG" + crypto)).build();
+			HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.coinex.com/v1/market/ticker?market=ERG" + crypto)).timeout(Duration.ofSeconds(10)).build();
 			try {
 				JsonObject response = JsonParser.object().from(HTTP.send(request, HttpResponse.BodyHandlers.ofString()).body());
 				return new BigDecimal(response.getObject("data").getObject("ticker").getString("last"));

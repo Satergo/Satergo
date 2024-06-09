@@ -10,6 +10,7 @@ import com.satergo.extra.dialog.SatVoidDialog;
 import com.sun.management.OperatingSystemMXBean;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -319,5 +320,11 @@ public class Utils {
 			}
 		}
 		return config.toString();
+	}
+
+	public static void runLaterOrNow(Runnable runnable) {
+		if (!Platform.isFxApplicationThread())
+			Platform.runLater(runnable);
+		else runnable.run();
 	}
 }
