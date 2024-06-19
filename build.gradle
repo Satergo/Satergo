@@ -54,15 +54,15 @@ dependencies {
 		exclude group: 'org.openjfx'
 		exclude group: 'org.controlsfx'
 	}
-	implementation 'org.fxmisc.flowless:flowless:0.7.2'
+	implementation 'org.fxmisc.flowless:flowless:0.7.3'
 
-	implementation 'org.ergoplatform:ergo-appkit_2.12:5.0.1'
+	implementation 'org.ergoplatform:ergo-appkit_2.12:5.0.4'
 	implementation 'com.typesafe:config:1.4.3'
 	implementation 'org.slf4j:slf4j-simple:2.0.13'
 	implementation 'com.grack:nanojson:1.9' // used for numerous HTTP APIs and ProgramData saving
 	implementation 'com.google.code.gson:gson:2.10.1'
-	implementation 'info.debatty:java-string-similarity:2.0.0' // used for mnemonic phrase words
-	implementation 'com.google.zxing:core:3.5.3' // used for qr codes
+	implementation 'info.debatty:java-string-similarity:2.0.0' // used for seed phrase words
+	implementation 'com.google.zxing:core:3.5.3' // used for QR codes
 	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 }
 

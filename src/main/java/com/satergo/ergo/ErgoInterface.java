@@ -6,6 +6,8 @@ import com.grack.nanojson.JsonParserException;
 import com.satergo.SystemProperties;
 import com.satergo.Utils;
 import org.ergoplatform.appkit.*;
+import org.ergoplatform.sdk.ErgoId;
+import org.ergoplatform.sdk.ErgoToken;
 
 import java.io.IOException;
 import java.math.BigDecimal;

@@ -1,6 +1,6 @@
 package com.satergo.ergo;
 
-import org.ergoplatform.appkit.ErgoId;
+import org.ergoplatform.sdk.ErgoId;
 
 import java.math.BigDecimal;
 import java.net.URI;

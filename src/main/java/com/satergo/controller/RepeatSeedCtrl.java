@@ -13,7 +13,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import org.ergoplatform.appkit.Mnemonic;
-import org.ergoplatform.appkit.SecretString;
+import org.ergoplatform.sdk.SecretString;
 
 import java.net.URL;
 import java.nio.file.Path;

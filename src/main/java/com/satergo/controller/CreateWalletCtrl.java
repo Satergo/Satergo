@@ -12,7 +12,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import org.ergoplatform.appkit.Mnemonic;
-import org.ergoplatform.appkit.SecretString;
+import org.ergoplatform.sdk.SecretString;
 
 import java.net.URL;
 import java.util.ResourceBundle;

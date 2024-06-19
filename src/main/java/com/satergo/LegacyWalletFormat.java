@@ -2,7 +2,7 @@ package com.satergo;
 
 import org.ergoplatform.appkit.Address;
 import org.ergoplatform.appkit.Mnemonic;
-import org.ergoplatform.appkit.SecretString;
+import org.ergoplatform.sdk.SecretString;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;

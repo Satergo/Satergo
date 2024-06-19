@@ -1,14 +1,13 @@
 package com.satergo.ergo;
 
 import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.math.ec.custom.sec.SecP256K1Point;
 import org.ergoplatform.appkit.Address;
 import org.ergoplatform.appkit.NetworkType;
 import scorex.crypto.hash.Blake2b256;
 import scorex.util.encode.Base58;
 import sigmastate.Values;
-import sigmastate.basics.SecP256K1;
-import sigmastate.interpreter.CryptoConstants;
+import sigmastate.crypto.CryptoConstants;
+import sigmastate.crypto.Platform;
 import sigmastate.serialization.ErgoTreeSerializer;
 
 import java.math.BigInteger;
@@ -44,8 +43,8 @@ public class ErgoStealthAddress {
 	}
 
 	public Address generatePaymentAddress(NetworkType networkType) {
-		ECPoint u = SecP256K1.curve().decodePoint(mainAddress);
-		SecP256K1Point g = CryptoConstants.dlogGroup().generator();
+		ECPoint u = Platform.createContext().decodePoint(mainAddress).value();
+		ECPoint g = CryptoConstants.dlogGroup().generator().value();
 		SecureRandom secureRandom = new SecureRandom();
 		byte[] rBytes = new byte[32], yBytes = new byte[32];
 		secureRandom.nextBytes(rBytes);

@@ -1,8 +1,8 @@
 package com.satergo.ergopay;
 
+import com.satergo.FormatNumber;
 import com.satergo.Load;
 import com.satergo.Main;
-import com.satergo.FormatNumber;
 import com.satergo.WalletKey;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
@@ -11,12 +11,12 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import org.ergoplatform.appkit.Address;
-import org.ergoplatform.appkit.ErgoToken;
 import org.ergoplatform.appkit.OutBox;
 import org.ergoplatform.appkit.ReducedTransaction;
 import org.ergoplatform.explorer.client.DefaultApi;
 import org.ergoplatform.explorer.client.model.AssetInstanceInfo;
 import org.ergoplatform.explorer.client.model.OutputInfo;
+import org.ergoplatform.sdk.ErgoToken;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 

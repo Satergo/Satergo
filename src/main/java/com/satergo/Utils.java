@@ -20,7 +20,11 @@ import javafx.scene.input.ClipboardContent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import org.ergoplatform.appkit.*;
+import org.ergoplatform.appkit.ColdErgoClient;
+import org.ergoplatform.appkit.ErgoClient;
+import org.ergoplatform.appkit.NetworkType;
+import org.ergoplatform.appkit.Parameters;
+import org.ergoplatform.sdk.ErgoId;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
