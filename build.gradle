@@ -76,6 +76,11 @@ jar {
 	}
 }
 
+shadowJar {
+	exclude 'LICENSE-2.0.txt', 'NOTICE'
+	exclude 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt'
+}
+
 satergoRuntime {
 
 	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets"]

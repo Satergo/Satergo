@@ -28,21 +28,11 @@
 -keep class com.satergo.** { *; }
 -keep class com.sun.** { *; }
 -keep class javafx.** { *; }
--keep class jfxtras.styles.jmetro.** { *; }
--keep class impl.jfxtras.styles.jmetro.** { *; }
--keep class org.ergoplatform.restapi.** { *; }
--keep class org.ergoplatform.appkit.** { *; }
--keep class scorex.util.encode.** { *; }
--keep class sigmastate.** { *; }
--keep class sigma.** { *; }
--keep class scalan.** { *; }
--keep class fastparse.** { *; }
--keep class scala.util.control.** { *; }
--keep class scala.collection.** { *; }
--keep class scala.package** { *; }
--keep class special.** { *; }
+-keep class com.pixelduke.control.skin.** { *; }
+-keep class impl.com.pixelduke.control.** { *; }
 -keep class com.google.zxing.** { *; }
--keep class wrappers.**  { *; }
+
+-dontwarn org.controlsfx.**
 
 -dontwarn scala.concurrent.**
 -dontwarn scala.reflect.**
@@ -51,9 +41,6 @@
 -dontwarn **$$anonfun$*
 -dontwarn algebra.**,spire.**,debox.**
 -dontwarn okio.*
-
--dontwarn org.controlsfx.**
--dontwarn org.fusesource.jansi.**,jtermios.windows.**
 -dontwarn retrofit2.**,okhttp3.**
 
 # Preserve all native method names and the name of their classes.
