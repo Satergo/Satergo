@@ -12,9 +12,9 @@
 
 		<Group fx:id="verifyHolder"/>
 
-		<Label fx:id="mnemonicPasswordLabel" text="%mnemonicPassword"/>
+		<Label text="%extendedSeedPassphrase" visible="${extendedSeedPassphrase.visible}" managed="${extendedSeedPassphrase.managed}"/>
 
-		<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword"/>
+		<PasswordField fx:id="extendedSeedPassphrase" promptText="%extendedSeedPassphrase" managed="${extendedSeedPassphrase.visible}"/>
 
 		<Button styleClass="large" onAction="#createWallet" text="%createWallet"/>
 	</VBox>

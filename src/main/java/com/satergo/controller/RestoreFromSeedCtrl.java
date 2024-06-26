@@ -39,7 +39,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 	@FXML private TextArea seedPhrase;
 	@FXML private FlowPane suggestionContainer;
 	@FXML private TextField walletName;
-	@FXML private PasswordField mnemonicPassword;
+	@FXML private PasswordField extendedSeedPassphrase;
 	@FXML private PasswordField walletPassword;
 
 	private List<String> allMnemonicWords;
@@ -70,16 +70,16 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 			});
 			if (matches.size() > 20) suggestionContainer.getChildren().add(new Label(Main.lang("dddAndMore")));
 		});
-		showMnemonicPassword.visibleProperty().bind(mnemonicPassword.visibleProperty().not());
-		mnemonicPassword.setOnKeyPressed(e -> {
+		showExtendedSeedPassphrase.visibleProperty().bind(extendedSeedPassphrase.visibleProperty().not());
+		extendedSeedPassphrase.setOnKeyPressed(e -> {
 			if (e.getCode() == KeyCode.ESCAPE) {
 				root.requestFocus();
 				e.consume();
 			}
 		});
-		mnemonicPassword.focusedProperty().addListener((observable, oldValue, newValue) -> {
-			if (!newValue && mnemonicPassword.getText().isEmpty())
-				mnemonicPassword.setVisible(false);
+		extendedSeedPassphrase.focusedProperty().addListener((observable, oldValue, newValue) -> {
+			if (!newValue && extendedSeedPassphrase.getText().isEmpty())
+				extendedSeedPassphrase.setVisible(false);
 		});
 	}
 
@@ -101,7 +101,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 			}
 		}
 		SecretString phrase = SecretString.create(SystemProperties.rawSeedPhrase() ? seedPhrase.getText() : String.join(" ", words));
-		Mnemonic mnemonic = Mnemonic.create(phrase, SecretString.create(mnemonicPassword.getText()));
+		Mnemonic mnemonic = Mnemonic.create(phrase, SecretString.create(extendedSeedPassphrase.getText()));
 		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 		if (path == null) return;
 
@@ -193,11 +193,11 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 		Main.get().displayWalletPage();
 	}
 
-	@FXML private Hyperlink showMnemonicPassword;
+	@FXML private Hyperlink showExtendedSeedPassphrase;
 
 	@FXML
-	public void showMnemonicPassword(ActionEvent actionEvent) {
-		mnemonicPassword.setVisible(true);
+	public void showExtendedSeedPassphrase(ActionEvent actionEvent) {
+		extendedSeedPassphrase.setVisible(true);
 	}
 
 	@Override

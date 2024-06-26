@@ -1,6 +1,10 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.text.Text?>
+<?import com.satergo.extra.ToggleSwitch?>
+<?import com.satergo.extra.LinkedHyperlink?>
 <HBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" alignment="BASELINE_CENTER" stylesheets="@./welcome.css" fx:id="root" fx:controller="com.satergo.controller.CreateWalletCtrl">
 	<VBox spacing="12.5" alignment="TOP_CENTER">
 		<Label styleClass="welcome-text" text="%createNewWallet"/>
@@ -16,30 +20,36 @@
 				<PasswordField fx:id="password" promptText="%enterWalletPassword" prefWidth="300"/>
 			</VBox>
 
-			<Button fx:id="addMnemonicPassword" managed="${addMnemonicPassword.visible}" text="%addMnemonicPasswordOptional" onAction="#addMnemonicPassword" maxWidth="Infinity">
-				<VBox.margin><Insets top="8"/></VBox.margin>
-			</Button>
-
-			<VBox fx:id="mnemonicPasswordBox" visible="false" managed="${mnemonicPasswordBox.visible}">
-				<Label text="%mnemonicPassword" styleClass="fieldLabel"/>
-				<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword" prefWidth="300"/>
-			</VBox>
-
 			<Button styleClass="large" onAction="#initializeWallet" text="%initializeWallet">
 				<VBox.margin><Insets top="10"/></VBox.margin>
 			</Button>
 		</VBox>
 
 		<VBox spacing="12.5" alignment="TOP_CENTER" fx:id="viewSeed" visible="false" managed="${viewSeed.visible}">
-			<Label fx:id="seedPhraseLabel" text="%seedPhraseC"/>
+			<Label text="%seedPhraseC"/>
 
 			<VBox spacing="4" alignment="TOP_RIGHT">
-				<TextArea fx:id="seedPhraseArea" editable="false" wrapText="true"/>
-
+				<TextArea fx:id="seedPhraseArea" editable="false" wrapText="true" minHeight="60"/>
 				<Button fx:id="copySeedPhrase" onAction="#copySeedPhrase" text="%copy"/>
 			</VBox>
 
-			<Button styleClass="large" fx:id="continueWallet" onAction="#continueWallet" text="%continue">
+			<TitledPane text="%advancedOptions" maxWidth="${seedPhraseArea.width}" expanded="false">
+				<VBox>
+					<ToggleSwitch fx:id="extendWithPassphrase" text="Extend this seed with a passphrase" contentDisplay="RIGHT"/>
+					<VBox visible="${extendWithPassphrase.selected}" managed="${extendWithPassphrase.selected}">
+						<TextFlow>
+							<padding><Insets top="4"/></padding>
+							<Text text="Also known as the &quot;BIP39 passphrase&quot; or &quot;mnemonic password&quot;, this passphrase changes the wallet that is made with the seed phrase. You need to store this passphrase with your seed phrase as both will be required to restore your wallet.">
+								<style>-fx-fill: -fx-text-base-color;</style>
+							</Text>
+							<LinkedHyperlink uri="https://github.com/Satergo/Satergo/wiki/Extending-the-wallet-seed-with-a-passphrase" text="%readMore"/>
+						</TextFlow>
+						<PasswordField fx:id="extendedSeedPassphrase" promptText="%extendedSeedPassphrase"/>
+					</VBox>
+				</VBox>
+			</TitledPane>
+
+			<Button styleClass="large" onAction="#continueWallet" text="%continue">
 				<VBox.margin><Insets top="6"/></VBox.margin>
 			</Button>
 		</VBox>

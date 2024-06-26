@@ -77,13 +77,13 @@ public class AccountCtrl implements Initializable, WalletTab {
 				});
 			} else {
 				GridPane grid = new GridPane();
-				grid.add(new Label("Phrase: "), 0, 0);
+				grid.add(new Label(Main.lang("seedPhraseC") + " "), 0, 0);
 				grid.add(new Label(mnemonic.getPhrase().toStringUnsecure()), 1, 0);
-				grid.add(new Label("Password: "), 0, 1);
+				grid.add(new Label(Main.lang("extendedSeedPassphrase") + ": "), 0, 1);
 				grid.add(new Label(mnemonic.getPassword().toStringUnsecure()), 1, 1);
 				dialog.getDialogPane().setContent(grid);
-				ButtonType copyPhrase = new ButtonType("Copy phrase");
-				ButtonType copyPassword = new ButtonType("Copy password");
+				ButtonType copyPhrase = new ButtonType(Main.lang("copySeedPhrase"));
+				ButtonType copyPassword = new ButtonType(Main.lang("copyExtendedPassphrase"));
 				dialog.getDialogPane().getButtonTypes().addAll(copyPhrase, copyPassword);
 				dialog.showForResult().ifPresent(t -> {
 					if (t == copyPhrase) Utils.copyStringToClipboard(mnemonic.getPhrase().toStringUnsecure());

@@ -14,8 +14,8 @@
 
 		<TextArea fx:id="seedPhrase" promptText="%seedPhrase" prefRowCount="6"/>
 		<FlowPane fx:id="suggestionContainer" hgap="6" vgap="4" visible="false" managed="${suggestionContainer.visible}"/>
-		<Hyperlink fx:id="showMnemonicPassword" onAction="#showMnemonicPassword" text="%clickHereToShowMnemonicPasswordRestore" styleClass="text-color" managed="${showMnemonicPassword.visible}" wrapText="true"/>
-		<PasswordField fx:id="mnemonicPassword" promptText="%mnemonicPassword" visible="false" managed="${mnemonicPassword.visible}"/>
+		<Hyperlink fx:id="showExtendedSeedPassphrase" onAction="#showExtendedSeedPassphrase" text="%clickHereExtendedSeedPassphraseRestore" styleClass="text-color" managed="${showExtendedSeedPassphrase.visible}" wrapText="true"/>
+		<PasswordField fx:id="extendedSeedPassphrase" promptText="%extendedSeedPassphrase" visible="false" managed="${extendedSeedPassphrase.visible}"/>
 
 		<Region prefHeight="10"/>
 

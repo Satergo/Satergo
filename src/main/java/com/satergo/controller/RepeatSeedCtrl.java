@@ -33,9 +33,9 @@ public class RepeatSeedCtrl implements Initializable, SetupPage.WithoutExtra {
 	}
 
 	private SeedPhraseOrderVerify verify;
-	@FXML private Label seedPhraseProgress, mnemonicPasswordLabel;
+	@FXML private Label seedPhraseProgress;
 	@FXML private Group verifyHolder;
-	@FXML private PasswordField mnemonicPassword;
+	@FXML private PasswordField extendedSeedPassphrase;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -44,10 +44,7 @@ public class RepeatSeedCtrl implements Initializable, SetupPage.WithoutExtra {
 		verifyHolder.getChildren().add(verify);
 		verify.onWordAdded = verify.onWordRemoved = word -> seedPhraseProgress.setText(String.join(" ", verify.userOrder));
 		if (mnemonic.getPassword().isEmpty()) {
-			mnemonicPasswordLabel.setVisible(false);
-			mnemonicPassword.setVisible(false);
-			mnemonicPasswordLabel.setManaged(false);
-			mnemonicPassword.setManaged(false);
+			extendedSeedPassphrase.setVisible(false);
 		}
 	}
 
@@ -55,8 +52,8 @@ public class RepeatSeedCtrl implements Initializable, SetupPage.WithoutExtra {
 	public void createWallet(ActionEvent e) {
 		if (!verify.isCorrect()) {
 			Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectWordOrder"));
-		} else if (!SecretString.create(mnemonicPassword.getText()).equals(mnemonic.getPassword())) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectMnemonicPassword"));
+		} else if (!SecretString.create(extendedSeedPassphrase.getText()).equals(mnemonic.getPassword())) {
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectExtendedSeedPassphrase"));
 		} else {
 			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 			if (path == null) return;
