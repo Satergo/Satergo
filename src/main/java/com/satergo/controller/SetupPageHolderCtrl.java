@@ -33,9 +33,7 @@ public class SetupPageHolderCtrl implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		language.setVisible(page.showExtra());
-		language.setManaged(page.showExtra());
 		left.setVisible(page instanceof SetupPage.CustomLeft c ? c.hasLeft() : !Main.get().getAllPages().isEmpty());
-		left.setManaged(page instanceof SetupPage.CustomLeft c ? c.hasLeft() : !Main.get().getAllPages().isEmpty());
 		language.setConverter(Translations.Entry.TO_NAME_CONVERTER);
 		language.getItems().addAll(Main.get().translations.getEntries());
 		language.setValue(Main.get().translations.getEntry(Main.programData().language.get()));
@@ -51,7 +49,6 @@ public class SetupPageHolderCtrl implements Initializable {
 				left(null);
 		});
 		version.setVisible(page.showExtra());
-		version.setManaged(page.showExtra());
 		version.setText("v" + Main.VERSION);
 	}
 

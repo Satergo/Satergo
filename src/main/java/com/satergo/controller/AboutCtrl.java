@@ -5,6 +5,7 @@ import com.satergo.Utils;
 import com.satergo.Wallet;
 import com.satergo.WalletKey;
 import com.satergo.ergo.ErgoInterface;
+import com.satergo.extra.LinkedHyperlink;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
 import javafx.event.ActionEvent;
@@ -26,6 +27,7 @@ import java.util.ResourceBundle;
 
 public class AboutCtrl implements Initializable, WalletTab {
 	@FXML private Label version, translatedBy;
+	@FXML private LinkedHyperlink designerLink;
 	private static final Address DONATION_ADDRESS = Address.create("9gMnqf29LPxos2Lk5Lt6SkTmbWYL1d5QFHygbf6zRXDgL4KtAho");
 
 	@Override
@@ -35,6 +37,8 @@ public class AboutCtrl implements Initializable, WalletTab {
 			translatedBy.setVisible(false);
 		}
 		translatedBy.setText(Main.lang("translatedIntoThisLanguageBy_s").formatted(Main.get().translations.getEntry().credit()));
+		// This is to prevent web crawlers from sending spam to the address
+		designerLink.setUri(new String(new char[] { 109, 97, 105, 108, 116, 111, 58, 99, 111, 100, 101, 112, 101, 110, 100, 101, 110, 99, 121, 111, 110, 97, 114, 116, 64, 103, 109, 97, 105, 108, 46, 99, 111, 109 }));
 	}
 
 	@FXML
@@ -98,12 +102,5 @@ public class AboutCtrl implements Initializable, WalletTab {
 		} catch (WalletKey.Failure ignored) {
 			// user already informed
 		}
-	}
-
-	@FXML
-	public void showDesigner(ActionEvent e) {
-		// This is to prevent web crawlers from sending spam to the address
-		String url = new String(new char[] { 109, 97, 105, 108, 116, 111, 58, 99, 111, 100, 101, 112, 101, 110, 100, 101, 110, 99, 121, 111, 110, 97, 114, 116, 64, 103, 109, 97, 105, 108, 46, 99, 111, 109 });
-		Main.get().getHostServices().showDocument(url);
 	}
 }

@@ -2,6 +2,7 @@ package com.satergo.controller;
 
 import com.satergo.*;
 import com.satergo.ergo.*;
+import com.satergo.extra.LinkedHyperlink;
 import com.satergo.extra.PriceCurrency;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
@@ -52,7 +53,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 	private ContextMenu addTokenContextMenu;
 	// Transaction data
 	@FXML private HBox txIdContainer;
-	@FXML private Hyperlink txLink;
+	@FXML private LinkedHyperlink txLink;
 	@FXML private Button copyTxId;
 
 	@FXML
@@ -350,7 +351,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 				send.setDisable(false);
 				String transactionId = transactTask.getValue();
 				txLink.setText(transactionId);
-				txLink.setOnAction(te -> Main.get().getHostServices().showDocument(Utils.explorerTransactionUrl(transactionId)));
+				txLink.setUri(Utils.explorerTransactionUrl(transactionId));
 				copyTxId.setOnAction(ce -> {
 					Utils.copyStringToClipboard(transactionId);
 					Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), 400);

@@ -1,9 +1,8 @@
+<?import com.satergo.extra.LinkedHyperlink?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.text.TextFlow?>
-<?import javafx.scene.control.Hyperlink?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="26" fx:controller="com.satergo.controller.AboutCtrl" alignment="CENTER_LEFT">
 	<padding><Insets top="20" right="20" bottom="200" left="40"/></padding>
 
@@ -11,7 +10,7 @@
 
 	<Label text="%madeByAberg"/>
 
-	<TextFlow><Label text="%visualDesignBy"/><Hyperlink styleClass="text-color" onAction="#showDesigner" text="Nadi"/></TextFlow>
+	<TextFlow><Label text="%visualDesignBy"/><LinkedHyperlink fx:id="designerLink" styleClass="text-color" text="Nadi"/></TextFlow>
 
 	<Label fx:id="translatedBy" managed="${translatedBy.visible}"/>
 

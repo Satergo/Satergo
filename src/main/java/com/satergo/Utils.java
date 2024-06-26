@@ -331,4 +331,11 @@ public class Utils {
 			Platform.runLater(runnable);
 		else runnable.run();
 	}
+
+	/**
+	 * Opens a website or a file
+	 */
+	public static void showDocument(String uri) {
+		Main.get().getHostServices().showDocument(uri);
+	}
 }

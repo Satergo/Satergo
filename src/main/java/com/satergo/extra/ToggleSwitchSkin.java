@@ -86,8 +86,9 @@ public class ToggleSwitchSkin extends SkinBase<ToggleSwitch> {
 		thumb.getStyleClass().setAll("thumb");
 		filling.getStyleClass().setAll("filling");
 		thumbArea.getStyleClass().setAll("thumb-area");
-		filling.prefWidthProperty().bind(Bindings.createDoubleBinding(() -> thumb.getTranslateX() == 0 ? 0.0 : thumb.getBoundsInParent().getMinX(),
-				thumb.boundsInParentProperty(), thumb.translateXProperty()));
+		filling.prefWidthProperty().bind(Bindings.createDoubleBinding(() ->
+						thumb.getTranslateX() == 0 ? 0.0 : thumb.getBoundsInParent().getMaxX() - thumbArea.getBoundsInParent().getMinX(),
+				thumb.translateXProperty(), thumb.boundsInParentProperty(), thumbArea.boundsInParentProperty()));
 
 		control.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
 			if (event.getCode() == KeyCode.SPACE) {

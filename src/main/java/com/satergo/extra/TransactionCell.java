@@ -88,8 +88,8 @@ public class TransactionCell extends BorderPane implements Initializable {
 		this.tx = tx;
 		// Convert my addresses to string to avoid constantly converting the API strings into Address objects
 		this.myAddresses = myAddresses.stream().map(Address::toString).collect(Collectors.toUnmodifiableSet());
-		Load.thisFxml(this, "/tx-cell.fxml");
 		ergDiff = totalReceived(tx, this.myAddresses) - totalSent(tx, this.myAddresses);
+		Load.thisFxml(this, "/tx-cell.fxml");
 		getStyleClass().add(ergDiff >= 0 ? "green" : "red");
 		top.setOnMouseClicked(e -> {
 			if (e.getButton() == MouseButton.PRIMARY)
@@ -98,7 +98,9 @@ public class TransactionCell extends BorderPane implements Initializable {
 		// context menu
 		MenuItem copyTxId = new MenuItem(Main.lang("copyTransactionId"));
 		copyTxId.setOnAction(e -> Utils.copyStringToClipboard(tx.getId()));
-		ContextMenu context = new ContextMenu(copyTxId);
+		MenuItem viewOnExplorer = new MenuItem("View on explorer");
+		viewOnExplorer.setOnAction(e -> Utils.showDocument(Utils.explorerTransactionUrl(tx.getId())));
+		ContextMenu context = new ContextMenu(copyTxId, viewOnExplorer);
 		top.setOnContextMenuRequested(e -> {
 			if (context.isShowing()) context.hide();
 			context.show(top, e.getScreenX(), e.getScreenY());

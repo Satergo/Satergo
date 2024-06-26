@@ -58,7 +58,7 @@ public class UpdateChecker {
 		dialog.showForResult().ifPresent(t -> {
 			if (t == update) {
 				// TODO implement updating & verifying functionality into the program
-				Main.get().getHostServices().showDocument("https://satergo.com/#downloads");
+				Utils.showDocument("https://satergo.com/#downloads");
 			} else if (t == skip) {
 				Main.programData().skippedUpdate.set(versionInfo.versionCode);
 			}

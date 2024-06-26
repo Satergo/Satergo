@@ -10,17 +10,17 @@
 		<left>
 			<HBox spacing="40">
 				<ImageView styleClass="imageLogo"/>
-				<Button fx:id="left" styleClass="transparent, borderless" onAction="#left" disable="true" focusTraversable="false" text="%back">
+				<Button fx:id="left" styleClass="transparent, borderless" onAction="#left" disable="true" focusTraversable="false" text="%back" managed="${left.visible}">
 					<graphic><Icon icon="left" height="12"/></graphic>
 				</Button>
 			</HBox>
 		</left>
 		<right>
-			<ComboBox fx:id="language" focusTraversable="false" visible="false"/>
+			<ComboBox fx:id="language" focusTraversable="false" visible="false" managed="${language.visible}"/>
 		</right>
 	</BorderPane>
 
 	<VBox fx:id="content" VBox.vgrow="ALWAYS"/>
 
-	<Label fx:id="version" alignment="BASELINE_RIGHT" maxWidth="Infinity"/>
+	<Label fx:id="version" alignment="BASELINE_RIGHT" maxWidth="Infinity" managed="${version.visible}"/>
 </VBox>

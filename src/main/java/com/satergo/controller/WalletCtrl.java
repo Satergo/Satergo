@@ -353,7 +353,7 @@ public class WalletCtrl implements Initializable {
 				result.showForResult().ifPresent(t -> {
 					if (t == copyId) Utils.copyStringToClipboard(id);
 					else if (t == viewOnExplorer) {
-						Main.get().getHostServices().showDocument(Utils.explorerTransactionUrl(id));
+						Utils.showDocument(Utils.explorerTransactionUrl(id));
 					}
 				});
 			}

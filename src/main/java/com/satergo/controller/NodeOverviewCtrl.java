@@ -184,7 +184,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 
 	@FXML
 	public void openConf(ActionEvent e) {
-		Main.get().getHostServices().showDocument(Main.node.confFile.getAbsolutePath());
+		Utils.showDocument(Main.node.confFile.getAbsolutePath());
 	}
 
 	@FXML
