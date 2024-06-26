@@ -42,12 +42,9 @@
 	</left>
 
 	<right>
-		<VBox>
-			<VBox fx:id="themeBox" alignment="TOP_CENTER">
-				<ImageView fx:id="themeImage"/>
-				<Label fx:id="themeLabel"/>
-			</VBox>
-		</VBox>
+		<Button fx:id="theme" styleClass="transparent, borderless" contentDisplay="TOP">
+			<graphic><ImageView fx:id="themeImage"/></graphic>
+		</Button>
 	</right>
 
 </BorderPane>

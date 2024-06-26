@@ -116,8 +116,13 @@
 	-fx-background-color: -c-button-pressed;
 }
 
-.button:focus-visible {
+.button:focus-visible, .button.borderless:focus-visible {
 	-fx-border-color: -sat-button-focused-border-color;
+}
+
+.button.borderless:focus-visible {
+	-fx-padding: 3.4px 9.4px 3.4px 9.4px;
+	-fx-border-width: 1px;
 }
 
 .button.transparent {

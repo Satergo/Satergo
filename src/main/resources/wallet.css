@@ -26,7 +26,7 @@
 	-fx-border-radius: 4px;
 }
 
-#sidebar .toggle-button:hover {
+#sidebar .toggle-button:hover, #sidebar .toggle-button:focus-visible {
 	-fx-background-color: -w-sidebar-button-hover;
 }
 

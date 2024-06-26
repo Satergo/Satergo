@@ -6,14 +6,14 @@ import com.satergo.Translations;
 import com.satergo.extra.PriceCurrency;
 import com.satergo.extra.PriceSource;
 import com.satergo.extra.ToggleSwitch;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 
 import java.net.URL;
@@ -27,7 +27,7 @@ public class SettingsCtrl implements Initializable, WalletTab {
 	@FXML private ComboBox<Translations.Entry> language;
 	@FXML private ToggleSwitch requirePasswordForSending;
 
-	@FXML private VBox themeBox;
+	@FXML private Button theme;
 	@FXML private ImageView themeImage;
 	@FXML private Label themeLabel;
 
@@ -49,13 +49,12 @@ public class SettingsCtrl implements Initializable, WalletTab {
 		themeImage.imageProperty().bind(Bindings.when(Main.programData().lightTheme)
 				.then(Load.image("/images/settings/sun.png"))
 				.otherwise(Load.image("/images/settings/moon.png")));
-		themeLabel.textProperty().bind(Bindings.when(Main.programData().lightTheme)
+		theme.textProperty().bind(Bindings.when(Main.programData().lightTheme)
 				.then(Main.lang("darkTheme"))
 				.otherwise(Main.lang("lightTheme")));
-		themeBox.setOnMouseClicked(e -> {
-			if (e.getButton() == MouseButton.PRIMARY)
-				Main.programData().lightTheme.set(!Main.programData().lightTheme.get());
-		});
+		// Screen reader users do not have to care about the theme
+		theme.focusTraversableProperty().bind(Platform.accessibilityActiveProperty().not());
+		theme.setOnAction(e -> Main.programData().lightTheme.set(!Main.programData().lightTheme.get()));
 		language.getItems().addAll(Main.get().translations.getEntries());
 		language.setValue(Main.get().translations.getEntry(Main.programData().language.get()));
 		language.valueProperty().addListener((observable, oldValue, newValue) -> {
