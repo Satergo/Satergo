@@ -11,7 +11,8 @@
 /*	-sat-hyperlink-color: linear-gradient(from 16% 0% to 140% 130%, #6163FF, #0003CC); */
 	-sat-hyperlink-color: linear-gradient(from 16% 0% to 140% 130%, -c-blue-gradient-start, -c-blue-gradient-end);
 
-	-sat-button-border-color: #828282;
+	-sat-button-border-color: -sat-input-border-color;
+	-sat-button-focused-border-color: -sat-input-focused-border-color;
 	-sat-button-hover-text-fill: white;
 
 	-sat-toggle-button-unselected: #828282;

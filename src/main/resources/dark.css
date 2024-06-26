@@ -10,7 +10,8 @@
 
 	-sat-hyperlink-color: linear-gradient(from 16% 0% to 140% 130%, -c-blue-gradient-start, -c-blue-gradient-end);
 
-	-sat-button-border-color: white;
+	-sat-button-border-color: #B6B6B6;
+	-sat-button-focused-border-color: white;
 	-sat-button-hover-text-fill: -fx-text-base-color;
 
 	-sat-toggle-button-unselected: #747474;

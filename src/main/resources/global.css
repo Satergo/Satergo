@@ -83,9 +83,9 @@
 .button {
 	-fx-background-color: TRANSPARENT;
 	-fx-border-color: -sat-button-border-color;
-	-fx-border-width: 0.5px;
 	-fx-border-radius: 4px;
-	-fx-padding: 3.9px 9.9px 3.9px 9.9px;
+	-fx-border-width: 1px;
+	-fx-padding: 3.4px 9.4px 3.4px 9.4px;
 }
 
 .button.small {
@@ -100,8 +100,8 @@
 .button:hover, .button:pressed {
 	-fx-background-color: -c-button-hover;
 	-fx-text-fill: -sat-button-hover-text-fill;
-	-fx-padding: 4px 10px 4px 10px;
 	-fx-border-width: 0;
+	-fx-padding: 4px 10px 4px 10px;
 }
 
 .button.small:hover, .button.small:pressed {
@@ -114,6 +114,10 @@
 
 .button:pressed {
 	-fx-background-color: -c-button-pressed;
+}
+
+.button:focus-visible {
+	-fx-border-color: -sat-button-focused-border-color;
 }
 
 .button.transparent {
@@ -212,7 +216,7 @@
 	-fx-border-radius: 5px;
 }
 
-.combo-box:hover {
+.combo-box:hover, .combo-box:focus-visible {
 	-fx-border-color: -sat-border-hover;
 }
 
