@@ -338,4 +338,21 @@ public class Utils {
 	public static void showDocument(String uri) {
 		Main.get().getHostServices().showDocument(uri);
 	}
+
+	public static Path getLastWalletDir() {
+		Path path = Main.programData().lastWalletDirectory.get();
+		if (path == null || !Files.isDirectory(path)) return null;
+		return path;
+	}
+
+	public static void accessibleLabel(Label... labels) {
+		for (Label label : labels) {
+			label.focusTraversableProperty().bind(Platform.accessibilityActiveProperty());
+		}
+	}
+
+	public static Label accessibleLabel(Label label) {
+		label.focusTraversableProperty().bind(Platform.accessibilityActiveProperty());
+		return label;
+	}
 }

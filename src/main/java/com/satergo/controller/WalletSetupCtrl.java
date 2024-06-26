@@ -43,8 +43,8 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 	@FXML
 	public void openWalletFile(ActionEvent e) {
 		FileChooser fileChooser = new FileChooser();
-		if (Main.programData().lastWalletDirectory.get() != null) {
-			fileChooser.setInitialDirectory(Main.programData().lastWalletDirectory.get().toFile());
+		if (Utils.getLastWalletDir() != null) {
+			fileChooser.setInitialDirectory(Utils.getLastWalletDir().toFile());
 		}
 		fileChooser.setTitle(Main.lang("walletFile"));
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(Main.lang("wallet"), "*." + Wallet.FILE_EXTENSION));

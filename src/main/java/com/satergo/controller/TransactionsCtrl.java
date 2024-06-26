@@ -1,6 +1,7 @@
 package com.satergo.controller;
 
 import com.satergo.Main;
+import com.satergo.Utils;
 import com.satergo.Wallet;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.SimpleTask;
@@ -23,7 +24,8 @@ import java.util.stream.Collectors;
 
 public class TransactionsCtrl implements Initializable, WalletTab {
 
-	private final Label loadingLabel = new Label(Main.lang("loading...")), emptyHistory = new Label(Main.lang("emptyTransactionHistory"));
+	private final Label loadingLabel = Utils.accessibleLabel(new Label(Main.lang("loading..."))),
+			emptyHistory = Utils.accessibleLabel(new Label(Main.lang("emptyTransactionHistory")));
 
 	@FXML private Button refreshButton;
 	@FXML private VBox finished;

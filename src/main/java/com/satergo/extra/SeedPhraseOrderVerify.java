@@ -1,12 +1,14 @@
 package com.satergo.extra;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.TilePane;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -17,9 +19,22 @@ public class SeedPhraseOrderVerify extends TilePane {
 
 	public final ArrayList<String> userOrder = new ArrayList<>();
 
-	public SeedPhraseOrderVerify(String[] words) {
+	public SeedPhraseOrderVerify(List<String> words) {
+		if (Platform.isAccessibilityActive()) {
+			setPrefColumns(1);
+			TextField accessibleInput = new TextField();
+			accessibleInput.setPrefWidth(Region.USE_COMPUTED_SIZE);
+			accessibleInput.setPromptText("Please enter the seed phrase words in order");
+			accessibleInput.textProperty().addListener((observable, oldValue, newValue) -> {
+				userOrder.clear();
+				Collections.addAll(userOrder, newValue.strip().split("\\s+"));
+				correct.set(userOrder.equals(words));
+			});
+			getChildren().add(accessibleInput);
+			return;
+		}
 		getStyleClass().add("seed-phrase-tiles");
-		ArrayList<String> shuffled = new ArrayList<>(List.of(words));
+		ArrayList<String> shuffled = new ArrayList<>(words);
 		Collections.shuffle(shuffled);
 		for (String word : shuffled) {
 			ToggleButton button = new ToggleButton(word);
@@ -33,8 +48,8 @@ public class SeedPhraseOrderVerify extends TilePane {
 					userOrder.remove(word);
 					onWordRemoved.accept(word);
 				}
-				allSelected.set(words.length == userOrder.size());
-				correct.set(Arrays.asList(words).equals(userOrder));
+				allSelected.set(words.size() == userOrder.size());
+				correct.set(words.equals(userOrder));
 			});
 			getChildren().add(button);
 		}
@@ -44,8 +59,8 @@ public class SeedPhraseOrderVerify extends TilePane {
 			switch (e.getCode()) {
 				case UP -> { if (index >= COL_PER_ROW) getChildren().get(index - COL_PER_ROW).requestFocus(); }
 				case LEFT -> { if (index > 0) getChildren().get(index - 1).requestFocus(); }
-				case DOWN -> { if (index < words.length - COL_PER_ROW) getChildren().get(index + COL_PER_ROW).requestFocus(); }
-				case RIGHT -> { if (index < words.length - 1) getChildren().get(index + 1).requestFocus(); }
+				case DOWN -> { if (index < words.size() - COL_PER_ROW) getChildren().get(index + COL_PER_ROW).requestFocus(); }
+				case RIGHT -> { if (index < words.size() - 1) getChildren().get(index + 1).requestFocus(); }
 			}
 		});
 	}

@@ -8,9 +8,9 @@
 
 	<Label fx:id="version"/>
 
-	<Label text="%madeByAberg"/>
+	<Label fx:id="author" text="%madeByAberg"/>
 
-	<TextFlow><Label text="%visualDesignBy"/><LinkedHyperlink fx:id="designerLink" styleClass="text-color" text="Nadi"/></TextFlow>
+	<TextFlow><Label fx:id="designerLabel" text="%visualDesignBy"/><LinkedHyperlink fx:id="designerLink" styleClass="text-color" text="Nadi"/></TextFlow>
 
 	<Label fx:id="translatedBy" managed="${translatedBy.visible}"/>
 

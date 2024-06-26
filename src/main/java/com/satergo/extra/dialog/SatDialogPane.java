@@ -10,6 +10,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
+import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -32,10 +33,10 @@ public class SatDialogPane extends StackPane {
 	private final Map<ButtonType, Node> buttonNodes = new WeakHashMap<>();
 
 	protected static final int
-			TITLE_BAR_INDEX = 0,
-			HEADER_INDEX = 1,
-			CONTENT_INDEX = 2,
-			BUTTON_BAR_INDEX = 3;
+			TITLE_BAR_ROW = 0,
+			HEADER_ROW = 1,
+			CONTENT_ROW = 2,
+			BUTTON_BAR_ROW = 3;
 
 	private double xPos, yPos;
 	private double xShift, yShift;
@@ -45,22 +46,22 @@ public class SatDialogPane extends StackPane {
 
 	public SatDialogPane(AbstractSatDialog<?, ?> dialog) {
 		this.dialog = dialog;
+		setAccessibleRole(AccessibleRole.DIALOG);
 		getStyleClass().add("sat-dialog-root");
 		Region background = new Region();
 		background.getStyleClass().add("sat-dialog-background");
-		// blur
 		getChildren().add(background);
 
 		container = new GridPane();
 		container.getStyleClass().add("sat-dialog-container");
 		x = new Button();
+		x.setFocusTraversable(false);
 		x.getStyleClass().add("sat-dialog-x");
 		x.setOnAction(e -> dialog.setResultAndClose(null, true));
 		x.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
 		Icon icon = new Icon("times");
 		x.setGraphic(icon);
 		x.getStyleClass().addAll("transparent", "borderless", "less-wide");
-		container.add(x, 0, TITLE_BAR_INDEX);
 		GridPane.setHalignment(x, HPos.RIGHT);
 		ColumnConstraints columnConstraints = new ColumnConstraints();
 		columnConstraints.setPercentWidth(100);
@@ -104,7 +105,8 @@ public class SatDialogPane extends StackPane {
 		HBox buttonBarContainer = new HBox(buttonBar);
 		GridPane.setMargin(buttonBarContainer, new Insets(20, 0, 0, 0));
 		buttonBarContainer.setAlignment(Pos.CENTER);
-		container.add(buttonBarContainer, 0, BUTTON_BAR_INDEX);
+		container.add(buttonBarContainer, 0, BUTTON_BAR_ROW);
+		container.add(x, 0, TITLE_BAR_ROW);
 
 		getChildren().add(container);
 	}
@@ -160,14 +162,14 @@ public class SatDialogPane extends StackPane {
 		headerLabel = new Label(text);
 		headerLabel.getStyleClass().add("sat-dialog-header");
 		GridPane.setMargin(headerLabel, new Insets(10, 0, 10, 0));
-		container.add(headerLabel, 0, HEADER_INDEX);
+		container.add(headerLabel, 0, HEADER_ROW);
 	}
 
 	public void setContent(Node node) {
 		if (this.content != null)
 			container.getChildren().remove(this.content);
 		this.content = node;
-		container.add(node, 0, CONTENT_INDEX);
+		container.add(node, 0, CONTENT_ROW);
 	}
 
 	public Node getContent() {

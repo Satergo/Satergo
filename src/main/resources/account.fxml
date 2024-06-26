@@ -56,7 +56,7 @@
 				<VBox spacing="4">
 					<HBox alignment="CENTER_LEFT" spacing="4">
 						<Label text="%yourAddresses"/>
-						<Button onAction="#addAddress" styleClass="small" text="%plus_Add"/>
+						<Button onAction="#addAddress" styleClass="small" text="%plus_Add" accessibleText="%add"/>
 					</HBox>
 					<VBox fx:id="addresses" spacing="2"/>
 				</VBox>

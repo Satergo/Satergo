@@ -6,6 +6,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -40,6 +42,10 @@ public abstract class AbstractSatDialog<PaneType extends SatDialogPane, ResultTy
 		initStyle(StageStyle.TRANSPARENT);
 		initModality(Modality.WINDOW_MODAL);
 		setScene(scene);
+		addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+			if (e.getCode() == KeyCode.ESCAPE)
+				close();
+		});
 	}
 
 	public AbstractSatDialog(Node content) {

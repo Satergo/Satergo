@@ -16,6 +16,7 @@ import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatTextInputDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.MapChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -125,19 +126,23 @@ public class AccountCtrl implements Initializable, WalletTab {
 		grid.setVgap(10);
 		grid.setPadding(new Insets(20, 150, 10, 10));
 
+		Label currentPasswordLabel = new Label(Main.lang("currentC"));
 		PasswordField currentPassword = new PasswordField();
+		currentPasswordLabel.setLabelFor(currentPassword);
+		Label newPasswordLabel = new Label(Main.lang("newC"));
 		PasswordField newPassword = new PasswordField();
+		newPasswordLabel.setLabelFor(newPassword);
 
-		grid.add(new Label(Main.lang("currentC")), 0, 0);
+		grid.add(currentPasswordLabel, 0, 0);
 		grid.add(currentPassword, 1, 0);
-		grid.add(new Label(Main.lang("newC")), 0, 1);
+		grid.add(newPasswordLabel, 0, 1);
 		grid.add(newPassword, 1, 1);
 
 		Node changeButton = dialog.getDialogPane().lookupButton(changeType);
 		changeButton.setDisable(true);
-		currentPassword.textProperty().addListener((observable, oldValue, newValue) -> {
-			changeButton.setDisable(newValue.trim().isEmpty());
-		});
+		changeButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
+				currentPassword.getText().isEmpty() || newPassword.getText().isBlank(),
+				currentPassword.textProperty(), newPassword.textProperty()));
 		dialog.getDialogPane().setContent(grid);
 		Platform.runLater(currentPassword::requestFocus);
 		dialog.setResultConverter(dialogButton -> {
