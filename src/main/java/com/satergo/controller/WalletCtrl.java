@@ -98,7 +98,7 @@ public class WalletCtrl implements Initializable {
 	}
 
 	private void setPrice(BigDecimal oneErgValue) {
-		Main.get().lastOneErgValue.set(oneErgValue);
+		Main.get().market.ergValue.set(oneErgValue);
 	}
 
 	// This method is called from one place on the FX application thread
@@ -110,6 +110,10 @@ public class WalletCtrl implements Initializable {
 		}
 		try {
 			BigDecimal price = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
+			try {
+				Main.get().market.updateTokenPrices();
+			} catch (IOException | InterruptedException ignored) {
+			}
 			Utils.runLaterOrNow(() -> {
 				revertOfflineMode();
 				priceError.set(false);

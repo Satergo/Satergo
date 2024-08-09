@@ -2,6 +2,7 @@ package com.satergo;
 
 import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
+import com.satergo.extra.MarketData;
 import com.satergo.extra.SimpleTask;
 import com.satergo.node.EmbeddedNode;
 import com.satergo.ergopay.ErgoPayURI;
@@ -43,8 +44,7 @@ public class Main extends Application {
 
 	public final Translations translations = new Translations("lang.Lang");
 
-	// The current value of 1 ERG, in the user's chosen currency.
-	public final SimpleObjectProperty<BigDecimal> lastOneErgValue = new SimpleObjectProperty<>();
+	public final MarketData market = new MarketData();
 
 	public static Main get() {
 		return INSTANCE;

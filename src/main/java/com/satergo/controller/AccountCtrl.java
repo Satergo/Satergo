@@ -11,11 +11,13 @@ import com.satergo.ergo.ErgoURI;
 import com.satergo.ergo.TokenBalance;
 import com.satergo.extra.ImageConversion;
 import com.satergo.extra.IncorrectPasswordException;
+import com.satergo.extra.MarketData;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatTextInputDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.collections.MapChangeListener;
 import javafx.event.ActionEvent;
@@ -42,8 +44,10 @@ import org.ergoplatform.sdk.ErgoId;
 import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -279,9 +283,10 @@ public class AccountCtrl implements Initializable, WalletTab {
 
 	private static class TokenLine extends BorderPane {
 		private final TokenBalance token;
-		@FXML private Label name, symbol, amount;
+		@FXML private Label name, symbol, amount, priceInErg, priceInFiat;
 		@FXML private ImageView icon;
 		@FXML private Button copyId;
+		@FXML private Node priceBox;
 
 		public TokenLine(TokenBalance token) {
 			this.token = token;
@@ -289,6 +294,19 @@ public class AccountCtrl implements Initializable, WalletTab {
 			this.name.setText(token.name() == null ? Main.lang("unnamed_parentheses") : token.name());
 			this.icon.setImage(Utils.tokenIcon36x36(ErgoId.create(token.id())));
 			this.amount.setText(FormatNumber.tokenExact(token));
+			this.priceBox.visibleProperty().bind(Main.programData().showPrice.and(Bindings.createBooleanBinding(() -> !priceInErg.getText().isEmpty(), priceInErg.textProperty())));
+		}
+
+		public void showPrice(MarketData market) {
+			BigDecimal oneUnitPriceInErg = market.ergPriceOfToken(token.id());
+			if (oneUnitPriceInErg == null || market.ergValue.get() == null) {
+				this.priceInErg.setText("");
+				this.priceInFiat.setText("");
+			} else {
+				BigDecimal priceInErg = token.fullAmount().multiply(oneUnitPriceInErg);
+				this.priceInErg.setText(new DecimalFormat("0.#### ERG").format(priceInErg));
+				this.priceInFiat.setText(FormatNumber.currencyExact(market.ergValue.get().multiply(priceInErg), Main.programData().priceCurrency.get()) + " " + Main.programData().priceCurrency.get().uc());
+			}
 		}
 
 		@FXML
@@ -317,20 +335,19 @@ public class AccountCtrl implements Initializable, WalletTab {
 		totalBalanceLabel.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
 		totalBalance.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
 		tokens.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
-		if (Main.get().getWallet().lastKnownBalance.get() != null) {
-			totalBalance.setText(FormatNumber.ergAllDecimals(ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed())) + " ERG");
-			for (TokenBalance token : Main.get().getWallet().lastKnownBalance.get().confirmedTokens()) {
-				TokenLine tokenLine = new TokenLine(token);
-				tokens.getChildren().add(tokenLine);
-			}
-		}
-		// binding with a converter could be used here
-		Main.get().getWallet().lastKnownBalance.addListener((observable, oldValue, newValue) -> {
-			totalBalance.setText(FormatNumber.ergAllDecimals(ErgoInterface.toFullErg(newValue.confirmed())) + " ERG");
+		Main.get().getWallet().lastKnownBalance.subscribe(balance -> {
+			if (balance == null) return;
+			totalBalance.setText(FormatNumber.ergAllDecimals(ErgoInterface.toFullErg(balance.confirmed())) + " ERG");
 			tokens.getChildren().clear();
 			for (TokenBalance token : Main.get().getWallet().lastKnownBalance.get().confirmedTokens()) {
 				TokenLine tokenLine = new TokenLine(token);
+				tokenLine.showPrice(Main.get().market);
 				tokens.getChildren().add(tokenLine);
+			}
+		});
+		Main.get().market.tokenPrices.addListener((InvalidationListener) obs -> {
+			for (Node child : tokens.getChildren()) {
+				((TokenLine) child).showPrice(Main.get().market);
 			}
 		});
 		updateAddresses();

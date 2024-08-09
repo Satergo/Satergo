@@ -155,9 +155,9 @@ public class HomeCtrl implements WalletTab, Initializable {
 		balanceFormat.setRoundingMode(RoundingMode.FLOOR);
 		balance.setText(balanceFormat.format(ErgoInterface.toFullErg(bal.confirmed())) + " ERG");
 		if (!Main.get().getWalletPage().priceError.get()) {
-			if (Main.programData().showPrice.get() && Main.get().lastOneErgValue.get() != null) {
+			if (Main.programData().showPrice.get() && Main.get().market.ergValue.get() != null) {
 				PriceCurrency currency = Main.programData().priceCurrency.get();
-				BigDecimal converted = ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed()).multiply(Main.get().lastOneErgValue.get());
+				BigDecimal converted = ErgoInterface.toFullErg(Main.get().getWallet().lastKnownBalance.get().confirmed()).multiply(Main.get().market.ergValue.get());
 				value.setText(FormatNumber.currencyExact(converted, currency) + " " + Main.programData().priceCurrency.get().uc());
 			}
 		} else {
@@ -193,7 +193,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 			addToken.setDisable(bal == null || bal.confirmedTokens().isEmpty());
 			updateInfo(bal);
 		});
-		Main.get().lastOneErgValue.addListener((obs, old, val) -> updateInfo(Main.get().getWallet().lastKnownBalance.get()));
+		Main.get().market.ergValue.addListener((obs, old, val) -> updateInfo(Main.get().getWallet().lastKnownBalance.get()));
 		updateInfo(Main.get().getWallet().lastKnownBalance.get());
 		info.visibleProperty().bind(Main.get().getWalletPage().offlineMode.not());
 		value.visibleProperty().bind(Main.programData().showPrice);
