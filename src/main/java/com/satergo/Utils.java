@@ -20,11 +20,9 @@ import javafx.scene.input.ClipboardContent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import org.ergoplatform.appkit.ColdErgoClient;
-import org.ergoplatform.appkit.ErgoClient;
-import org.ergoplatform.appkit.NetworkType;
-import org.ergoplatform.appkit.Parameters;
+import org.ergoplatform.appkit.*;
 import org.ergoplatform.sdk.ErgoId;
+import org.ergoplatform.sdk.ErgoToken;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -37,8 +35,11 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -122,6 +123,10 @@ public class Utils {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void alertUnexpectedException(Throwable throwable) {
+		Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable);
 	}
 
 	public static void textDialogWithCopy(String headerText, String contentText) {
@@ -354,5 +359,18 @@ public class Utils {
 	public static Label accessibleLabel(Label label) {
 		label.focusTraversableProperty().bind(Platform.accessibilityActiveProperty());
 		return label;
+	}
+
+	public static void alertTxBuildException(Throwable t, long amountNanoErg, Collection<ErgoToken> tokens, Function<ErgoId, String> getTokenName) {
+		if (t instanceof InputBoxesSelectionException.NotEnoughErgsException ex) {
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(FormatNumber.ergExact(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
+		} else if (t instanceof InputBoxesSelectionException.NotEnoughTokensException ex) {
+			String tokensString = tokens.stream()
+					.filter(token -> token.getValue() > ex.tokenBalances.get(token.getId().toString()))
+					.map(ErgoToken::getId).map(getTokenName).map(name -> '"' + name + '"').collect(Collectors.joining(", "));
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughOf_s").formatted(tokensString));
+		} else if (t != null) {
+			Utils.alertUnexpectedException(t);
+		}
 	}
 }

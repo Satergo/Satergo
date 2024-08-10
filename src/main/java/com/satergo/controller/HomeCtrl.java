@@ -28,10 +28,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class HomeCtrl implements WalletTab, Initializable {
@@ -361,7 +358,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 			transactTask.setOnFailed(te -> {
 				// Not sure if it can be null
 				if (transactTask.getException() != null) {
-					Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), transactTask.getException());
+					Utils.alertUnexpectedException(transactTask.getException());
 					transactTask.getException().printStackTrace();
 				}
 				send.setDisable(false);
@@ -370,14 +367,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 		});
 		unsignedTxTask.setOnFailed(f -> {
 			send.setDisable(false);
-			if (unsignedTxTask.getException() instanceof InputBoxesSelectionException.NotEnoughErgsException ex) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(FormatNumber.ergExact(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
-			} else if (unsignedTxTask.getException() instanceof InputBoxesSelectionException.NotEnoughTokensException ex) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughOf_s").formatted(ex.tokenBalances.keySet().stream().map(ErgoId::create).map(tokenNames::get).map(name -> '"' + name + '"').collect(Collectors.joining(", "))));
-			} else if (unsignedTxTask.getException() != null) {
-				Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), unsignedTxTask.getException());
-				unsignedTxTask.getException().printStackTrace();
-			}
+			Utils.alertTxBuildException(unsignedTxTask.getException(), amountNanoErg, Arrays.asList(tokensToSend), tokenNames::get);
 		});
 		new Thread(unsignedTxTask).start();
 	}

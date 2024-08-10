@@ -116,7 +116,7 @@ public class Main extends Application {
 
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
 			try {
-				Platform.runLater(() -> Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable));
+				Platform.runLater(() -> Utils.alertUnexpectedException(throwable));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

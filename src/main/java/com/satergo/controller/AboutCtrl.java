@@ -23,6 +23,7 @@ import org.ergoplatform.appkit.UnsignedTransaction;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.Collections;
 import java.util.ResourceBundle;
 
 public class AboutCtrl implements Initializable, WalletTab {
@@ -102,6 +103,8 @@ public class AboutCtrl implements Initializable, WalletTab {
 			if (txId != null) Utils.textDialogWithCopy(Main.lang("transactionId"), txId);
 		} catch (WalletKey.Failure ignored) {
 			// user already informed
+		} catch (Exception ex) {
+			Utils.alertTxBuildException(ex, ErgoInterface.toNanoErg(amountFullErg), Collections.emptyList(), id -> {throw new UnsupportedOperationException();});
 		}
 	}
 }

@@ -201,7 +201,7 @@ public class WalletCtrl implements Initializable {
 			} catch (ConnectException e) {
 				Platform.runLater(this::offlineMode);
 			} catch (Exception e) {
-				Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), e);
+				Utils.alertUnexpectedException(e);
 			}
 		}, 60, 60, TimeUnit.SECONDS);
 
@@ -365,7 +365,7 @@ public class WalletCtrl implements Initializable {
 		if (uri.needsNetworkRequest()) {
 			new SimpleTask<>(makeRequest)
 					.onSuccess(successHandler)
-					.onFail(throwable -> Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable))
+					.onFail(Utils::alertUnexpectedException)
 					.newThread();
 		} else {
 			try {
