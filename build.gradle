@@ -3,7 +3,7 @@ import com.satergo.build.SatergoBuildPlugin
 plugins {
 	id 'java'
 	id 'application'
-	id 'com.github.johnrengelman.shadow' version '8.1.1'
+	id 'com.gradleup.shadow' version '8.3.0'
 }
 
 apply plugin: SatergoBuildPlugin
@@ -49,6 +49,10 @@ if (platformProvided && project.findProperty("platform") != "auto") {
 def javaFxVersion = '22.0.1'
 def javaFxModules = [ 'base', 'controls', 'fxml', 'graphics' ]
 
+configurations {
+	javaFxDeps
+}
+
 dependencies {
 	implementation ('com.pixelduke:FXSkins:1.0.0') {
 		exclude group: 'org.openjfx'
@@ -63,7 +67,9 @@ dependencies {
 	implementation 'com.google.code.gson:gson:2.10.1'
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for seed phrase words
 	implementation 'com.google.zxing:core:3.5.3' // used for QR codes
-	javaFxModules.forEach({ md -> implementation "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
+	// We add the JavaFX dependencies to a custom configuration to later specify that the dependencies in this configuration shall be excluded from the shaded jar
+	javaFxModules.forEach({ md -> javaFxDeps "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
+	implementation configurations.javaFxDeps.dependencies
 }
 
 jar {
@@ -79,11 +85,21 @@ jar {
 shadowJar {
 	exclude 'LICENSE-2.0.txt', 'NOTICE'
 	exclude 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt'
+	dependencies {
+		project.configurations.javaFxDeps.dependencies.forEach {
+			// This does not exclude transitive dependencies
+			// However, JavaFX does not have any dependencies
+			exclude(dependency(it))
+		}
+	}
 }
 
 satergoRuntime {
 
 	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets"]
+	javaFxModules.forEach { extraModules.add("javafx." + it) }
+	excludeModules = ["java.sql", "jdk.management"]
+	extraModuleJars = configurations.javaFxDeps.files
 	extraJlinkOptions = ["--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"]
 	cleanupRuntimeContent = true
 	cacheRuntimes = true

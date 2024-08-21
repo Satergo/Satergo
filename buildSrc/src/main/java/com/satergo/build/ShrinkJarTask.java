@@ -49,6 +49,12 @@ public class ShrinkJarTask extends DefaultTask {
 			classPathEntry.setFilter(Collections.singletonList("!module-info.class"));
 			config.libraryJars.add(classPathEntry);
 		}
+		for (File extraModuleJar : ext.extraModuleJars) {
+			ClassPathEntry classPathEntry = new ClassPathEntry(extraModuleJar, false);
+			classPathEntry.setJarFilter(Collections.singletonList("!**.jar"));
+			classPathEntry.setFilter(Collections.singletonList("!module-info.class"));
+			config.libraryJars.add(classPathEntry);
+		}
 
 		config.programJars = new ClassPath();
 		config.programJars.add(new ClassPathEntry(shadowJarFile, false));

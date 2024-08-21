@@ -8,10 +8,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Objects;
+import java.util.*;
 import java.util.spi.ToolProvider;
 import java.util.stream.Collectors;
 
@@ -41,6 +38,13 @@ public class RuntimeBuildTask extends DefaultTask {
 		// Add extra (likely dynamically used) modules from configuration
 		if (extension.extraModules != null)
 			modules.addAll(extension.extraModules);
+		if (extension.excludeModules != null) {
+			extension.excludeModules.forEach(excluded -> {
+				if (!modules.remove(excluded)) {
+					getLogger().warn("Attempted to exclude module \"{}\" which was not going to be included", excluded);
+				}
+			});
+		}
 
 		// Use from cache or download JDK for runtime
 		String[] jdkArchiveLinkParts = extension.jdkRuntimeURI.getPath().split("/");
@@ -60,7 +64,12 @@ public class RuntimeBuildTask extends DefaultTask {
 		ArrayList<String> args = new ArrayList<>();
 
 		args.add("--module-path");
-		args.add(jdk.resolve("jmods").toAbsolutePath().toString());
+		List<String> modulePaths = new ArrayList<>();
+		modulePaths.add(jdk.resolve("jmods").toAbsolutePath().toString());
+		for (File extraModuleJar : extension.extraModuleJars) {
+			modulePaths.add(extraModuleJar.getParentFile().getAbsolutePath());
+		}
+		args.add(String.join(":", modulePaths));
 
 		args.add("--add-modules");
 		args.add(String.join(",", modules));

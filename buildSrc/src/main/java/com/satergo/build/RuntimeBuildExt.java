@@ -4,8 +4,10 @@ import groovy.lang.Closure;
 import org.gradle.api.Action;
 import org.gradle.util.internal.ConfigureUtil;
 
+import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 public class RuntimeBuildExt {
@@ -40,6 +42,9 @@ public class RuntimeBuildExt {
 	public boolean includeJarInRuntime = false;
 
 	public List<String> extraModules;
+	public List<String> excludeModules;
+	/** Additional JARs to include on the module path. Note: the names of these must be included in {@link #extraModules} for them to be linked. */
+	public Collection<File> extraModuleJars;
 	public List<String> extraJlinkOptions;
 
 	public Path proguardConfig;

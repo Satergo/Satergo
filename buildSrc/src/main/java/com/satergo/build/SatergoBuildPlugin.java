@@ -16,6 +16,7 @@ public class SatergoBuildPlugin implements Plugin<Project> {
 			task.setGroup("build");
 			if (!project.hasProperty("doNotShrink"))
 				task.dependsOn("shrinkJarTask");
+			else task.dependsOn("shadowJar");
 		});
 		project.getExtensions().create("satergoRuntime", RuntimeBuildExt.class);
 
