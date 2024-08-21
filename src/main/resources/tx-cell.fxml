@@ -23,16 +23,22 @@
 	</top>
 
 	<bottom>
-		<StackPane fx:id="bottomContainer">
-			<GridPane fx:id="bottom" visible="false" managed="${bottom.visible}" hgap="30">
+		<VBox fx:id="bottomContainer" visible="false" managed="${bottomContainer.visible}" maxHeight="180">
+			<Region prefHeight="16"/>
+			<GridPane fx:id="bottom" hgap="30" VBox.vgrow="ALWAYS">
 				<padding>
-					<Insets topRightBottomLeft="26"/>
+					<Insets left="26" right="26"/>
 				</padding>
 				<columnConstraints>
 					<ColumnConstraints percentWidth="50"/>
 					<ColumnConstraints percentWidth="50"/>
 				</columnConstraints>
+				<rowConstraints>
+					<RowConstraints vgrow="ALWAYS"/>
+					<RowConstraints vgrow="ALWAYS"/>
+				</rowConstraints>
 			</GridPane>
-		</StackPane>
+			<Region prefHeight="26"/>
+		</VBox>
 	</bottom>
 </fx:root>

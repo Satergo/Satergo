@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -35,7 +36,12 @@ public final class TransactionInOut extends HBox {
 		space.visibleProperty().bind(tokens.visibleProperty());
 		space.managedProperty().bind(tokens.managedProperty());
 		Label amountLabel = new Label();
+		amountLabel.setOnContextMenuRequested(e -> {
+			Utils.copyStringToClipboard(amount);
+			Utils.showTemporaryTooltip(amountLabel, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
+		});
 		Label erg = new Label(" ERG");
+		erg.setOnContextMenuRequested(amountLabel.getOnContextMenuRequested());
 		box.getChildren().addAll(tokens, space, amountLabel, erg);
 		Label arrow = new Label("\u27F6");
 		arrow.setMinWidth(Region.USE_PREF_SIZE);

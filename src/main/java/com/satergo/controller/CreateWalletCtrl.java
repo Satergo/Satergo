@@ -46,7 +46,7 @@ public class CreateWalletCtrl implements SetupPage.WithoutExtra, SetupPage.Custo
 	@FXML
 	public void copySeedPhrase(ActionEvent e) {
 		Utils.copyStringToClipboard(seedPhrase);
-		Utils.showTemporaryTooltip(copySeedPhrase, new Tooltip(Main.lang("copied")), 400);
+		Utils.showTemporaryTooltip(copySeedPhrase, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
 	}
 
 	@FXML

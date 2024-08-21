@@ -21,11 +21,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.layout.*;
 import javafx.util.Duration;
 import org.ergoplatform.appkit.Address;
 import org.ergoplatform.explorer.client.model.AssetInstanceInfo;
@@ -60,7 +56,7 @@ public class TransactionCell extends BorderPane implements Initializable {
 	@FXML private Node top;
 	@FXML private GridPane bottom;
 	@FXML private StackPane arrow;
-	@FXML private StackPane bottomContainer;
+	@FXML private Pane bottomContainer;
 
 	private final BooleanProperty expanded = new SimpleBooleanProperty(null, "expanded", false);
 	public BooleanProperty expandedProperty() { return expanded; }
@@ -98,9 +94,11 @@ public class TransactionCell extends BorderPane implements Initializable {
 		// context menu
 		MenuItem copyTxId = new MenuItem(Main.lang("copyTransactionId"));
 		copyTxId.setOnAction(e -> Utils.copyStringToClipboard(tx.getId()));
+		MenuItem copyErgAmount = new MenuItem(Main.lang("copyErgAmount"));
+		copyErgAmount.setOnAction(e -> Utils.copyStringToClipboard(FormatNumber.ergExact(ErgoInterface.toFullErg(ergDiff))));
 		MenuItem viewOnExplorer = new MenuItem("View on explorer");
 		viewOnExplorer.setOnAction(e -> Utils.showDocument(Utils.explorerTransactionUrl(tx.getId())));
-		ContextMenu context = new ContextMenu(copyTxId, viewOnExplorer);
+		ContextMenu context = new ContextMenu(copyTxId, copyErgAmount, viewOnExplorer);
 		top.setOnContextMenuRequested(e -> {
 			if (context.isShowing()) context.hide();
 			context.show(top, e.getScreenX(), e.getScreenY());
@@ -127,8 +125,6 @@ public class TransactionCell extends BorderPane implements Initializable {
 				}
 			}
 		});
-		clipRect.widthProperty().bind(widthProperty());
-		bottomContainer.setClip(clipRect);
 	}
 
 	private void createContent() {
@@ -138,10 +134,15 @@ public class TransactionCell extends BorderPane implements Initializable {
 		var outputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getOutputs()), output -> {
 			return Cell.wrapNode(createInOut(TransactionInOut.Type.OUTPUT, output.getAddress(), output.getValue(), output.getAssets()));
 		});
-		inputFlow.maxHeightProperty().bind(Bindings.when(expandedProperty()).then(Region.USE_COMPUTED_SIZE).otherwise(0));
-		outputFlow.maxHeightProperty().bind(Bindings.when(expandedProperty()).then(Region.USE_COMPUTED_SIZE).otherwise(0));
-		bottom.add(new VirtualizedScrollPane<>(inputFlow), 0, 0);
-		bottom.add(new VirtualizedScrollPane<>(outputFlow), 1, 0);
+		var inputScroll = new VirtualizedScrollPane<>(inputFlow);
+		inputScroll.prefHeightProperty().bind(bottom.heightProperty());
+		GridPane.setHgrow(inputScroll, Priority.ALWAYS);
+		Utils.overscrollToParent(inputScroll);
+		var outputScroll = new VirtualizedScrollPane<>(outputFlow);
+		outputScroll.prefHeightProperty().bind(bottom.heightProperty());
+		Utils.overscrollToParent(outputScroll);
+		bottom.add(inputScroll, 0, 0);
+		bottom.add(outputScroll, 1, 0);
 	}
 
 	private TransactionInOut createInOut(TransactionInOut.Type type, String address, long value, List<AssetInstanceInfo> assets) {
@@ -168,8 +169,8 @@ public class TransactionCell extends BorderPane implements Initializable {
 					Duration.ZERO,
 					event -> {
 						// start expand
-						if (CACHE_ANIMATION) bottom.setCache(true);
-						bottom.setVisible(true);
+						if (CACHE_ANIMATION) bottomContainer.setCache(true);
+						bottomContainer.setVisible(true);
 					},
 					new KeyValue(transitionProperty(), transitionStartValue)
 			);
@@ -177,7 +178,7 @@ public class TransactionCell extends BorderPane implements Initializable {
 					duration,
 					event -> {
 						// end expand
-						if (CACHE_ANIMATION) bottom.setCache(false);
+						if (CACHE_ANIMATION) bottomContainer.setCache(false);
 					},
 					new KeyValue(transitionProperty(), 1, Interpolator.LINEAR)
 			);
@@ -186,7 +187,7 @@ public class TransactionCell extends BorderPane implements Initializable {
 					Duration.ZERO,
 					event -> {
 						// Start collapse
-						if (CACHE_ANIMATION) bottom.setCache(true);
+						if (CACHE_ANIMATION) bottomContainer.setCache(true);
 					},
 					new KeyValue(transitionProperty(), transitionStartValue)
 			);
@@ -194,8 +195,8 @@ public class TransactionCell extends BorderPane implements Initializable {
 					duration,
 					event -> {
 						// end collapse
-						bottom.setVisible(false);
-						if (CACHE_ANIMATION) bottom.setCache(false);
+						bottomContainer.setVisible(false);
+						if (CACHE_ANIMATION) bottomContainer.setCache(false);
 					},
 					new KeyValue(transitionProperty(), 0, Interpolator.LINEAR)
 			);
@@ -204,14 +205,10 @@ public class TransactionCell extends BorderPane implements Initializable {
 		timeline.play();
 	}
 
-	private final Rectangle clipRect = new Rectangle();
-
 	@Override
 	protected void layoutChildren() {
-		double contentHeight = (getHeight() - top.prefHeight(-1)) * getTransition();
-		contentHeight = snapSizeY(contentHeight);
-		bottomContainer.resize(getWidth(), contentHeight);
-		clipRect.setHeight(contentHeight);
+		double contentHeight = snapSizeY(bottomContainer.getMaxHeight() * getTransition());
+		bottomContainer.setPrefHeight(contentHeight);
 		super.layoutChildren();
 	}
 

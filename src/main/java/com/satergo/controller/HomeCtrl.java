@@ -106,7 +106,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 		@FXML
 		public void copyId() {
 			Utils.copyStringToClipboard(tokenSummary.id());
-			Utils.showTemporaryTooltip(idTooltipLabel, new Tooltip(Main.lang("copied")), 400);
+			Utils.showTemporaryTooltip(idTooltipLabel, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
 		}
 	}
 
@@ -351,7 +351,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 				txLink.setUri(Utils.explorerTransactionUrl(transactionId));
 				copyTxId.setOnAction(ce -> {
 					Utils.copyStringToClipboard(transactionId);
-					Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), 400);
+					Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
 				});
 				txIdContainer.setVisible(true);
 			});

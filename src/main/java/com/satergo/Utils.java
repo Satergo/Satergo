@@ -13,16 +13,22 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.control.skin.ScrollPaneSkin;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.ScrollEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.ergoplatform.appkit.*;
 import org.ergoplatform.sdk.ErgoId;
 import org.ergoplatform.sdk.ErgoToken;
+import org.fxmisc.flowless.Cell;
+import org.fxmisc.flowless.VirtualFlow;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -37,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -44,6 +51,8 @@ import java.util.stream.Collectors;
 public class Utils {
 
 	public static final HttpClient HTTP = HttpClient.newHttpClient();
+
+	public static long COPIED_TOOLTIP_MS = 600;
 
 	public static URL resource(String location) {
 		return Objects.requireNonNull(Utils.class.getResource(location), "resource not found");
@@ -265,7 +274,7 @@ public class Utils {
 		tooltip.setOnShown(event -> {
 			tooltip.setOpacity(1);
 			tooltip.setAnchorX(bounds.getCenterX() - tooltip.getWidth() / 2 + 10);
-			Utils.fxRunDelayed(tooltip::hide, 600);
+			Utils.fxRunDelayed(tooltip::hide, ms);
 		});
 		tooltip.show(node, bounds.getCenterX() - tooltip.getWidth() / 2, bounds.getMaxY());
 	}
@@ -372,5 +381,39 @@ public class Utils {
 		} else if (t != null) {
 			Utils.alertUnexpectedException(t);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends Parent>T findParent(Node node, Class<T> parentClass) {
+		Parent parent = node.getParent();
+		while (true) {
+			if (parent == null) return null;
+			if (parentClass.isInstance(parent))
+				return (T) parent;
+			parent = parent.getParent();
+		}
+	}
+
+	/**
+	 * Makes it so that if the user scrolls toward the end while already at the end in a VirtualizedScrollPane,
+	 * it will try to find a parent ScrollPane and scroll it instead. The same applies for scrolling toward the start.
+	 */
+	public static <T, C extends Cell<T, ?>>void overscrollToParent(VirtualizedScrollPane<VirtualFlow<T, C>> scrollPane) {
+		VirtualFlow<T, C> flow = scrollPane.getContent();
+		flow.addEventHandler(ScrollEvent.SCROLL, e -> {
+			ScrollPane parent = Utils.findParent(scrollPane, ScrollPane.class);
+			if (parent == null) return;
+			ScrollBar scrollBar = ((ScrollPaneSkin) parent.getSkin()).getVerticalScrollBar();
+			if (scrollBar == null) return;
+			if (e.getDeltaY() < 0) {
+				if (flow.getEstimatedScrollY() + flow.getHeight() >= flow.getTotalHeightEstimate()-1 || !scrollPane.lookup(".scroll-bar:vertical").isVisible()) {
+					scrollBar.increment();
+				}
+			} else if (e.getDeltaY() > 0) {
+				if (flow.getEstimatedScrollY() == 0 || !scrollPane.lookup(".scroll-bar:vertical").isVisible()) {
+					scrollBar.decrement();
+				}
+			}
+		});
 	}
 }

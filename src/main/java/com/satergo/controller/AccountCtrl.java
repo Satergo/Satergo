@@ -258,7 +258,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 			this.address.setText(address.toString());
 			this.copy.setOnAction(e -> {
 				Utils.copyStringToClipboard(address.toString());
-				Utils.showTemporaryTooltip(copy, new Tooltip(Main.lang("copied")), 400);
+				Utils.showTemporaryTooltip(copy, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
 			});
 			this.rename.setOnAction(e -> {
 				SatTextInputDialog dialog = new SatTextInputDialog();
@@ -312,7 +312,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		@FXML
 		public void copyId(ActionEvent e) {
 			Utils.copyStringToClipboard(token.id());
-			Utils.showTemporaryTooltip(copyId, new Tooltip(Main.lang("copied")), 400);
+			Utils.showTemporaryTooltip(copyId, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
 		}
 	}
 
