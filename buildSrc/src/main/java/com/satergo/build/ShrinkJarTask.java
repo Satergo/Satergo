@@ -36,7 +36,7 @@ public class ShrinkJarTask extends DefaultTask {
 		File shadowJarFile = getShadowArchiveFile(getProject());
 
 		// Run proguard
-		File proguardOutputFile = new File(getProject().getBuildDir(), "libs/" + ext.proguardOutputName);
+		File proguardOutputFile = new File(getProject().getLayout().getBuildDirectory().get().getAsFile(), "libs/" + ext.proguardOutputName);
 		Configuration config = new Configuration();
 		try (ConfigurationParser configurationParser = new ConfigurationParser(ext.proguardConfig.toFile(), System.getProperties())) {
 			configurationParser.parse(config);

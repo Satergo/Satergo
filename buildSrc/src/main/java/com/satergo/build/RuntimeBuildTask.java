@@ -49,7 +49,7 @@ public class RuntimeBuildTask extends DefaultTask {
 		// Use from cache or download JDK for runtime
 		String[] jdkArchiveLinkParts = extension.jdkRuntimeURI.getPath().split("/");
 		String jdkArchiveName = jdkArchiveLinkParts[jdkArchiveLinkParts.length - 1];
-		Path cacheDir = getProject().getBuildDir().toPath().resolve(JDK_CACHE_DIR_NAME);
+		Path cacheDir = getProject().getLayout().getBuildDirectory().get().dir(JDK_CACHE_DIR_NAME).getAsFile().toPath();
 		if (!Files.exists(cacheDir))
 			Files.createDirectory(cacheDir);
 		Path jdk = cacheDir.resolve(jdkArchiveName);
@@ -58,7 +58,7 @@ public class RuntimeBuildTask extends DefaultTask {
 		}
 
 		// Invoke jlink to create a runtime
-		Path runtimeOutput = getProject().getBuildDir().toPath().resolve("runtime");
+		Path runtimeOutput = getProject().getLayout().getBuildDirectory().get().getAsFile().toPath().resolve("runtime");
 		if (Files.exists(runtimeOutput))
 			FileUtils.deleteDirectory(runtimeOutput);
 		ArrayList<String> args = new ArrayList<>();

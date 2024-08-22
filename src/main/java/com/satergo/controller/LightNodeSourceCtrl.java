@@ -2,7 +2,7 @@ package com.satergo.controller;
 
 import com.satergo.Load;
 import com.satergo.Main;
-import com.satergo.ProgramData;
+import com.satergo.Utils;
 import com.satergo.extra.ToggleSwitch;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
@@ -19,9 +19,7 @@ public class LightNodeSourceCtrl implements SetupPage.WithExtra {
 	@FXML
 	public void downloadAndSetup(ActionEvent e) {
 		SatPromptDialog<Pair<Boolean, Boolean>> dialog = new SatPromptDialog<>();
-		dialog.initOwner(Main.get().stage());
-		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-		Main.get().applySameTheme(dialog.getScene());
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		Parent root = Load.fxml("/dialog/light-node-config.fxml");
 		dialog.getDialogPane().setContent(root);
 		ToggleSwitch nipopow = (ToggleSwitch) root.lookup("#nipopow"),

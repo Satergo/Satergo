@@ -42,8 +42,7 @@ public class UpdateChecker {
 		if (!isNewer(versionInfo.versionCode)) throw new IllegalArgumentException();
 		if (Main.programData().skippedUpdate.get() == versionInfo.versionCode) return;
 		SatPromptDialog<ButtonType> dialog = new SatPromptDialog<>();
-		dialog.initOwner(Main.get().stage());
-		Main.get().applySameTheme(dialog.getScene());
+		Utils.initDialog(dialog, Main.get().stage());
 		ButtonType update = new ButtonType(Main.lang("update"), ButtonBar.ButtonData.YES);
 		ButtonType skip = new ButtonType(Main.lang("skip"), ButtonBar.ButtonData.NO);
 		ButtonType notNow = new ButtonType(Main.lang("notNow"), ButtonBar.ButtonData.CANCEL_CLOSE);

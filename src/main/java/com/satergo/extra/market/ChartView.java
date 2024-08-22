@@ -1,4 +1,4 @@
-package com.satergo.extra;
+package com.satergo.extra.market;
 
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;

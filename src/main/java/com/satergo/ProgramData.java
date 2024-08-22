@@ -5,6 +5,8 @@ import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonWriter;
 import com.satergo.extra.*;
+import com.satergo.extra.market.PriceCurrency;
+import com.satergo.extra.market.PriceSource;
 import javafx.beans.property.ReadOnlyProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
@@ -104,13 +106,14 @@ public class ProgramData {
 			programData.allSettings.forEach(setting -> {
 				String k = ((ReadOnlyProperty<?>) setting).getName();
 				try {
-					if (setting instanceof SimpleEnumLikeProperty s)
-						s.set(jo.isNull(k) ? null : s.valueOf(jo.getString(k)));
-					else if (setting instanceof SimpleStringProperty s) s.set(jo.getString(k));
-					else if (setting instanceof SimpleBooleanProperty s) s.set(jo.getBoolean(k));
-					else if (setting instanceof SimplePathProperty s) s.set(jo.isNull(k) ? null : Path.of(jo.getString(k)));
-					else if (setting instanceof SimpleLongProperty s) s.set(jo.getLong(k));
-					else throw new IllegalArgumentException("type mismatch");
+					switch (setting) {
+						case SimpleEnumLikeProperty s -> s.set(jo.isNull(k) ? null : s.valueOf(jo.getString(k)));
+						case SimpleStringProperty s -> s.set(jo.getString(k));
+						case SimpleBooleanProperty s -> s.set(jo.getBoolean(k));
+						case SimplePathProperty s -> s.set(jo.isNull(k) ? null : Path.of(jo.getString(k)));
+						case SimpleLongProperty s -> s.set(jo.getLong(k));
+						default -> throw new IllegalArgumentException("type mismatch");
+					}
 				} catch (Exception e) {
 					System.err.println("ProgramData field \"" + k + "\" is corrupted. (value=" + jo.get(k) + ")");
 				}

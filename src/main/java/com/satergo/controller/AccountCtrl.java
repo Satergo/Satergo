@@ -11,7 +11,7 @@ import com.satergo.ergo.ErgoURI;
 import com.satergo.ergo.TokenBalance;
 import com.satergo.extra.ImageConversion;
 import com.satergo.extra.IncorrectPasswordException;
-import com.satergo.extra.MarketData;
+import com.satergo.extra.market.MarketData;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatTextInputDialog;
@@ -67,9 +67,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 		WalletKey.Local key = (WalletKey.Local) Main.get().getWallet().key();
 		try {
 			SatVoidDialog dialog = new SatVoidDialog();
-			dialog.initOwner(totalBalance.getScene().getWindow());
-			dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-			Main.get().applySameTheme(dialog.getScene());
+			Utils.initDialog(dialog, totalBalance.getScene().getWindow(), MoveStyle.FOLLOW_OWNER);
 			dialog.setTitle("Your seed");
 			dialog.setHeaderText("Your seed");
 			Mnemonic mnemonic = key.getMnemonic();
@@ -102,9 +100,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 
 	private void changeWalletName() {
 		SatTextInputDialog dialog = new SatTextInputDialog();
-		dialog.initOwner(Main.get().stage());
-		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-		Main.get().applySameTheme(dialog.getScene());
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		dialog.setTitle(Main.lang("renameWallet"));
 		dialog.setHeaderText(null);
 		dialog.getEditor().setPromptText(Main.lang("walletName"));
@@ -114,9 +110,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 	private void changeWalletPassword() {
 		// Create the custom dialog.
 		SatPromptDialog<Pair<String, String>> dialog = new SatPromptDialog<>();
-		dialog.initOwner(Main.get().stage());
-		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-		Main.get().applySameTheme(dialog.getScene());
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		dialog.setTitle(Main.lang("programName"));
 		dialog.setHeaderText(Main.lang("changePassword"));
 
@@ -169,9 +163,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 	public void addAddress(ActionEvent e) {
 		int nextIndex = Main.get().getWallet().nextAddressIndex();
 		SatPromptDialog<Pair<Integer, String>> dialog = new SatPromptDialog<>();
-		dialog.initOwner(Main.get().stage());
-		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-		Main.get().applySameTheme(dialog.getScene());
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		dialog.setTitle(Main.lang("addAddress"));
 		dialog.setHeaderText(null);
 		var content = new HBox() {
@@ -209,9 +201,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 	@FXML
 	public void openSettingsDialog(ActionEvent e) {
 		SatVoidDialog dialog = new SatVoidDialog();
-		dialog.initOwner(totalBalance.getScene().getWindow());
-		Main.get().applySameTheme(dialog.getScene());
-		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
+		Utils.initDialog(dialog, totalBalance.getScene().getWindow(), MoveStyle.FOLLOW_OWNER);
 		dialog.getDialogPane().setPrefWidth(Math.min(500, Main.get().stage().getWidth() * 0.5));
 		dialog.setTitle("Wallet settings");
 		dialog.setHeaderText("Wallet settings");
@@ -262,9 +252,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 			});
 			this.rename.setOnAction(e -> {
 				SatTextInputDialog dialog = new SatTextInputDialog();
-				dialog.initOwner(Main.get().stage());
-				dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-				Main.get().applySameTheme(dialog.getScene());
+				Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 				dialog.setTitle(Main.lang("renameAddress"));
 				dialog.setHeaderText(null);
 				dialog.getEditor().setPromptText(Main.lang("addressName"));
@@ -319,13 +307,9 @@ public class AccountCtrl implements Initializable, WalletTab {
 	private void updateAddresses() {
 		addresses.getChildren().clear();
 		Main.get().getWallet().myAddresses.forEach((index, name) -> {
-			try {
-				addresses.getChildren().add(new AddressLine(index, name, Main.get().getWallet().publicAddress(index),
-						() -> Main.get().getWallet().myAddresses.remove(index),
-						newName -> Main.get().getWallet().myAddresses.put(index, newName), index != 0));
-			} catch (WalletKey.Failure e) {
-				throw new RuntimeException(e);
-			}
+			addresses.getChildren().add(new AddressLine(index, name, Main.get().getWallet().publicAddress(index),
+					() -> Main.get().getWallet().myAddresses.remove(index),
+					newName -> Main.get().getWallet().myAddresses.put(index, newName), index != 0));
 		});
 	}
 
@@ -379,15 +363,15 @@ public class AccountCtrl implements Initializable, WalletTab {
 			try {
 				qrCodeImage.setVisible(true);
 				qrCode(Main.get().getWallet().publicAddress(qrCodeAddress.getValue()).toString());
-			} catch (WriterException | WalletKey.Failure ex) {
-				ex.printStackTrace();
+			} catch (WriterException ex) {
+				Utils.alertUnexpectedException(ex);
 				qrCodeImage.setVisible(false);
 			}
 		});
 
 		try {
 			qrCode(Main.get().getWallet().publicAddress(0).toString());
-		} catch (WriterException | WalletKey.Failure e) {
+		} catch (WriterException e) {
 			throw new RuntimeException(e);
 		}
 	}

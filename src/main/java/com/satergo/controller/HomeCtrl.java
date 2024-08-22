@@ -3,7 +3,7 @@ package com.satergo.controller;
 import com.satergo.*;
 import com.satergo.ergo.*;
 import com.satergo.extra.LinkedHyperlink;
-import com.satergo.extra.PriceCurrency;
+import com.satergo.extra.market.PriceCurrency;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.TXOutputForm;
 import com.satergo.extra.dialog.MoveStyle;
@@ -61,17 +61,11 @@ public class HomeCtrl implements WalletTab, Initializable {
 	@FXML
 	public void showSendOptions(ActionEvent e) {
 		SatPromptDialog<Pair<ArrayList<Integer>, Address>> dialog = new SatPromptDialog<>();
-		dialog.initOwner(Main.get().stage());
-		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-		Main.get().applySameTheme(dialog.getScene());
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		dialog.setTitle(Main.lang("settings"));
 		dialog.setHeaderText(null);
 		SendOptionsCtrl ctrl = new SendOptionsCtrl(Main.get().getWallet().myAddresses.entrySet().stream().map(entry -> {
-			try {
-				return new SendOptionsCtrl.AddressData(entry.getKey(), entry.getValue(), Main.get().getWallet().publicAddress(entry.getKey()));
-			} catch (WalletKey.Failure ex) {
-				throw new RuntimeException(ex);
-			}
+			return new SendOptionsCtrl.AddressData(entry.getKey(), entry.getValue(), Main.get().getWallet().publicAddress(entry.getKey()));
 		}).toList(), candidates, change);
 		Parent content = Load.fxmlControllerFactory("/send-options.fxml", ctrl);
 		dialog.getDialogPane().setContent(content);
@@ -118,11 +112,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 		headTitle.setTooltip(nameTooltip);
 
 		candidates = new ArrayList<>(Main.get().getWallet().myAddresses.keySet());
-		try {
-			change = Main.get().getWallet().publicAddress(candidates.getFirst());
-		} catch (WalletKey.Failure e) {
-			// won't happen because the master address is always either cached or available
-		}
+		change = Main.get().getWallet().publicAddress(candidates.getFirst());
 		Main.get().getWallet().myAddresses.addListener((MapChangeListener<Integer, String>) change -> {
 			if (change.wasRemoved()) candidates.remove(change.getKey());
 			else if (change.wasAdded()) candidates.add(change.getKey());
@@ -180,13 +170,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 				outBoxes.add(outBox);
 				tokenNames.putAll(form.tokenNames());
 			}
-			List<Address> inputAddresses = candidates.stream().map(index -> {
-				try {
-					return Main.get().getWallet().publicAddress(index);
-				} catch (WalletKey.Failure ex) {
-					throw new RuntimeException(ex);
-				}
-			}).toList();
+			List<Address> inputAddresses = candidates.stream().map(Main.get().getWallet()::publicAddress).toList();
 			long ergFinal = erg;
 			new SimpleTask<>(() -> ErgoInterface.createUnsignedTransaction(ctx, inputAddresses, outBoxes, ergFinal, List.copyOf(tokens.values()), fee.get(), change))
 					.onSuccess(unsignedTx -> {

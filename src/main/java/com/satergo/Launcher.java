@@ -10,9 +10,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
-/**
- * Using JavaFX portable runtime folders without modularity seems to require a separate class to launch the application.
- */
 public class Launcher {
 
 	private static IPC ipc;
@@ -81,14 +78,14 @@ public class Launcher {
 			}
 		}
 		if (!freeArgs.isEmpty())
-			Main.initWalletFile = Path.of(freeArgs.get(0));
+			Main.initWalletFile = Path.of(freeArgs.getFirst());
 		new Thread(() -> {
 			try {
 				ipc.listen();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}).start();
+		}, "IPC thread").start();
 		Application.launch(Main.class, args);
 	}
 }

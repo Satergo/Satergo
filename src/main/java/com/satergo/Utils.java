@@ -4,6 +4,7 @@ import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.satergo.ergo.ErgoInterface;
+import com.satergo.extra.dialog.AbstractSatDialog;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPasswordInputDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
@@ -46,6 +47,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,7 +56,7 @@ public class Utils {
 
 	public static final HttpClient HTTP = HttpClient.newHttpClient();
 
-	public static long COPIED_TOOLTIP_MS = 600;
+	public static final long COPIED_TOOLTIP_MS = 600;
 
 	public static URL resource(String location) {
 		return Objects.requireNonNull(Utils.class.getResource(location), "resource not found");
@@ -78,8 +80,7 @@ public class Utils {
 
 	public static void alert(Alert.AlertType type, String headerText, String contentText) {
 		SatVoidDialog alert = new SatVoidDialog();
-		alert.initOwner(Main.get().stage());
-		Main.get().applySameTheme(alert.getScene());
+		initDialog(alert, Main.get().stage());
 		alert.setTitle(Main.lang("programName"));
 		alert.setHeaderText(headerText);
 		alert.getDialogPane().setContent(new Label(contentText));
@@ -91,8 +92,7 @@ public class Utils {
 
 	public static SatVoidDialog alert(Alert.AlertType type, Node content) {
 		SatVoidDialog alert = new SatVoidDialog();
-		alert.initOwner(Main.get().stage());
-		Main.get().applySameTheme(alert.getScene());
+		initDialog(alert, Main.get().stage());
 		alert.setTitle(Main.lang("programName"));
 		alert.setHeaderText(null);
 		alert.getDialogPane().setContent(content);
@@ -137,14 +137,12 @@ public class Utils {
 	}
 
 	public static void alertUnexpectedException(Throwable throwable) {
-		Utils.alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable);
+		alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable);
 	}
 
 	public static void textDialogWithCopy(String headerText, String contentText) {
 		SatVoidDialog alert = new SatVoidDialog();
-		alert.initOwner(Main.get().stage());
-		alert.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-		Main.get().applySameTheme(alert.getScene());
+		initDialog(alert, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		alert.setHeaderText(headerText);
 		Label label = new Label(contentText);
 		label.setWrapText(true);
@@ -219,14 +217,13 @@ public class Utils {
 
 	public static String requestPassword(String dialogTitle) {
 		SatPasswordInputDialog dialog = new SatPasswordInputDialog();
+		initDialog(dialog, Main.get().stage());
 		dialog.setHeaderText(dialogTitle);
-		dialog.initOwner(Main.get().stage());
-		Main.get().applySameTheme(dialog.getScene());
 		return dialog.showForResult().orElse(null);
 	}
 
 	public static void alertIncorrectPassword() {
-		Utils.alert(Alert.AlertType.ERROR, Main.lang("incorrectPassword"));
+		alert(Alert.AlertType.ERROR, Main.lang("incorrectPassword"));
 	}
 
 	public static Path fileChooserSave(Window owner, String title, Path initialDirectory, String initialFileName, FileChooser.ExtensionFilter... extensionFilters) {
@@ -258,12 +255,22 @@ public class Utils {
 		return VERSION_COMPARATOR.compare(a, b);
 	}
 
+	private static final HashMap<ErgoId, Image> token32Cache = new HashMap<>();
 	public static Image tokenIcon32x32(ErgoId tokenId) {
-		return new Image("https://raw.githubusercontent.com/Satergo/Resources/master/token-icons-32x32/" + tokenId + ".png", true);
+		if (token32Cache.containsKey(tokenId))
+			return token32Cache.get(tokenId);
+		Image image = new Image("https://raw.githubusercontent.com/Satergo/Resources/master/token-icons-32x32/" + tokenId + ".png", true);
+		token32Cache.put(tokenId, image);
+		return image;
 	}
 
+	private static final HashMap<ErgoId, Image> token36Cache = new HashMap<>();
 	public static Image tokenIcon36x36(ErgoId tokenId) {
-		return new Image("https://raw.githubusercontent.com/Satergo/Resources/master/token-icons-36x36/" + tokenId + ".png", true);
+		if (token36Cache.containsKey(tokenId))
+			return token36Cache.get(tokenId);
+		Image image = new Image("https://raw.githubusercontent.com/Satergo/Resources/master/token-icons-36x36/" + tokenId + ".png", true);
+		token36Cache.put(tokenId, image);
+		return image;
 	}
 
 	public static long getTotalSystemMemory() {
@@ -276,7 +283,7 @@ public class Utils {
 		tooltip.setOnShown(event -> {
 			tooltip.setOpacity(1);
 			tooltip.setAnchorX(bounds.getCenterX() - tooltip.getWidth() / 2 + 10);
-			Utils.fxRunDelayed(tooltip::hide, ms);
+			fxRunDelayed(tooltip::hide, ms);
 		});
 		tooltip.show(node, bounds.getCenterX() - tooltip.getWidth() / 2, bounds.getMaxY());
 	}
@@ -319,7 +326,7 @@ public class Utils {
 	}
 
 	public static String makeNodeConfig(boolean nipopow, boolean utxoSetSnapshot) {
-		String template = Utils.resourceStringUTF8("/conf-template.conf");
+		String template = resourceStringUTF8("/conf-template.conf");
 		String[] lines = template.split("\n");
 		StringBuilder config = new StringBuilder();
 		boolean inNipopow = false, inUtxo = false;
@@ -374,14 +381,14 @@ public class Utils {
 
 	public static void alertTxBuildException(Throwable t, long amountNanoErg, Collection<ErgoToken> tokens, Function<ErgoId, String> getTokenName) {
 		if (t instanceof InputBoxesSelectionException.NotEnoughErgsException ex) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(FormatNumber.ergExact(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
+			alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughErg_s_moreNeeded").formatted(FormatNumber.ergExact(ErgoInterface.toFullErg(amountNanoErg - ex.balanceFound))));
 		} else if (t instanceof InputBoxesSelectionException.NotEnoughTokensException ex) {
 			String tokensString = tokens.stream()
 					.filter(token -> token.getValue() > ex.tokenBalances.get(token.getId().toString()))
 					.map(ErgoToken::getId).map(getTokenName).map(name -> '"' + name + '"').collect(Collectors.joining(", "));
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughOf_s").formatted(tokensString));
+			alert(Alert.AlertType.ERROR, Main.lang("youDoNotHaveEnoughOf_s").formatted(tokensString));
 		} else if (t != null) {
-			Utils.alertUnexpectedException(t);
+			alertUnexpectedException(t);
 		}
 	}
 
@@ -403,7 +410,7 @@ public class Utils {
 	public static <T, C extends Cell<T, ?>>void overscrollToParent(VirtualizedScrollPane<VirtualFlow<T, C>> scrollPane) {
 		VirtualFlow<T, C> flow = scrollPane.getContent();
 		flow.addEventHandler(ScrollEvent.SCROLL, e -> {
-			ScrollPane parent = Utils.findParent(scrollPane, ScrollPane.class);
+			ScrollPane parent = findParent(scrollPane, ScrollPane.class);
 			if (parent == null) return;
 			ScrollBar scrollBar = ((ScrollPaneSkin) parent.getSkin()).getVerticalScrollBar();
 			if (scrollBar == null) return;
@@ -431,5 +438,15 @@ public class Utils {
 				return FXCollections.singletonObservableList(list);
 			}
 		};
+	}
+
+	public static void initDialog(AbstractSatDialog<?, ?> dialog, Window owner) {
+		dialog.initOwner(owner);
+		Main.get().applySameTheme(dialog.getScene());
+	}
+
+	public static void initDialog(AbstractSatDialog<?, ?> dialog, Window owner, MoveStyle moveStyle) {
+		initDialog(dialog, owner);
+		dialog.setMoveStyle(moveStyle);
 	}
 }

@@ -37,7 +37,6 @@ import javafx.css.Styleable;
 import javafx.css.StyleableDoubleProperty;
 import javafx.css.StyleableProperty;
 import javafx.css.converter.SizeConverter;
-import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.SkinBase;

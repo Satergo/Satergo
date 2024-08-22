@@ -6,6 +6,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -57,7 +58,10 @@ public class SatDialogPane extends StackPane {
 		x = new Button();
 		x.setFocusTraversable(false);
 		x.getStyleClass().add("sat-dialog-x");
-		x.setOnAction(e -> dialog.setResultAndClose(null, true));
+		x.setOnAction(e -> {
+			dialog.setResult(null);
+			Event.fireEvent(getScene().getWindow(), new WindowEvent(getScene().getWindow(), WindowEvent.WINDOW_CLOSE_REQUEST));
+		});
 		x.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
 		Icon icon = new Icon("times");
 		x.setGraphic(icon);
@@ -201,12 +205,8 @@ public class SatDialogPane extends StackPane {
 				Window owner = dialog.getOwner();
 				if (owner == null)
 					throw new IllegalStateException("FOLLOW_OWNER cannot be used before initOwner has been called.");
-				owner.xProperty().addListener(xHandler = (observable1, old, value) -> {
-					dialog.setX((double) value + xShift);
-				});
-				owner.yProperty().addListener(yHandler = (observable1, old, value) -> {
-					dialog.setY((double) value + yShift);
-				});
+				owner.xProperty().addListener(xHandler = (obs, old, value) -> dialog.setX((double) value + xShift));
+				owner.yProperty().addListener(yHandler = (obs, old, value) -> dialog.setY((double) value + yShift));
 			} else {
 				if (xHandler != null && yHandler != null) {
 					dialog.getOwner().xProperty().removeListener(xHandler);

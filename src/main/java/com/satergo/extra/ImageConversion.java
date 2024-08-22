@@ -44,6 +44,7 @@ import javafx.scene.paint.Color;
  * This class is taken from the JavaFX source code and provides utility
  * methods for converting data types between AWT and JavaFX formats images.
  */
+@SuppressWarnings("all")
 public class ImageConversion {
     private ImageConversion() {} // no instances
 

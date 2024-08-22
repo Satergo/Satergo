@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Uses Unix Domain Sockets, or if they are not supported, TCP sockets, to communicate with an existing instance
- * Despite the name of Unix Domain Sockets, they are also supported on Windows 10 (but not on 7).
+ * Despite the name of Unix Domain Sockets, they are also supported on Windows 10+ (but not on 7).
  */
 public class IPC {
 

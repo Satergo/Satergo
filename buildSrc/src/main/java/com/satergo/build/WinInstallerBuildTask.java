@@ -84,7 +84,7 @@ public class WinInstallerBuildTask extends DefaultTask {
 	}
 
 	private Path getBuildDirPath() {
-		return getProject().getBuildDir().toPath();
+		return getProject().getLayout().getBuildDirectory().get().getAsFile().toPath();
 	}
 
 	private static class Args {

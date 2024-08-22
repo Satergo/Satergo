@@ -37,7 +37,7 @@ public class SatPromptDialog<R> extends AbstractSatDialog<SatDialogPane, R> {
 		Callback<ButtonType, R> resultConverter = getResultConverter();
 
 		R priorResultValue = getResult();
-		R newResultValue = null;
+		R newResultValue;
 
 		if (resultConverter == null) {
 			// The choice to cast cmd to R here was a conscious decision, taking

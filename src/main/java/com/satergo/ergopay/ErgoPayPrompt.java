@@ -108,11 +108,7 @@ public class ErgoPayPrompt extends SatPromptDialog<Boolean> {
 		}
 		HashMap<Address, Integer> walletAddresses = new HashMap<>();
 		Main.get().getWallet().myAddresses.forEach((index, name) -> {
-			try {
-				walletAddresses.put(Main.get().getWallet().publicAddress(index), index);
-			} catch (WalletKey.Failure e) {
-				throw new RuntimeException(e);
-			}
+			walletAddresses.put(Main.get().getWallet().publicAddress(index), index);
 		});
 		root.add(new Label(Main.lang("ergoPay.affectedAddressesC") + " " + affectedAddresses.stream()
 				.filter(walletAddresses::containsKey)

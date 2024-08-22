@@ -160,9 +160,7 @@ public class WalletCtrl implements Initializable {
 		} catch (IOException e) {
 			offlineMode();
 		}
-		Main.programData().showPrice.subscribe(show -> {
-			updatePriceValue();
-		});
+		Main.programData().showPrice.subscribe(show -> updatePriceValue());
 
 		tabs.put("home", Load.fxmlNodeAndController("/home.fxml"));
 		tabs.put("account", Load.fxmlNodeAndController("/account.fxml"));
@@ -296,10 +294,8 @@ public class WalletCtrl implements Initializable {
 		Address address;
 		if (uri.needsAddress()) {
 			SatPromptDialog<Integer> addressPrompt = new SatPromptDialog<>();
+			Utils.initDialog(addressPrompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 			addressPrompt.setHeaderText(Main.lang("ergoPay.selectAnAddressToProvide"));
-			addressPrompt.initOwner(Main.get().stage());
-			addressPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-			Main.get().applySameTheme(addressPrompt.getScene());
 			ComboBox<Integer> comboBox = new ComboBox<>();
 			comboBox.getItems().addAll(Main.get().getWallet().myAddresses.keySet());
 			comboBox.setValue(0);
@@ -317,11 +313,7 @@ public class WalletCtrl implements Initializable {
 			addressPrompt.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 			Integer index = addressPrompt.showForResult().orElse(null);
 			if (index == null) return;
-			try {
-				address = Main.get().getWallet().publicAddress(index);
-			} catch (WalletKey.Failure e) {
-				throw new RuntimeException(e);
-			}
+			address = Main.get().getWallet().publicAddress(index);
 		} else {
 			address = null;
 		}
@@ -332,9 +324,7 @@ public class WalletCtrl implements Initializable {
 				return;
 			}
 			ErgoPayPrompt prompt = new ErgoPayPrompt(request);
-			prompt.initOwner(Main.get().stage());
-			prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-			Main.get().applySameTheme(prompt.getScene());
+			Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 			if (prompt.showForResult().orElse(false)) {
 				String id = Utils.createErgoClient().execute(ctx -> {
 					SignedTransaction transaction;
@@ -347,9 +337,7 @@ public class WalletCtrl implements Initializable {
 					return quoted.substring(1, quoted.length() - 1);
 				});
 				SatVoidDialog result = new SatVoidDialog();
-				result.initOwner(Main.get().stage());
-				result.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-				Main.get().applySameTheme(result.getScene());
+				Utils.initDialog(result, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 				result.setHeaderText("The transaction succeeded");
 				ButtonType copyId = new ButtonType(Main.lang("ergoPay.copyId"), ButtonBar.ButtonData.OK_DONE);
 				ButtonType viewOnExplorer = new ButtonType(Main.lang("ergoPay.viewOnExplorer"), ButtonBar.ButtonData.OK_DONE);

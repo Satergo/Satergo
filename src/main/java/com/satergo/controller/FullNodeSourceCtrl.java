@@ -70,7 +70,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 			File[] files = nodeDirectory.listFiles();
 			List<File> candidates = files == null ? null : Arrays.stream(files)
 					.filter(f -> f.getName().startsWith("ergo") && f.getName().endsWith(".jar")).toList();
-			nodeJar = candidates != null && candidates.size() == 1 ? candidates.get(0) : null;
+			nodeJar = candidates != null && candidates.size() == 1 ? candidates.getFirst() : null;
 			if (nodeJar == null) { // could not find or found multiple, request from user
 				FileChooser fileChooser = new FileChooser();
 				fileChooser.setInitialDirectory(nodeDirectory);
@@ -80,9 +80,7 @@ public class FullNodeSourceCtrl implements SetupPage.WithExtra {
 			}
 
 			SatPromptDialog<Pair<NetworkType, File>> dialog = new SatPromptDialog<>();
-			dialog.initOwner(Main.get().stage());
-			dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-			Main.get().applySameTheme(dialog.getScene());
+			Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 			dialog.setTitle(Main.lang("programName"));
 			dialog.setHeaderText(Main.lang("moreInformationNeededNode"));
 			Parent root = Load.fxml("/dialog/need-more-info-existing-node.fxml");

@@ -34,7 +34,7 @@ public class AboutCtrl implements Initializable, WalletTab {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		version.setText("Satergo v" + Main.VERSION);
-		if (Main.get().translations.getEntries().get(0).equals(Main.get().translations.getEntry())) {
+		if (Main.get().translations.getEntries().getFirst().equals(Main.get().translations.getEntry())) {
 			translatedBy.setVisible(false);
 		}
 		translatedBy.setText(Main.lang("translatedIntoThisLanguageBy_s").formatted(Main.get().translations.getEntry().credit()));
@@ -51,9 +51,7 @@ public class AboutCtrl implements Initializable, WalletTab {
 		}
 
 		SatPromptDialog<BigDecimal> dialog = new SatPromptDialog<>();
-		dialog.initOwner(Main.get().stage());
-		dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-		Main.get().applySameTheme(dialog.getDialogPane().getScene());
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		dialog.setTitle(Main.lang("donate"));
 		dialog.setHeaderText(Main.lang("donate"));
 
@@ -101,8 +99,6 @@ public class AboutCtrl implements Initializable, WalletTab {
 				}
 			}));
 			if (txId != null) Utils.textDialogWithCopy(Main.lang("transactionId"), txId);
-		} catch (WalletKey.Failure ignored) {
-			// user already informed
 		} catch (Exception ex) {
 			Utils.alertTxBuildException(ex, ErgoInterface.toNanoErg(amountFullErg), Collections.emptyList(), id -> {throw new UnsupportedOperationException();});
 		}

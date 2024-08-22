@@ -1,4 +1,4 @@
-package com.satergo.extra;
+package com.satergo.extra.market;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

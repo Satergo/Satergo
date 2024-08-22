@@ -27,6 +27,7 @@
 
 package com.satergo.extra;
 
+import com.satergo.Utils;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.BooleanPropertyBase;
 import javafx.css.PseudoClass;
@@ -167,14 +168,14 @@ public class ToggleSwitch extends Labeled
 	/** {@inheritDoc} */
 	@Override
 	public String getUserAgentStylesheet() {
-		return ToggleSwitch.class.getResource("/toggleswitch.css").toExternalForm();
+		return Utils.resourcePath("/toggleswitch.css");
 	}
 
 	@Override
 	public Object queryAccessibleAttribute(AccessibleAttribute attribute, Object... parameters) {
-		switch (attribute) {
-			case SELECTED: return isSelected();
-			default: return super.queryAccessibleAttribute(attribute, parameters);
-		}
+		return switch (attribute) {
+			case SELECTED -> isSelected();
+			default -> super.queryAccessibleAttribute(attribute, parameters);
+		};
 	}
 }

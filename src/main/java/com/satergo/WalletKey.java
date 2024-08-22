@@ -104,7 +104,7 @@ public abstract class WalletKey {
 
 	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure;
 	public abstract SignedTransaction signReduced(BlockchainContext ctx, ReducedTransaction reducedTx, int baseCost, Collection<Integer> addressIndexes) throws Failure;
-	public abstract Address derivePublicAddress(NetworkType networkType, int index) throws Failure;
+	public abstract Address derivePublicAddress(NetworkType networkType, int index);
 	public abstract WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure; // it would be cool to call this "recrypt" :)
 
 	public byte[] copyIv() { return Arrays.copyOf(encrypted, 12); }

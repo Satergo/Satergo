@@ -54,9 +54,7 @@ public class RemoteNodeSetupCtrl implements SetupPage.WithExtra, Initializable {
 			SimpleTask<ErgoNodeAccess.Status> testTask = new SimpleTask<>(nodeAccess::getStatus)
 					.onFail(ex -> {
 						SatPromptDialog<ButtonType> dialog = new SatPromptDialog<>();
-						dialog.initOwner(Main.get().stage());
-						dialog.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-						Main.get().applySameTheme(dialog.getScene());
+						Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 						dialog.setTitle("Error");
 						dialog.getDialogPane().setContent(new Label(Main.lang("errorWhenTryingToConnectToNode").formatted(ex.getClass() == RuntimeException.class ? ex.getCause().getClass().getSimpleName() : ex.getClass().getSimpleName())));
 						ButtonType ignore = new ButtonType(Main.lang("ignore"), ButtonBar.ButtonData.FINISH);
@@ -65,9 +63,7 @@ public class RemoteNodeSetupCtrl implements SetupPage.WithExtra, Initializable {
 							if (t == ignore) onSuccess.run();
 						});
 					})
-					.onSuccess(status -> {
-						onSuccess.run();
-					});
+					.onSuccess(status -> onSuccess.run());
 			continueButton.disableProperty().bind(testTask.runningProperty());
 			testingConnection.visibleProperty().bind(testTask.runningProperty());
 			testTask.newThread();

@@ -77,18 +77,12 @@ public final class Wallet {
 
 	public final SimpleObjectProperty<Balance> lastKnownBalance = new SimpleObjectProperty<>();
 
-	public Address publicAddress(int index) throws WalletKey.Failure {
+	public Address publicAddress(int index) {
 		return key.derivePublicAddress(Main.programData().nodeNetworkType.get(), index);
 	}
 
 	public Stream<Address> addressStream() {
-		return myAddresses.keySet().stream().map(index -> {
-			try {
-				return publicAddress(index);
-			} catch (WalletKey.Failure e) {
-				throw new RuntimeException(e);
-			}
-		});
+		return myAddresses.keySet().stream().map(this::publicAddress);
 	}
 
 	/**

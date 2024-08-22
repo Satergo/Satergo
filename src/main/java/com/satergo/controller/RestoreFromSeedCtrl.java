@@ -123,9 +123,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 				boolean nonstandardHas = api.getApiV1AddressesP1Transactions(masterNonstandard.toString(), 0, 1, true).execute().body().getTotal() > 0;
 				if (standardHas && nonstandardHas) {
 					SatPromptDialog<Boolean> prompt = new SatPromptDialog<>();
-					prompt.initOwner(root.getScene().getWindow());
-					prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-					Main.get().applySameTheme(prompt.getScene());
+					Utils.initDialog(prompt, root.getScene().getWindow(), MoveStyle.FOLLOW_OWNER);
 					prompt.setHeaderText(Main.lang("differentWalletsFound"));
 					Label sAddr0Label = new Label(masterStandard.toString());
 					Label nsAddr0Label = new Label(masterNonstandard.toString());
@@ -148,9 +146,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 					nonstandardDerivation = isNonstandard;
 				} else if (!standardHas && nonstandardHas) {
 					SatVoidDialog info = new SatVoidDialog();
-					info.initOwner(root.getScene().getWindow());
-					info.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-					Main.get().applySameTheme(info.getScene());
+					Utils.initDialog(info, root.getScene().getWindow(), MoveStyle.FOLLOW_OWNER);
 					Label label = new Label(Main.lang("nonstandardDerivationNotice"));
 					label.setMaxWidth(Screen.getPrimary().getBounds().getWidth() * 0.3);
 					label.setWrapText(true);
@@ -172,8 +168,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 		// This differs from the BIP44 standard which defines the maximum gap size as 20, but that could take too much time with the current setup.
 		// TODO could be parallelized
 		ArrayList<Integer> foundAddresses = new ArrayList<>();
-		int unused = 0;
-		for (int index = 1;; index++) {
+		for (int index = 1, unused = 0;; index++) {
 			try {
 				Address address = wallet.publicAddress(index);
 				boolean exists = api.getApiV1AddressesP1Transactions(address.toString(), 0, 1, true).execute().body().getTotal() > 0;
@@ -181,7 +176,7 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 					unused++;
 					if (unused == 2) break;
 				} else foundAddresses.add(index);
-			} catch (WalletKey.Failure | IOException ex) {
+			} catch (IOException ex) {
 				throw new RuntimeException(ex);
 			}
 		}

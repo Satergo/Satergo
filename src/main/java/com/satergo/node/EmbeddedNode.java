@@ -207,9 +207,7 @@ public class EmbeddedNode {
 					}
 					Utils.alert(Alert.AlertType.INFORMATION, Main.lang("updatedErgoNode"));
 				});
-				task.setOnFailed(e -> {
-					Utils.alertUnexpectedException(task.getException());
-				});
+				task.setOnFailed(e -> Utils.alertUnexpectedException(task.getException()));
 				new Thread(task).start();
 
 			});

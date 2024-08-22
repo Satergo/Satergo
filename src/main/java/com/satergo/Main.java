@@ -2,14 +2,14 @@ package com.satergo;
 
 import com.pixelduke.control.skin.FXSkins;
 import com.satergo.controller.*;
-import com.satergo.extra.MarketData;
+import com.satergo.ergo.ErgoURI;
+import com.satergo.ergopay.ErgoPayURI;
+import com.satergo.extra.IncorrectPasswordException;
+import com.satergo.extra.market.MarketData;
 import com.satergo.extra.SimpleTask;
 import com.satergo.node.EmbeddedNode;
-import com.satergo.ergopay.ErgoPayURI;
-import com.satergo.ergo.ErgoURI;
-import com.satergo.extra.IncorrectPasswordException;
-import com.satergo.extra.ThemeStyle;
 import javafx.application.Application;
+import javafx.application.ColorScheme;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -22,7 +22,6 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -53,7 +52,7 @@ public class Main extends Application {
 	private Stage stage;
 	private Scene scene;
 
-	private final SimpleObjectProperty<ThemeStyle> themeStyle = new SimpleObjectProperty<>();
+	private final SimpleObjectProperty<ColorScheme> colorScheme = new SimpleObjectProperty<>();
 	private static final Path CUSTOM_STYLESHEET = Utils.settingsDir().resolve("custom.css");
 
 	private Wallet wallet;
@@ -62,7 +61,7 @@ public class Main extends Application {
 	public void applySameTheme(Scene scene) {
 		scene.getStylesheets().add(FXSkins.getStylesheetURL());
 		scene.getStylesheets().add(Utils.resourcePath("/global.css"));
-		scene.getStylesheets().add(themeStyle.get() == ThemeStyle.DARK ? "/dark.css" : "/light.css");
+		scene.getStylesheets().add(colorScheme.get() == ColorScheme.DARK ? "/dark.css" : "/light.css");
 		if (Files.isRegularFile(CUSTOM_STYLESHEET)) {
 			try {
 				scene.getStylesheets().add(CUSTOM_STYLESHEET.toUri().toURL().toExternalForm());
@@ -72,12 +71,12 @@ public class Main extends Application {
 		}
 	}
 
-	public ObjectProperty<ThemeStyle> themeStyleProperty() {
-		return themeStyle;
+	public ObjectProperty<ColorScheme> colorSchemeProperty() {
+		return colorScheme;
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
+	public void start(Stage primaryStage) {
 		try {
 			startInternal(primaryStage);
 		} catch (Exception e) {
@@ -105,11 +104,11 @@ public class Main extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setMinWidth(304);
 
-		themeStyle.addListener((observable, oldValue, newValue) -> {
+		colorScheme.addListener((observable, oldValue, newValue) -> {
 			scene.getStylesheets().clear();
 			applySameTheme(scene);
 		});
-		themeStyle.set(programData.lightTheme.get() ? ThemeStyle.LIGHT : ThemeStyle.DARK);
+		colorScheme.set(programData.lightTheme.get() ? ColorScheme.LIGHT : ColorScheme.DARK);
 
 		Icon.icons = ResourceBundle.getBundle("icons");
 		Icon.defaultHeight = 16;
@@ -163,7 +162,7 @@ public class Main extends Application {
 					}
 				}).newThread();
 
-		programData.lightTheme.addListener((observable, oldValue, newValue) -> themeStyle.set(newValue ? ThemeStyle.LIGHT : ThemeStyle.DARK));
+		programData.lightTheme.addListener((observable, oldValue, newValue) -> colorScheme.set(newValue ? ColorScheme.LIGHT : ColorScheme.DARK));
 	}
 
 	@Override

@@ -1,7 +1,7 @@
 package com.satergo;
 
 import com.satergo.ergo.TokenBalance;
-import com.satergo.extra.PriceCurrency;
+import com.satergo.extra.market.PriceCurrency;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;

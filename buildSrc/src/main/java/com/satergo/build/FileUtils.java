@@ -54,7 +54,7 @@ class FileUtils {
 		}
 	}
 
-	private static void extractArchiveTo(ArchiveInputStream ais, Path outputDirectory, Function<String, String> nameRewrite) throws IOException {
+	private static void extractArchiveTo(ArchiveInputStream<?> ais, Path outputDirectory, Function<String, String> nameRewrite) throws IOException {
 		ArchiveEntry archiveEntry = ais.getNextEntry();
 		while (archiveEntry != null) {
 			String name = nameRewrite.apply(archiveEntry.getName());

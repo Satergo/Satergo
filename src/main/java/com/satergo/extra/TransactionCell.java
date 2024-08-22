@@ -7,7 +7,6 @@ import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenSummary;
 import javafx.animation.*;
-import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -128,12 +127,10 @@ public class TransactionCell extends BorderPane implements Initializable {
 	}
 
 	private void createContent() {
-		var inputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getInputs()), input -> {
-			return Cell.wrapNode(createInOut(TransactionInOut.Type.INPUT, input.getAddress(), input.getValue(), input.getAssets()));
-		});
-		var outputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getOutputs()), output -> {
-			return Cell.wrapNode(createInOut(TransactionInOut.Type.OUTPUT, output.getAddress(), output.getValue(), output.getAssets()));
-		});
+		var inputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getInputs()), input ->
+				Cell.wrapNode(createInOut(TransactionInOut.Type.INPUT, input.getAddress(), input.getValue(), input.getAssets())));
+		var outputFlow = VirtualFlow.createVertical(FXCollections.observableList(tx.getOutputs()), output ->
+				Cell.wrapNode(createInOut(TransactionInOut.Type.OUTPUT, output.getAddress(), output.getValue(), output.getAssets())));
 		var inputScroll = new VirtualizedScrollPane<>(inputFlow);
 		inputScroll.prefHeightProperty().bind(bottom.heightProperty());
 		GridPane.setHgrow(inputScroll, Priority.ALWAYS);

@@ -1,4 +1,4 @@
-package com.satergo.extra;
+package com.satergo.extra.market;
 
 import java.util.Currency;
 import java.util.HashMap;
