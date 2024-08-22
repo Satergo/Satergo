@@ -6,6 +6,7 @@ import com.grack.nanojson.JsonParserException;
 import com.satergo.SystemProperties;
 import com.satergo.Utils;
 import org.ergoplatform.appkit.*;
+import org.ergoplatform.appkit.impl.OutBoxImpl;
 import org.ergoplatform.sdk.ErgoId;
 import org.ergoplatform.sdk.ErgoToken;
 
@@ -132,6 +133,16 @@ public class ErgoInterface {
 				.fee(feeAmount)
 				.sendChangeTo(changeAddress)
 				.build();
+	}
+
+	private static final long COST_PER_BYTE = 360;
+	public static OutBox buildWithMinimumBoxValue(OutBoxBuilder outBoxBuilder, int boxIndex) {
+		// Build a box with 0.001 to get the size that it would be
+		int boxSize = ((OutBoxImpl) outBoxBuilder.value(toNanoErg(new BigDecimal("0.001"))).build())
+				.getErgoBoxCandidate().toBox("0".repeat(64), (short) boxIndex).bytes().length;
+		// Build a box with the calculated minimum ERG value
+		outBoxBuilder.value(boxSize * COST_PER_BYTE);
+		return outBoxBuilder.build();
 	}
 
 	public static JsonObject getTokenItem(NetworkType networkType, ErgoId tokenId) {

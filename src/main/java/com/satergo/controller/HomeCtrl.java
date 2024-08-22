@@ -167,9 +167,10 @@ public class HomeCtrl implements WalletTab, Initializable {
 			HashMap<ErgoId, String> tokenNames = new HashMap<>();
 			HashMap<ErgoId, ErgoToken> tokens = new HashMap<>();
 			ArrayList<OutBox> outBoxes = new ArrayList<>();
-			for (Tab tab : outputTabPane.getTabs()) {
+			for (int i = 0; i < outputTabPane.getTabs().size(); i++) {
+				Tab tab = outputTabPane.getTabs().get(i);
 				TXOutputForm form = (TXOutputForm) tab.getContent();
-				OutBox outBox = form.createOutBox(txBuilder);
+				OutBox outBox = form.createOutBox(txBuilder, i);
 				erg += outBox.getValue();
 				for (ErgoToken token : outBox.getTokens()) {
 					ErgoToken existing = tokens.get(token.getId());

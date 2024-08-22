@@ -75,7 +75,7 @@ public class TXOutputForm extends VBox implements Initializable {
 	/**
 	 * @return null if an error occurred (the error will have been reported to the user)
 	 */
-	public OutBox createOutBox(UnsignedTransactionBuilder txBuilder) {
+	public OutBox createOutBox(UnsignedTransactionBuilder txBuilder, int boxIndex) {
 		if (address.getText().isBlank()) {
 			Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
 			return null;
@@ -101,11 +101,14 @@ public class TXOutputForm extends VBox implements Initializable {
 				return null;
 			}
 		}
+		boolean dynamicMinimum;
 		BigDecimal amountFullErg;
 		if (!tokenList.getChildren().isEmpty() && amount.getText().isBlank()) {
-			// Default value of 0.001 ERG when no ERG is specified but there are tokens specified
-			amountFullErg = new BigDecimal("0.001");
+			// Dynamic minimum value of ERG when no ERG is specified but there are tokens specified
+			amountFullErg = null;
+			dynamicMinimum = true;
 		} else {
+			dynamicMinimum = false;
 			if (amount.getText().isBlank()) {
 				Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
 				return null;
@@ -122,7 +125,6 @@ public class TXOutputForm extends VBox implements Initializable {
 				}
 			}
 		}
-		long amountNanoErg = ErgoInterface.toNanoErg(amountFullErg);
 		ErgoToken[] tokensToSend = new ErgoToken[tokenList.getChildren().size()];
 		for (int i = 0; i < tokenList.getChildren().size(); i++) {
 			TokenLine tokenLine = (TokenLine) tokenList.getChildren().get(i);
@@ -136,12 +138,10 @@ public class TXOutputForm extends VBox implements Initializable {
 			}
 			tokensToSend[i] = new ErgoToken(tokenLine.tokenSummary.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenSummary.decimals()));
 		}
-
-		return txBuilder.outBoxBuilder()
+		OutBoxBuilder outBoxBuilder = txBuilder.outBoxBuilder()
 				.contract(recipient.toErgoContract())
-				.value(amountNanoErg)
-				.tokens(tokensToSend)
-				.build();
+				.tokens(tokensToSend);
+		return dynamicMinimum ? ErgoInterface.buildWithMinimumBoxValue(outBoxBuilder, boxIndex) : outBoxBuilder.value(ErgoInterface.toNanoErg(amountFullErg)).build();
 	}
 
 	/** @return empty if an error occurred (the user will have been informed) */
