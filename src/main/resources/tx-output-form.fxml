@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.satergo.Icon?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<fx:root xmlns="http://javafx.com/javafx"
+		 xmlns:fx="http://javafx.com/fxml"
+		 type="VBox" stylesheets="tx-output-form.css"
+		 spacing="10">
+	<VBox>
+		<Label text="%address" styleClass="fieldLabel">
+			<labelFor><TextField fx:id="address"/></labelFor>
+		</Label>
+		<fx:reference source="address"/>
+	</VBox>
+
+	<GridPane>
+		<Label text="%amount" styleClass="fieldLabel" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
+			<labelFor><TextField fx:id="amount" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS"/></labelFor>
+		</Label>
+		<fx:reference source="amount"/>
+
+		<Label text="%fee" styleClass="feeLabel" GridPane.rowIndex="0" GridPane.columnIndex="1" visible="${fee.visible}" managed="${fee.managed}">
+			<labelFor><TextField fx:id="fee" GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="100" managed="${fee.visible}"/></labelFor>
+		</Label>
+		<fx:reference source="fee"/>
+		<Label text="%defaultMinimum" styleClass="feeLabel" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="RIGHT" style="-fx-font-size: 10px;" visible="${fee.visible}"/>
+	</GridPane>
+
+	<Hyperlink fx:id="addToken" text="%addToken" contentDisplay="RIGHT" onAction="#addToken">
+		<graphic>
+			<Icon icon="plus" height="10"/>
+		</graphic>
+	</Hyperlink>
+
+	<ScrollPane fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS">
+		<VBox fx:id="tokenList" spacing="2"/>
+	</ScrollPane>
+</fx:root>

@@ -5,6 +5,7 @@ import com.satergo.extra.PriceCurrency;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 /**
  * AllDecimals: all decimals are shown, even if the trailing ones are zeroes
@@ -16,6 +17,10 @@ public class FormatNumber {
 
 	static {
 		update();
+	}
+
+	public static String integer(int integer) {
+		return NumberFormat.getInstance().format(integer);
 	}
 
 	public static String ergAllDecimals(BigDecimal erg) {

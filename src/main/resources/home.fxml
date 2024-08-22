@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import com.satergo.extra.IconButton?>
 <?import com.satergo.extra.LinkedHyperlink?>
-<?import com.satergo.Icon?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -46,40 +45,13 @@
 			</StackPane>
 		</top>
 		<center>
-			<VBox spacing="10">
-				<BorderPane.margin><Insets top="27.5"/></BorderPane.margin>
+			<VBox>
 				<HBox alignment="BASELINE_CENTER">
 					<Label fx:id="paymentRequestIndicator" text="%youHaveOpenedAPaymentRequest" visible="false" managed="${paymentRequestIndicator.visible}"/>
 				</HBox>
-				<VBox>
-					<Label text="%address" styleClass="fieldLabel">
-						<labelFor><TextField fx:id="sendAddress"/></labelFor>
-					</Label>
-					<fx:reference source="sendAddress"/>
-				</VBox>
-
-				<GridPane>
-					<Label text="%amount" styleClass="fieldLabel" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
-						<labelFor><TextField fx:id="sendAmount" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS"/></labelFor>
-					</Label>
-					<fx:reference source="sendAmount"/>
-
-					<Label text="%fee" styleClass="feeLabel" GridPane.rowIndex="0" GridPane.columnIndex="1">
-						<labelFor><TextField fx:id="sendFee" GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="100"/></labelFor>
-					</Label>
-					<fx:reference source="sendFee"/>
-					<Label text="%defaultMinimum" styleClass="feeLabel" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-font-size: 10px;"/>
-				</GridPane>
-
-				<Hyperlink fx:id="addToken" text="%addToken" contentDisplay="RIGHT" onAction="#addToken">
-					<graphic>
-						<Icon icon="plus" height="10"/>
-					</graphic>
-				</Hyperlink>
-
-				<ScrollPane prefHeight="120" fitToWidth="true">
-					<VBox fx:id="tokenList" spacing="2"/>
-				</ScrollPane>
+				<TabPane fx:id="outputTabPane" styleClass="hide-header" VBox.vgrow="ALWAYS">
+					<VBox.margin><Insets top="16" bottom="16"/></VBox.margin>
+				</TabPane>
 			</VBox>
 		</center>
 		<bottom>
@@ -92,7 +64,10 @@
 				</HBox>
 				<HBox alignment="CENTER" spacing="60">
 					<Button onAction="#clearAll" text="%clearAll"/>
-					<Button text="%send" fx:id="send" onAction="#send"/>
+					<HBox>
+						<Button text="%send" fx:id="send" onAction="#send"/>
+						<Button text="+" fx:id="addOutput" onAction="#addOutput"/>
+					</HBox>
 				</HBox>
 			</VBox>
 		</bottom>

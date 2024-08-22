@@ -1,0 +1,13 @@
+.feeLabel {
+	-fx-padding: 0 0 2px 6px;
+}
+
+.feeShown #amount {
+	-fx-background-radius: 8 0 0 8;
+	-fx-border-radius: 8 0 0 8;
+}
+
+#fee {
+	-fx-background-radius: 0 8 8 0;
+	-fx-border-radius: 0 8 8 0;
+}

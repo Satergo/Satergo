@@ -7,16 +7,28 @@
 	-fx-font-weight: BOLD;
 }
 
-.feeLabel {
-	-fx-padding: 0 0 2px 6px;
+#send {
+	-fx-background-radius: 4 0 0 4;
+	-fx-border-radius: 4 0 0 4;
 }
 
-#sendAmount {
-	-fx-background-radius: 8 0 0 8;
-	-fx-border-radius: 8 0 0 8;
+#addOutput {
+	-fx-background-radius: 0 4 4 0;
+	-fx-border-radius: 0 4 4 0;
+	-fx-border-width: 1px 1px 1px 0;
+	-fx-padding: 3.4px 6.4px 3.4px 6.4px;
 }
 
-#sendFee {
-	-fx-background-radius: 0 8 8 0;
-	-fx-border-radius: 0 8 8 0;
+#addOutput:hover {
+	-fx-border-width: 0;
+	-fx-padding: 4px 7px 4px 6px;
+}
+
+.tab-pane.hide-header {
+	-fx-tab-max-height: 0;
+}
+
+.tab-pane.hide-header .tab-header-area {
+	visibility: hidden;
+	-fx-focus-traversable: false;
 }

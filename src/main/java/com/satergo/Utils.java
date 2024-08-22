@@ -11,6 +11,9 @@ import com.sun.management.OperatingSystemMXBean;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.binding.IntegerBinding;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -43,7 +46,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -415,5 +417,19 @@ public class Utils {
 				}
 			}
 		});
+	}
+
+	public static <T> IntegerBinding indexBinding(ObservableList<T> list, T object) {
+		Objects.requireNonNull(list, "list");
+		return new IntegerBinding() {
+			{ super.bind(list); }
+			@Override public void dispose() { super.unbind(list); }
+			@Override protected int computeValue() {
+				return list.indexOf(object);
+			}
+			@Override public ObservableList<?> getDependencies() {
+				return FXCollections.singletonObservableList(list);
+			}
+		};
 	}
 }

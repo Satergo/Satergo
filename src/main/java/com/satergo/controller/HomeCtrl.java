@@ -4,20 +4,22 @@ import com.satergo.*;
 import com.satergo.ergo.*;
 import com.satergo.extra.LinkedHyperlink;
 import com.satergo.extra.PriceCurrency;
+import com.satergo.extra.SimpleTask;
+import com.satergo.extra.TXOutputForm;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.IntegerBinding;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Side;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 import org.ergoplatform.appkit.*;
@@ -40,14 +42,12 @@ public class HomeCtrl implements WalletTab, Initializable {
 
 	// Send section
 	private List<Integer> candidates;
+	@FXML private TabPane outputTabPane;
 	private Address change;
 	@FXML private Label paymentRequestIndicator;
-	@FXML private Hyperlink addToken;
-	@FXML private VBox tokenList;
-	@FXML private TextField sendAddress, sendAmount, sendFee;
 	@FXML private Button send;
 	@FXML private Label nodeSyncNotice;
-	private ContextMenu addTokenContextMenu;
+	private final SimpleBooleanProperty disableTokens = new SimpleBooleanProperty(false);
 	// Transaction data
 	@FXML private HBox txIdContainer;
 	@FXML private LinkedHyperlink txLink;
@@ -56,58 +56,6 @@ public class HomeCtrl implements WalletTab, Initializable {
 	@FXML
 	public void logout(ActionEvent e) {
 		Main.get().getWalletPage().logout();
-	}
-
-	public static class TokenLine extends BorderPane {
-		@FXML private Label name, idTooltipLabel;
-		@FXML private Tooltip idTooltip;
-		@FXML private TextField amount;
-
-		public final TokenSummary tokenSummary;
-
-		public TokenLine(TokenSummary tokenSummary) {
-			Load.thisFxml(this, "/line/send-token.fxml");
-			this.tokenSummary = tokenSummary;
-			name.setText(tokenSummary.name());
-			idTooltip.setText(tokenSummary.id());
-			amount.textProperty().addListener((observable, oldValue, newValue) -> setIsValidAmount(amountIsValid() || amount.getText().isEmpty()));
-		}
-
-		public void setIsValidAmount(boolean isValidAmount) {
-			if (isValidAmount) getStyleClass().remove("error");
-			else {
-				if (!getStyleClass().contains("error"))
-					getStyleClass().add("error");
-			}
-		}
-
-		public boolean hasAmount() {
-			return !amount.getText().isEmpty();
-		}
-
-		public boolean amountIsValid() {
-			return Utils.isValidBigDecimal(amount.getText());
-		}
-
-		public void setAmount(BigDecimal bigDecimal) {
-			this.amount.setText(bigDecimal.toPlainString());
-		}
-
-		public BigDecimal getAmount() {
-			if (!amountIsValid()) throw new IllegalArgumentException();
-			return new BigDecimal(amount.getText());
-		}
-
-		@FXML
-		public void remove() {
-			((Pane) getParent()).getChildren().remove(this);
-		}
-
-		@FXML
-		public void copyId() {
-			Utils.copyStringToClipboard(tokenSummary.id());
-			Utils.showTemporaryTooltip(idTooltipLabel, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
-		}
 	}
 
 	@FXML
@@ -171,23 +119,17 @@ public class HomeCtrl implements WalletTab, Initializable {
 
 		candidates = new ArrayList<>(Main.get().getWallet().myAddresses.keySet());
 		try {
-			change = Main.get().getWallet().publicAddress(candidates.get(0));
+			change = Main.get().getWallet().publicAddress(candidates.getFirst());
 		} catch (WalletKey.Failure e) {
 			// won't happen because the master address is always either cached or available
 		}
-		sendAddress.textProperty().addListener((obs, o, n) -> {
-			paymentRequestIndicator.setVisible(false);
-			txIdContainer.setVisible(false);
-		});
 		Main.get().getWallet().myAddresses.addListener((MapChangeListener<Integer, String>) change -> {
 			if (change.wasRemoved()) candidates.remove(change.getKey());
 			else if (change.wasAdded()) candidates.add(change.getKey());
 		});
-		sendAmount.textProperty().addListener((obs, o, n) -> txIdContainer.setVisible(false));
-		sendFee.textProperty().addListener((obs, o, n) -> txIdContainer.setVisible(false));
-		addToken.setDisable(Main.get().getWallet().lastKnownBalance.get() == null || Main.get().getWallet().lastKnownBalance.get().confirmedTokens().isEmpty());
+		disableTokens.set(Main.get().getWallet().lastKnownBalance.get() == null || Main.get().getWallet().lastKnownBalance.get().confirmedTokens().isEmpty());
 		Main.get().getWallet().lastKnownBalance.addListener((obs, old, bal) -> {
-			addToken.setDisable(bal == null || bal.confirmedTokens().isEmpty());
+			disableTokens.set(bal == null || bal.confirmedTokens().isEmpty());
 			updateInfo(bal);
 		});
 		Main.get().market.ergValue.addListener((obs, old, val) -> updateInfo(Main.get().getWallet().lastKnownBalance.get()));
@@ -201,203 +143,116 @@ public class HomeCtrl implements WalletTab, Initializable {
 			});
 		}
 
-	}
-
-	@FXML
-	public void addToken(ActionEvent e) {
-		if (addTokenContextMenu != null && addTokenContextMenu.isShowing())
-			addTokenContextMenu.hide();
-		addTokenContextMenu = new ContextMenu();
-		List<TokenBalance> ownedTokens = Main.get().getWallet().lastKnownBalance.get().confirmedTokens();
-		for (TokenBalance token : ownedTokens) {
-			if (tokenList.getChildren().stream().anyMatch(t -> ((TokenLine) t).tokenSummary.id().equals(token.id())))
-				continue;
-			MenuItem menuItem = new MenuItem();
-			menuItem.setText(token.name() + " (" + token.id().substring(0, 20) + "...)");
-			ImageView icon = new ImageView(Utils.tokenIcon32x32(ErgoId.create(token.id())));
-			icon.setFitWidth(32);
-			icon.setFitHeight(32);
-			menuItem.setGraphic(icon);
-			menuItem.setOnAction(ae -> tokenList.getChildren().add(new TokenLine(token)));
-			addTokenContextMenu.getItems().add(menuItem);
-		}
-		addTokenContextMenu.show(addToken, Side.BOTTOM, 0, 0);
+		outputTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
+		outputTabPane.getTabs().add(createOutputTab());
+		Insets initialMargin = VBox.getMargin(outputTabPane);
+		outputTabPane.getTabs().addListener((ListChangeListener<Tab>) c -> {
+			if (c.getList().size() > 1) {
+				VBox.setMargin(outputTabPane, new Insets(2, initialMargin.getRight(), initialMargin.getBottom(), initialMargin.getLeft()));
+				outputTabPane.getStyleClass().remove("hide-header");
+			} else {
+				VBox.setMargin(outputTabPane, initialMargin);
+				outputTabPane.getStyleClass().add("hide-header");
+			}
+		});
 	}
 
 	@FXML
 	public void send(ActionEvent event) {
-		TextField address = sendAddress, amount = sendAmount, fee = sendFee;
-
-		if (address.getText().isBlank()) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
-			return;
-		}
-		Address recipient;
-		try {
-			recipient = Address.create(address.getText());
-			if (recipient.isMainnet() && Main.programData().nodeNetworkType.get() != NetworkType.MAINNET) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("recipientIsAMainnetAddress"));
-				return;
-			}
-			if (!recipient.isMainnet() && Main.programData().nodeNetworkType.get() != NetworkType.TESTNET) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("recipientIsATestnetAddress"));
-				return;
-			}
-		} catch (RuntimeException e) {
-			// Invalid address, check if it is a stealth address instead
-			try {
-				ErgoStealthAddress stealth = new ErgoStealthAddress(address.getText());
-				recipient = stealth.generatePaymentAddress(Main.programData().nodeNetworkType.get());
-			} catch (Exception ex) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("invalidAddress"));
-				return;
-			}
-		}
-		BigDecimal amountFullErg;
-		if (!tokenList.getChildren().isEmpty() && amount.getText().isBlank()) {
-			// Default value of 0.001 ERG when no ERG is specified but there are tokens specified
-			amountFullErg = new BigDecimal("0.001");
-		} else {
-			if (amount.getText().isBlank()) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
-				return;
-			} else {
-				try {
-					amountFullErg = new BigDecimal(amount.getText());
-				} catch (NumberFormatException ex) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("amountInvalid"));
-					return;
+		Utils.createErgoClient().execute(ctx -> {
+			UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
+			Optional<Long> fee = ((TXOutputForm) outputTabPane.getTabs().getFirst().getContent()).getFee();
+			if (fee.isEmpty()) return null;
+			long erg = 0;
+			HashMap<ErgoId, String> tokenNames = new HashMap<>();
+			HashMap<ErgoId, ErgoToken> tokens = new HashMap<>();
+			ArrayList<OutBox> outBoxes = new ArrayList<>();
+			for (Tab tab : outputTabPane.getTabs()) {
+				TXOutputForm form = (TXOutputForm) tab.getContent();
+				OutBox outBox = form.createOutBox(txBuilder);
+				erg += outBox.getValue();
+				for (ErgoToken token : outBox.getTokens()) {
+					ErgoToken existing = tokens.get(token.getId());
+					if (existing == null) tokens.put(token.getId(), token);
+					else tokens.put(token.getId(), new ErgoToken(token.getId(), token.getValue() + existing.getValue()));
 				}
-				if (!ErgoInterface.hasValidNumberOfDecimals(amountFullErg)) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("amountHasTooManyDecimals"));
-					return;
-				}
+				outBoxes.add(outBox);
+				tokenNames.putAll(form.tokenNames());
 			}
-		}
-		long amountNanoErg = ErgoInterface.toNanoErg(amountFullErg);
-		ErgoToken[] tokensToSend = new ErgoToken[tokenList.getChildren().size()];
-		HashMap<ErgoId, String> tokenNames = new HashMap<>(tokenList.getChildren().size());
-		for (int i = 0; i < tokenList.getChildren().size(); i++) {
-			TokenLine tokenLine = (TokenLine) tokenList.getChildren().get(i);
-			if (!tokenLine.hasAmount()) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_needsAmount").formatted(tokenLine.tokenSummary.name()));
-				return;
-			}
-			if (!tokenLine.amountIsValid()) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_hasInvalidAmount").formatted(tokenLine.tokenSummary.name()));
-				return;
-			}
-			tokensToSend[i] = new ErgoToken(tokenLine.tokenSummary.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenSummary.decimals()));
-			tokenNames.put(ErgoId.create(tokenLine.tokenSummary.id()), tokenLine.tokenSummary.name());
-		}
-		BigDecimal feeFullErg = null;
-		if (!fee.getText().isBlank()) {
-			try {
-				feeFullErg = new BigDecimal(fee.getText());
-			} catch (NumberFormatException ex) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("feeInvalid"));
-				return;
-			}
-			if (!ErgoInterface.hasValidNumberOfDecimals(feeFullErg)) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("feeHasTooManyDecimals"));
-				return;
-			}
-		}
-		long feeNanoErg = feeFullErg == null ? Parameters.MinFee : ErgoInterface.toNanoErg(feeFullErg);
-		if (feeNanoErg < Parameters.MinFee) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("feeTooLow").formatted(ErgoInterface.toFullErg(Parameters.MinFee)));
-			return;
-		}
-		Wallet wallet = Main.get().getWallet();
-		send.setDisable(true);
-		Address rec = recipient;
-		Task<UnsignedTransaction> unsignedTxTask = new Task<>() {
-			@Override
-			protected UnsignedTransaction call() {
-				return ErgoInterface.createUnsignedTransaction(Utils.createErgoClient(),
-						candidates.stream().map(index -> {
-							try {
-								return Main.get().getWallet().publicAddress(index);
-							} catch (WalletKey.Failure ex) {
-								throw new RuntimeException(ex);
-							}
-						}).toList(),
-						rec, amountNanoErg, feeNanoErg, change, tokensToSend);
-			}
-		};
-		unsignedTxTask.setOnSucceeded(s -> {
-			UnsignedTransaction unsignedTx = unsignedTxTask.getValue();
-			SignedTransaction signedTx = Utils.createErgoClient().execute(ctx -> {
+			List<Address> inputAddresses = candidates.stream().map(index -> {
 				try {
-					return wallet.key().sign(ctx, unsignedTx, candidates);
+					return Main.get().getWallet().publicAddress(index);
 				} catch (WalletKey.Failure ex) {
-					return null;
+					throw new RuntimeException(ex);
 				}
-			});
-			if (signedTx == null) {
-				send.setDisable(false);
-				return;
-			}
-			Task<String> transactTask = new Task<>() {
-				@Override
-				protected String call() {
-					return wallet.transact(signedTx);
-				}
-			};
-			transactTask.setOnSucceeded(ts -> {
-				send.setDisable(false);
-				String transactionId = transactTask.getValue();
-				txLink.setText(transactionId);
-				txLink.setUri(Utils.explorerTransactionUrl(transactionId));
-				copyTxId.setOnAction(ce -> {
-					Utils.copyStringToClipboard(transactionId);
-					Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
-				});
-				txIdContainer.setVisible(true);
-			});
-			transactTask.setOnFailed(te -> {
-				// Not sure if it can be null
-				if (transactTask.getException() != null) {
-					Utils.alertUnexpectedException(transactTask.getException());
-					transactTask.getException().printStackTrace();
-				}
-				send.setDisable(false);
-			});
-			new Thread(transactTask).start();
+			}).toList();
+			long ergFinal = erg;
+			new SimpleTask<>(() -> ErgoInterface.createUnsignedTransaction(ctx, inputAddresses, outBoxes, ergFinal, List.copyOf(tokens.values()), fee.get(), change))
+					.onSuccess(unsignedTx -> {
+						try {
+							SignedTransaction signedTx = Main.get().getWallet().key().sign(ctx, unsignedTx, candidates);
+							new SimpleTask<>(() -> Main.get().getWallet().transact(signedTx))
+									.onSuccess(transactionId -> {
+										send.setDisable(false);
+										txLink.setText(transactionId);
+										txLink.setUri(Utils.explorerTransactionUrl(transactionId));
+										copyTxId.setOnAction(ce -> {
+											Utils.copyStringToClipboard(transactionId);
+											Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
+										});
+										txIdContainer.setVisible(true);
+									})
+									.onFail(ex -> {
+										Utils.alertUnexpectedException(ex);
+										send.setDisable(false);
+									})
+									.newThread();
+						} catch (WalletKey.Failure e) {
+							send.setDisable(false);
+						}
+					})
+					.onFail(e -> {
+						send.setDisable(false);
+						Utils.alertTxBuildException(e, ergFinal, tokens.values(), tokenNames::get);
+					})
+					.newThread();
+			return null;
 		});
-		unsignedTxTask.setOnFailed(f -> {
-			send.setDisable(false);
-			Utils.alertTxBuildException(unsignedTxTask.getException(), amountNanoErg, Arrays.asList(tokensToSend), tokenNames::get);
-		});
-		new Thread(unsignedTxTask).start();
+	}
+
+	private Tab createOutputTab(TXOutputForm form) {
+		form.addressProperty().addListener((obs, old, val) -> paymentRequestIndicator.setVisible(false));
+		form.addChangeListener(() -> txIdContainer.setVisible(false));
+		form.disableTokens.bind(disableTokens);
+		Tab tab = new Tab("", form);
+		IntegerBinding indexOf = Utils.indexBinding(outputTabPane.getTabs(), tab);
+		form.showFee.bind(indexOf.isEqualTo(0));
+		tab.textProperty().bind(Bindings.createStringBinding(() -> {
+			if (indexOf.get() == -1) return "";
+			if (!form.addressProperty().get().isBlank())
+				return form.addressProperty().get().substring(0, Math.min(form.addressProperty().get().length(), 5));
+			return "#" + FormatNumber.integer(indexOf.get() + 1);
+		}, form.addressProperty(), indexOf));
+		return tab;
+	}
+
+	private Tab createOutputTab() {
+		return createOutputTab(new TXOutputForm());
+	}
+
+	public void addOutput(ActionEvent e) {
+		Tab newTab = createOutputTab();
+		outputTabPane.getTabs().add(newTab);
+		outputTabPane.getSelectionModel().select(newTab);
 	}
 
 	@FXML
 	public void clearAll(ActionEvent e) {
-		sendAddress.setText("");
-		sendAmount.setText("");
-		sendFee.setText("");
-		tokenList.getChildren().clear();
+		outputTabPane.getTabs().setAll(createOutputTab());
 	}
 
 	public void insertErgoURI(ErgoURI ergoURI) {
-		try {
-			clearAll(null);
-			sendAddress.setText(ergoURI.address);
-			paymentRequestIndicator.setVisible(true);
-			if (ergoURI.amount != null)
-				sendAmount.setText(ergoURI.amount.toPlainString());
-			ergoURI.tokens.entrySet()
-					.parallelStream()
-					.map(entry -> new Pair<>(ErgoInterface.getTokenInfo(Main.programData().nodeNetworkType.get(), entry.getKey()), entry.getValue()))
-					.sequential()
-					.forEachOrdered(entry -> {
-						TokenLine tokenLine = new TokenLine(entry.getKey());
-						tokenLine.setAmount(entry.getValue());
-						tokenList.getChildren().add(tokenLine);
-					});
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		outputTabPane.getTabs().setAll(createOutputTab(TXOutputForm.forErgoURI(ergoURI)));
+		paymentRequestIndicator.setVisible(true);
 	}
 }

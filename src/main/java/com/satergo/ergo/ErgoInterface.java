@@ -68,7 +68,7 @@ public class ErgoInterface {
 
 	/**
 	 * @param ergoClient ErgoClient, see for example {@link #newNodeApiClient}
-	 * @param addresses Input addresses
+	 * @param inputAddresses Input addresses
 	 * @param recipient Address to send to
 	 * @param amountToSend Amount to send (in nanoERGs)
 	 * @param feeAmount Fee, minimum {@link Parameters#MinFee}
@@ -77,13 +77,13 @@ public class ErgoInterface {
 	 * @throws InputBoxesSelectionException If not enough ERG or not enough tokens were found
 	 * @return The transaction ID with quotes around it
 	 */
-	public static UnsignedTransaction createUnsignedTransaction(ErgoClient ergoClient, List<Address> addresses,
+	public static UnsignedTransaction createUnsignedTransaction(ErgoClient ergoClient, List<Address> inputAddresses,
 								  Address recipient, long amountToSend, long feeAmount, Address changeAddress, ErgoToken... tokensToSend) throws InputBoxesSelectionException {
 		if (feeAmount < Parameters.MinFee) {
 			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
 		}
 		return ergoClient.execute(ctx -> {
-			List<InputBox> boxesToSpend = BoxOperations.createForSenders(addresses, ctx)
+			List<InputBox> boxesToSpend = BoxOperations.createForSenders(inputAddresses, ctx)
 					.withAmountToSpend(amountToSend)
 					.withFeeAmount(feeAmount)
 					.withTokensToSpend(List.of(tokensToSend))
@@ -103,6 +103,35 @@ public class ErgoInterface {
 					.sendChangeTo(changeAddress)
 					.build();
 		});
+	}
+
+	/**
+	 * @param inputAddresses Input addresses
+	 * @param totalErg Amount to send (in nanoERGs)
+	 * @param feeAmount Fee, minimum {@link Parameters#MinFee}
+	 * @param changeAddress The address where leftover ERG or tokens from UTXOs will be sent
+	 * @param totalTokens Tokens to send
+	 * @throws InputBoxesSelectionException If not enough ERG or not enough tokens were found
+	 * @return The transaction ID with quotes around it
+	 */
+	public static UnsignedTransaction createUnsignedTransaction(BlockchainContext ctx, List<Address> inputAddresses,
+																List<OutBox> outBoxes, long totalErg, List<ErgoToken> totalTokens, long feeAmount, Address changeAddress) throws InputBoxesSelectionException {
+		if (feeAmount < Parameters.MinFee) {
+			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
+		}
+		List<InputBox> boxesToSpend = BoxOperations.createForSenders(inputAddresses, ctx)
+				.withAmountToSpend(totalErg)
+				.withFeeAmount(feeAmount)
+				.withTokensToSpend(totalTokens)
+				.withInputBoxesLoader(new ExplorerAndPoolUnspentBoxesLoader().withAllowChainedTx(true))
+				.loadTop();
+		UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
+		return txBuilder
+				.addInputs(boxesToSpend.toArray(new InputBox[0]))
+				.addOutputs(outBoxes.toArray(new OutBox[0]))
+				.fee(feeAmount)
+				.sendChangeTo(changeAddress)
+				.build();
 	}
 
 	public static JsonObject getTokenItem(NetworkType networkType, ErgoId tokenId) {
