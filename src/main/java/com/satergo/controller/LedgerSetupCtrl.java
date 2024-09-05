@@ -87,9 +87,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 		System.out.println("Created");
 		status.setText(Main.lang("ledger.pleaseAcceptRequest"));
 		LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
-		prompt.initOwner(Main.get().stage());
-		prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-		Main.get().applySameTheme(prompt.getDialogPane().getScene());
+		Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		prompt.showForResult().ifPresent(parentExtPubKey -> {
 			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 			if (path == null) return;
