@@ -102,6 +102,11 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 		}
 		SecretString phrase = SecretString.create(SystemProperties.rawSeedPhrase() ? seedPhrase.getText() : String.join(" ", words));
 		Mnemonic mnemonic = Mnemonic.create(phrase, SecretString.create(extendedSeedPassphrase.getText()));
+
+		if (walletPassword.getText().isBlank()) {
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("passwordRequired"));
+			return;
+		}
 		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Utils.getLastWalletDir(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 		if (path == null) return;
 

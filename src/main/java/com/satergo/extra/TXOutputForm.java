@@ -139,8 +139,9 @@ public class TXOutputForm extends VBox implements Initializable {
 			tokensToSend[i] = new ErgoToken(tokenLine.tokenSummary.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenSummary.decimals()));
 		}
 		OutBoxBuilder outBoxBuilder = txBuilder.outBoxBuilder()
-				.contract(recipient.toErgoContract())
-				.tokens(tokensToSend);
+				.contract(recipient.toErgoContract());
+		if (tokensToSend.length > 0)
+			outBoxBuilder.tokens(tokensToSend);
 		return dynamicMinimum ? ErgoInterface.buildWithMinimumBoxValue(outBoxBuilder, boxIndex) : outBoxBuilder.value(ErgoInterface.toNanoErg(amountFullErg)).build();
 	}
 

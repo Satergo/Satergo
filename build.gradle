@@ -25,7 +25,10 @@ application {
 
 repositories {
 	mavenCentral()
-	maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+	maven {
+		url 'https://oss.sonatype.org/content/repositories/snapshots/'
+		content { includeGroup 'org.scorexfoundation' }
+	}
 }
 
 boolean buildInstaller = project.hasProperty("buildInstaller")
@@ -98,7 +101,7 @@ satergoRuntime {
 
 	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets"]
 	javaFxModules.forEach { extraModules.add("javafx." + it) }
-	excludeModules = ["java.sql", "jdk.management"]
+	excludeModules = ["java.sql"]
 	extraModuleJars = configurations.javaFxDeps.files
 	extraJlinkOptions = ["--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"]
 	cleanupRuntimeContent = true
