@@ -52,17 +52,22 @@ public class ErgoLedgerAppkit {
 		byte[] ergoTree = box.getErgoTree().bytes();
 		byte[] registers = serializeRegisters(box.getRegisters());
 		List<ErgoToken> boxTokens = box.getTokens();
+		System.out.println("Attest box start");
 		int sessionId = protocol.attestBoxStart(txId, box.getTransactionIndex(), box.getValue(), ergoTree.length, box.getCreationHeight(), boxTokens.size(), registers.length, null);
-		int frameCount = 0;
+		int frameCount = -1;
 		double chunkCount = Math.ceil(ergoTree.length / 255.0);
 		for (int i = 0; i < chunkCount; i++) {
 			int start = i * 255;
 			byte[] chunk = Arrays.copyOfRange(ergoTree, start, Math.min(start + 255, ergoTree.length));
+			System.out.println("Attest add ergo tree chunk");
 			Optional<Integer> result = protocol.attestAddErgoTreeChunk(sessionId, chunk);
 			if (result.isPresent()) {
 				frameCount = result.get();
 				break;
 			}
+		}
+		if (frameCount == -1) {
+			throw new IllegalStateException();
 		}
 		if (!boxTokens.isEmpty()) {
 			if (boxTokens.size() > 20) {
@@ -79,17 +84,21 @@ public class ErgoLedgerAppkit {
 				for (int j = i; j < Math.min(i + perChunk, tokens.size()); j++) {
 					chunk.put(tokens.get(j).getKey(), tokens.get(j).getValue());
 				}
+				System.out.println("Attest add tokens");
 				protocol.attestAddTokens(sessionId, chunk);
 			}
 		}
 		if (!box.getRegisters().isEmpty()) {
+			System.out.println("Attest add registers chunk");
 			writeInChunks(protocol::attestAddRegistersChunk, sessionId, registers);
 		}
 		AttestedBoxFrame[] frames = new AttestedBoxFrame[frameCount];
 		for (int i = 0; i < frameCount; i++) {
+			System.out.println("Attest get box frame");
 			AttestedBoxFrame frame = protocol.getAttestedBoxFrame(sessionId, i);
 			frames[i] = frame;
 		}
+		System.out.println("RETURN");
 		return frames;
 	}
 
