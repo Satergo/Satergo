@@ -1,7 +1,9 @@
-package com.satergo.keystore;
+package com.satergo;
 
 import com.satergo.Main;
 import com.satergo.Utils;
+import com.satergo.extra.hw.ledger.AttestedBox;
+import com.satergo.extra.hw.ledger.ErgoLedgerAppkit;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.EncryptedData;
 import com.satergo.extra.Encryption;
@@ -93,7 +95,7 @@ public abstract class WalletKey {
 	private EncryptedData encrypted;
 	protected final Type<?> type;
 
-	WalletKey(Type<?> type) {
+	private WalletKey(Type<?> type) {
 		this.type = type;
 	}
 

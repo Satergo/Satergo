@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -129,16 +131,20 @@ public final class Wallet {
 		saveToFile();
 	}
 
-	/**
-	 * Creates a new wallet with a local key and a master address and saves it
-	 */
-	public static Wallet create(Path path, Mnemonic mnemonic, String name, char[] password, boolean nonstandardDerivation) {
+	public static Wallet create(Path path, WalletKey walletKey, String name, char[] password) {
 		byte[] detailsSalt = Encryption.secureRandom(16);
 		SecretKey detailsSecretKey;
 		detailsSecretKey = F2_ENCRYPTION.generateSecretKey(password, detailsSalt);
-		Wallet wallet = new Wallet(path, WalletKey.Local.create(nonstandardDerivation, mnemonic, password, F2_ENCRYPTION), name, Map.of(0, Main.lang("masterAddressLabel")), detailsSalt, detailsSecretKey, Collections.emptyList());
+		Wallet wallet = new Wallet(path, walletKey, name, Map.of(0, Main.lang("masterAddressLabel")), detailsSalt, detailsSecretKey, Collections.emptyList());
 		wallet.saveToFile();
 		return wallet;
+	}
+
+	/**
+	 * creates a new wallet with local key and master address and saves it
+	 */
+	public static Wallet create(Path path, Mnemonic mnemonic, String name, char[] password, boolean nonstandardDerivation) {
+		return create(path, WalletKey.Local.create(nonstandardDerivation, mnemonic, password), name, password);
 	}
 
 	public static Wallet create(Path path, Mnemonic mnemonic, String name, char[] password) {
