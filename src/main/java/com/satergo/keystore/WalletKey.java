@@ -338,9 +338,7 @@ public abstract class WalletKey {
 			storedKeyBytes = new byte[KEY_LENGTH];
 			data.get(storedKeyBytes);
 			LedgerPrompt.Connect connectionPrompt = new LedgerPrompt.Connect(productId);
-			connectionPrompt.initOwner(Main.get().stage());
-			connectionPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-			Main.get().applySameTheme(connectionPrompt.getDialogPane().getScene());
+			Utils.initDialog(connectionPrompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 			connectionPrompt.setOnShown(event -> {
 				LedgerSelector ledgerSelector = new LedgerSelector() {
 					@Override
@@ -360,9 +358,7 @@ public abstract class WalletKey {
 			ergoLedgerAppkit = connectionPrompt.showForResult().orElse(null);
 			ergoLedgerAppkit.device.open();
 			LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
-			prompt.initOwner(Main.get().stage());
-			prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-			Main.get().applySameTheme(prompt.getDialogPane().getScene());
+			Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 			ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
 			// not approved
 			if (parentExtPubKey == null) throw new RuntimeException();
@@ -399,9 +395,7 @@ public abstract class WalletKey {
 		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
 			try {
 				LedgerPrompt.Attest attestPrompt = new LedgerPrompt.Attest(ergoLedgerAppkit, unsignedTx.getInputs());
-				attestPrompt.initOwner(Main.get().stage());
-				attestPrompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-				Main.get().applySameTheme(attestPrompt.getDialogPane().getScene());
+				Utils.initDialog(attestPrompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 				List<AttestedBox> inputBoxes = attestPrompt.showForResult().orElse(null);
 				// not approved
 				if (inputBoxes == null) return null;
@@ -411,9 +405,7 @@ public abstract class WalletKey {
 							case MAINNET -> ErgoNetworkType.MAINNET;
 							case TESTNET -> ErgoNetworkType.TESTNET;
 						}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(), null, null));
-				prompt.initOwner(Main.get().stage());
-				prompt.setMoveStyle(MoveStyle.FOLLOW_OWNER);
-				Main.get().applySameTheme(prompt.getDialogPane().getScene());
+				Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 				byte[] bytes = prompt.showForResult().orElse(null);
 				// not approved
 				if (bytes == null) return null;
