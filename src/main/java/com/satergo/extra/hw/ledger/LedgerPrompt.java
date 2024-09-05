@@ -4,6 +4,7 @@ import com.satergo.Main;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
+import com.satergo.jledger.transport.hid4java.InvalidChannelException;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -55,7 +56,7 @@ public sealed interface LedgerPrompt {
 					setResult(null);
 					throw e;
 				}
-			} else if (t instanceof HidLedgerDevice3.InvalidChannelException e) {
+			} else if (t instanceof InvalidChannelException e) {
 				if (e.received == 0) {
 					setHeaderText(Main.lang("ledger.deviceIsLocked"));
 					displayAskAgain(e);
