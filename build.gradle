@@ -74,6 +74,11 @@ dependencies {
 	// We add the JavaFX dependencies to a custom configuration to later specify that the dependencies in this configuration shall be excluded from the shaded jar
 	javaFxModules.forEach({ md -> javaFxDeps "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 	implementation configurations.javaFxDeps.dependencies
+
+	// ledger
+	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation 'org.hid4java:hid4java:0.7.0'
+//	implementation 'net.codecrete.usb:java-does-usb:0.6.1'
 }
 
 jar {

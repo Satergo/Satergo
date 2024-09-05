@@ -24,9 +24,10 @@ The two sections must be encrypted with the **same password** and must use **dif
 
 Encrypted wallet private key data: `(short) wallet key type id` followed by the serialized data.
 
-| Wallet key type ID | Value | Details                                |
-|--------------------|-------|----------------------------------------|
-| 0                  | LOCAL | The mnemonic is stored inside the file |
+| Wallet key type ID | Value  | Details                                |
+|--------------------|--------|----------------------------------------|
+| 0                  | LOCAL  | The mnemonic is stored inside the file |
+| 50                 | LEDGER | Ledger                                 |
 
 `LOCAL` structure:
 
@@ -38,54 +39,64 @@ Encrypted wallet private key data: `(short) wallet key type id` followed by the 
 | short              | byte length of next field                                                           |
 | utf-8 string bytes | mnemonic password                                                                   |
 
+`LEDGER` structure:
+
+| Data type | Value          |
+|-----------|----------------|
+| int       | the product id |
+| byte\[33] | the public key |
+
 Encrypted wallet details data:
 
-| Data type                                           | Value                               |
-|-----------------------------------------------------|-------------------------------------|
-| short                                               | byte length of next field           |
-| utf-8 string bytes                                  | wallet name                         |
-| int                                                 | amount of derived address           |
-| [derived address entry](#derived-address-entry-0)[] | derived address entry               |
-| int                                                 | address book size                   |
-| [address book entry](#address-book-entry-0)[]       | address book entry                  |
+| Data type                                         | Value                               |
+|---------------------------------------------------|-------------------------------------|
+| short                                             | byte length of next field           |
+| utf-8 string bytes                                | wallet name                         |
+| int                                               | amount of derived address           |
+| [derived address entry](#derived-address-entry)[] | derived address entry               |
+| int                                               | address book size                   |
+| [address book entry](#address-book-entry)[]       | address book entry                  |
 
-# OLD FORMAT (DO NOT IMPLEMENT)
-
-## formatVersion 0
-**This version should not be implemented.**
-
-**Note: This version contains an unnecessary header. To get to the data, skip 6 bytes.**
-
-Encrypted data: (everything is encrypted in this version, even the version number)
-
-| Data type                                           | Value                     |
-|-----------------------------------------------------|---------------------------|
-| short                                               | (-21267, skip)            |
-| short                                               | (5, skip)                 |
-| short                                               | (skip)                    |
-| long                                                | format version            |
-| short                                               | byte length of next field |
-| utf-8 string bytes                                  | wallet name               |
-| short                                               | byte length of next field |
-| utf-8 string bytes                                  | seed phrase               |
-| short                                               | byte length of next field |
-| utf-8 string bytes                                  | mnemonic password         |
-| int                                                 | amount of derived address |
-| [derived address entry](#derived-address-entry-0)[] | derived address entry     |
-| int                                                 | address book size         |
-| [address book entry](#address-book-entry-0)[]       | address book entry        |
-
-### Derived address entry (0)
+### Derived address entry
 | Data type          | Value                     |
 |--------------------|---------------------------|
 | int                | address index             |
 | short              | byte length of next field |
 | utf-8 string bytes | address label             |
 
-### Address book entry (0)
+### Address book entry
 | Data type          | Value                     |
 |--------------------|---------------------------|
 | short              | byte length of next field |
 | utf-8 string bytes | name                      |
 | short              | byte length of next field |
 | utf-8 string bytes | address                   |
+
+<details>
+<summary><h2 style="display: inline;">OLD FORMAT (DO NOT IMPLEMENT)</h2></summary>
+
+## formatVersion 0
+**This version should not be implemented.**
+
+**Note: This version contains an unnecessary header. To get to the data, skip 6 bytes.**
+
+Encrypted data: (everything is encrypted in this version, even the format version number)
+
+| Data type                                         | Value                     |
+|---------------------------------------------------|---------------------------|
+| short                                             | (-21267, skip)            |
+| short                                             | (5, skip)                 |
+| short                                             | (skip)                    |
+| long                                              | format version            |
+| short                                             | byte length of next field |
+| utf-8 string bytes                                | wallet name               |
+| short                                             | byte length of next field |
+| utf-8 string bytes                                | seed phrase               |
+| short                                             | byte length of next field |
+| utf-8 string bytes                                | mnemonic password         |
+| int                                               | amount of derived address |
+| [derived address entry](#derived-address-entry)[] | derived address entry     |
+| int                                               | address book size         |
+| [address book entry](#address-book-entry)[]       | address book entry        |
+
+</details>

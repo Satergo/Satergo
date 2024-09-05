@@ -67,6 +67,11 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 		Main.get().displaySetupPage(Load.<RestoreFromSeedCtrl>fxmlController("/setup-page/restore-wallet-from-seed.fxml"));
 	}
 
+	@FXML
+	public void createForHardwareWallet(ActionEvent e) {
+		Main.get().displaySetupPage(Load.<HardwareWalletSetupCtrl>fxmlController("/setup-page/hardware-wallet.fxml"));
+	}
+
 	@Override
 	public Parent recreate() {
 		return Load.fxml("/setup-page/wallet.fxml");

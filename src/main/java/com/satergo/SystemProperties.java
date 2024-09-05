@@ -24,6 +24,13 @@ public class SystemProperties {
 		return Boolean.getBoolean("satergo.alwaysNonstandardDerivation");
 	}
 
+	public static Optional<String> ledgerEmulator() {
+		return Optional.ofNullable(getProperty("satergo.ledgerEmulator"));
+	}
+	public static Optional<Integer> ledgerEmulatorPort() {
+		return Optional.ofNullable(Integer.getInteger("satergo.ledgerEmulatorPort"));
+	}
+
 	public static String packagePlatform() {
 		return System.getProperty("satergo.packagePlatform", "DEV");
 	}

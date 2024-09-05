@@ -7,9 +7,10 @@
 	<Label styleClass="welcome-text" text="%welcome"/>
 	<VBox spacing="12">
 		<SetupOption title="%createNewWallet" onAction="#createWallet"/>
+		<SetupOption title="%createForAHardwareWallet" onAction="#createForHardwareWallet"/>
 		<SetupOption title="%openWalletFile" onAction="#openWalletFile"/>
 		<SetupOption title="%restoreWalletUsingSeed" onAction="#restoreFromSeed"/>
 	</VBox>
-	<VBox fx:id="content" VBox.vgrow="ALWAYS"/>
+	<Region VBox.vgrow="ALWAYS"/>
 	<Label fx:id="nodeConfigurationInfo"/>
 </VBox>
