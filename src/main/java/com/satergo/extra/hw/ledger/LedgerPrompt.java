@@ -116,7 +116,7 @@ public sealed interface LedgerPrompt {
 		@Override
 		protected void request() {
 			new SimpleTask<>(() -> inputBoxes.stream()
-					.sorted(Comparator.comparingInt(InputBox::getTransactionIndex))
+//					.sorted(Comparator.comparingInt(InputBox::getTransactionIndex))
 					.map(inputBox -> new AttestedBox(
 							inputBox,
 							ergoLedgerAppkit.getAttestedBoxFrames(inputBox),

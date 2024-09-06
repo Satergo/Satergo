@@ -172,6 +172,7 @@ public class ErgoLedgerAppkit {
 	}
 
 	private void addDataInputs(int sessionId, List<InputBox> dataBoxes) {
+		// TODO chunk
 		protocol.addDataInputs(sessionId, dataBoxes.stream().map(box -> box.getId().getBytes()).toList());
 	}
 
@@ -233,7 +234,7 @@ public class ErgoLedgerAppkit {
 	private static byte[] serializeRegisters(List<ErgoValue<?>> registers) {
 		SigmaByteWriter sbw = SigmaSerializer.startWriter();
 		for (int i = 0; i < registers.size(); i++) {
-			// first entry, R4 is index 0, so + 4
+			// the first entry, R4, is index 0, so + 4
 			int id = i + 4;
 			sbw.putUByte(id);
 			sbw.putValue(AppkitIso.isoErgoValueToSValue().to(registers.get(i)));
