@@ -12,6 +12,7 @@ import org.ergoplatform.appkit.InputBox;
 import org.ergoplatform.appkit.impl.InputBoxImpl;
 import org.ergoplatform.sdk.wallet.secrets.ExtendedPublicKey;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -115,6 +116,7 @@ public sealed interface LedgerPrompt {
 		@Override
 		protected void request() {
 			new SimpleTask<>(() -> inputBoxes.stream()
+					.sorted(Comparator.comparingInt(InputBox::getTransactionIndex))
 					.map(inputBox -> new AttestedBox(
 							inputBox,
 							ergoLedgerAppkit.getAttestedBoxFrames(inputBox),

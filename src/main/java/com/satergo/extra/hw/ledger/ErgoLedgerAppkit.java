@@ -55,7 +55,9 @@ public class ErgoLedgerAppkit {
 		System.out.println("Attest box start");
 		int sessionId = protocol.attestBoxStart(txId, box.getTransactionIndex(), box.getValue(), ergoTree.length, box.getCreationHeight(), boxTokens.size(), registers.length, null);
 		int frameCount = -1;
+		System.out.println("ergoTree[" + ergoTree.length + "] = " + HexFormat.ofDelimiter(" ").formatHex(ergoTree));
 		double chunkCount = Math.ceil(ergoTree.length / 255.0);
+		System.out.println("chunkCount = " + chunkCount);
 		for (int i = 0; i < chunkCount; i++) {
 			int start = i * 255;
 			byte[] chunk = Arrays.copyOfRange(ergoTree, start, Math.min(start + 255, ergoTree.length));
