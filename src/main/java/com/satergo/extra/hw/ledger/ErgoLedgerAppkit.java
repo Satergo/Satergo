@@ -19,6 +19,7 @@ import sigmastate.utils.SigmaByteWriter;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 public class ErgoLedgerAppkit {
 
@@ -158,7 +159,9 @@ public class ErgoLedgerAppkit {
 		for (AttestedBox attestedBox : boxesToSpend) {
 
 			for (AttestedBoxFrame frame : attestedBox.frames()) {
-				protocol.addInputBoxFrame(sessionId, frame.boxId(), frame.framesCount(), frame.frameIndex(), frame.amount(), new LinkedHashMap<>(), frame.attestation(),
+				LinkedHashMap<byte[], Long> tokens = new LinkedHashMap<>();
+				frame.tokens().forEach((tokenId, value) -> tokens.put(tokenId.bytes(), value));
+				protocol.addInputBoxFrame(sessionId, frame.boxId(), frame.framesCount(), frame.frameIndex(), frame.amount(), tokens, frame.attestation(),
 						attestedBox.extension().length);
 			}
 
@@ -211,6 +214,20 @@ public class ErgoLedgerAppkit {
 			byte[] chunk = Arrays.copyOfRange(bytes, start, Math.min(start + 255, bytes.length));
 			function.accept(sessionId, chunk);
 		}
+	}
+	private <T>Optional<T> writeInChunksWithResult(BiFunction<Integer, byte[], Optional<T>> function, int sessionId, byte[] bytes) {
+		int chunks = (int) Math.ceil(bytes.length / 255.0);
+		for (int i = 0; i < chunks; i++) {
+			int start = i * 255;
+			byte[] chunk = Arrays.copyOfRange(bytes, start, Math.min(start + 255, bytes.length));
+			Optional<T> returnValue = function.apply(sessionId, chunk);
+			if (returnValue.isPresent()) {
+				if (i < chunks - 1)
+					throw new IllegalStateException("Received return value before everything was written");
+				return returnValue;
+			}
+		}
+		return Optional.empty();
 	}
 
 	private static byte[] serializeRegisters(List<ErgoValue<?>> registers) {
