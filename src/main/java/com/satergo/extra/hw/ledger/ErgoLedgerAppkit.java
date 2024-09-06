@@ -59,17 +59,14 @@ public class ErgoLedgerAppkit {
 		double chunkCount = Math.ceil(ergoTree.length / 255.0);
 		System.out.println("chunkCount = " + chunkCount);
 		for (int i = 0; i < chunkCount; i++) {
+			if (frameCount != -1) throw new IllegalStateException("Box frame is identified as finished but it is not");
 			int start = i * 255;
 			byte[] chunk = Arrays.copyOfRange(ergoTree, start, Math.min(start + 255, ergoTree.length));
 			System.out.println("Attest add ergo tree chunk");
 			Optional<Integer> result = protocol.attestAddErgoTreeChunk(sessionId, chunk);
 			if (result.isPresent()) {
 				frameCount = result.get();
-				break;
 			}
-		}
-		if (frameCount == -1) {
-			throw new IllegalStateException();
 		}
 		if (!boxTokens.isEmpty()) {
 			if (boxTokens.size() > 20) {
@@ -82,17 +79,32 @@ public class ErgoLedgerAppkit {
 			// max 6 tokens per exchange, so do it in chunks
 			int perChunk = 6;
 			for (int i = 0; i < Math.ceil(tokens.size() / (double) perChunk); i++) {
+				if (frameCount != -1) throw new IllegalStateException("Box frame is identified as finished but it is not");
 				LinkedHashMap<byte[], Long> chunk = new LinkedHashMap<>();
 				for (int j = i; j < Math.min(i + perChunk, tokens.size()); j++) {
 					chunk.put(tokens.get(j).getKey(), tokens.get(j).getValue());
 				}
 				System.out.println("Attest add tokens");
-				protocol.attestAddTokens(sessionId, chunk);
+				Optional<Integer> result = protocol.attestAddTokens(sessionId, chunk);
+				if (result.isPresent()) {
+					frameCount = result.get();
+				}
 			}
 		}
 		if (!box.getRegisters().isEmpty()) {
 			System.out.println("Attest add registers chunk");
-			writeInChunks(protocol::attestAddRegistersChunk, sessionId, registers);
+			for (int i = 0; i < Math.ceil(registers.length / 255.0); i++) {
+				if (frameCount != -1) throw new IllegalStateException("Box frame is identified as finished but it is not");
+				int start = i * 255;
+				byte[] chunk = Arrays.copyOfRange(registers, start, Math.min(start + 255, registers.length));
+				Optional<Integer> result = protocol.attestAddRegistersChunk(sessionId, chunk);
+				if (result.isPresent()) {
+					frameCount = result.get();
+				}
+			}
+		}
+		if (frameCount == -1) {
+			throw new IllegalStateException();
 		}
 		AttestedBoxFrame[] frames = new AttestedBoxFrame[frameCount];
 		for (int i = 0; i < frameCount; i++) {
