@@ -12,7 +12,7 @@ import org.ergoplatform.appkit.InputBox;
 import org.ergoplatform.appkit.impl.InputBoxImpl;
 import org.ergoplatform.sdk.wallet.secrets.ExtendedPublicKey;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -115,13 +115,16 @@ public sealed interface LedgerPrompt {
 
 		@Override
 		protected void request() {
-			new SimpleTask<>(() -> inputBoxes.stream()
-//					.sorted(Comparator.comparingInt(InputBox::getTransactionIndex))
-					.map(inputBox -> new AttestedBox(
-							inputBox,
-							ergoLedgerAppkit.getAttestedBoxFrames(inputBox),
-							ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension()))).toList())
-					.onSuccess(this::setResult)
+			new SimpleTask<>(() -> {
+				ArrayList<AttestedBox> attestedBoxes = new ArrayList<>();
+				for (int i = 0; i < inputBoxes.size(); i++) {
+					InputBox inputBox = inputBoxes.get(i);
+					attestedBoxes.add(new AttestedBox(
+							ergoLedgerAppkit.attestBox(inputBox),
+							ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension())));
+				}
+				return attestedBoxes;
+			}).onSuccess(this::setResult)
 					.onFail(this::handleException)
 					.newThread();
 		}

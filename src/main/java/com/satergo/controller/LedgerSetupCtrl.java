@@ -5,7 +5,10 @@ import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.hw.ledger.ErgoLedgerAppkit;
 import com.satergo.extra.hw.ledger.LedgerPrompt;
 import com.satergo.extra.hw.ledger.LedgerSelector;
+import com.satergo.jledger.APDUCommand;
+import com.satergo.jledger.APDUResponse;
 import com.satergo.jledger.LedgerDevice;
+import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.transport.hid4java.HidLedgerDevice;
 import com.satergo.jledger.transport.speculos.EmulatorLedgerDevice;
@@ -50,7 +53,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			@Override
 			public void deviceFound(HidDevice device) {
 				Platform.runLater(() -> {
-					if (LedgerDevice.PRODUCT_IDS.contains(device.getProductId())) {
+					if (LedgerDevice.PRODUCT_IDS.containsKey(device.getProductId())) {
 						status.setText("Found a " + getModelName(device.getProductId()) + " device.");
 					} else {
 						status.setText("Found a Ledger device, the model is unknown.");
@@ -69,22 +72,25 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 	@FXML
 	public void createWallet(ActionEvent e) {
 		if (!emulator) ledgerSelector.stop();
-		System.out.println("Instantiating device");
 		LedgerDevice ledgerDevice = emulator
-				? new EmulatorLedgerDevice(SystemProperties.ledgerEmulator().get(), SystemProperties.ledgerEmulatorPort().get(), LedgerDevice.NANO_S_PRODUCT_ID)
+				? new EmulatorLedgerDevice(SystemProperties.ledgerEmulator().get(), SystemProperties.ledgerEmulatorPort().get(), 0x1011)
 				: new HidLedgerDevice(ledgerSelector.getDevice());
-		System.out.println("Instantiated");
-		System.out.println("Opening device");
 		if (!ledgerDevice.open()) {
 			Utils.alert(Alert.AlertType.ERROR, "Failed to open connection to the Ledger device. " + ledgerSelector.getDevice().getLastErrorMessage());
 			return;
 		}
-		System.out.println("Opened");
-		System.out.println("Creating kit");
 		ErgoProtocol proto = new ErgoProtocol(ledgerDevice);
-		System.out.println("proto.getVersion() = " + proto.getVersion());
+		String appName;
+		try {
+			appName = proto.getAppName();
+		} catch (ErgoLedgerException ex) {
+			appName = "error";
+		}
+		if (!appName.equals("Ergo")) {
+			Utils.alert(Alert.AlertType.ERROR, "Please open the Ergo app on your Ledger first");
+			return;
+		}
 		ErgoLedgerAppkit ergoLedgerAppkit = new ErgoLedgerAppkit(proto);
-		System.out.println("Created");
 		status.setText(Main.lang("ledger.pleaseAcceptRequest"));
 		LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
 		Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);

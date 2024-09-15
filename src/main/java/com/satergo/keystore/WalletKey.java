@@ -19,6 +19,7 @@ import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.ErgoLikeTransaction;
 import org.ergoplatform.P2PKAddress;
 import org.ergoplatform.appkit.*;
+import org.ergoplatform.appkit.impl.InputBoxImpl;
 import org.ergoplatform.sdk.wallet.secrets.DerivationPath;
 import org.ergoplatform.sdk.wallet.secrets.ExtendedPublicKey;
 import org.ergoplatform.sdk.wallet.secrets.ExtendedSecretKey;
@@ -134,8 +135,11 @@ public abstract class WalletKey {
 	 */
 	public void initCaches(ByteBuffer data) {}
 
-	/** @apiNote May return null, for example if a request was sent to an external device but the user denied it. */
-	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure;
+	/**
+	 * @param changeAddress The index of the change address. Does not affect the transaction, it is only used as a hint for certain wallet key types that might make use of it.
+	 * @apiNote May return null, for example if a request was sent to an external device but the user denied it.
+	 */
+	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes, Integer changeAddress) throws Failure;
 	public abstract SignedTransaction signReduced(BlockchainContext ctx, ReducedTransaction reducedTx, int baseCost, Collection<Integer> addressIndexes) throws Failure;
 	public abstract Address derivePublicAddress(NetworkType networkType, int index);
 	public abstract WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure; // it would be cool to call this "recrypt" :)
@@ -284,7 +288,7 @@ public abstract class WalletKey {
 		}
 
 		@Override
-		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
+		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes, Integer changeAddress) throws Failure {
 			return ErgoInterface.newWithMnemonicProver(ctx, nonstandard, getMnemonic(), addressIndexes).sign(unsignedTx);
 		}
 
@@ -333,7 +337,6 @@ public abstract class WalletKey {
 
 		@Override
 		public void initCaches(ByteBuffer data) {
-			System.out.println("INIT CACHES");
 			productId = data.getInt();
 			storedKeyBytes = new byte[KEY_LENGTH];
 			data.get(storedKeyBytes);
@@ -343,7 +346,6 @@ public abstract class WalletKey {
 				LedgerSelector ledgerSelector = new LedgerSelector() {
 					@Override
 					public void deviceFound(HidDevice hidDevice) {
-						System.out.println("DEVICE FOUND");
 						Platform.runLater(() -> {
 							connectionPrompt.setResult(new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice(hidDevice))));
 							connectionPrompt.close();
@@ -351,11 +353,12 @@ public abstract class WalletKey {
 						stop();
 					}
 				};
-				System.out.println("Start listener");
 				ledgerSelector.startListener();
 			});
-			connectionPrompt.close();
+//			connectionPrompt.close();
 			ergoLedgerAppkit = connectionPrompt.showForResult().orElse(null);
+			if (ergoLedgerAppkit == null)
+				throw new IllegalStateException("Not accepted");
 			ergoLedgerAppkit.device.open();
 			LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
 			Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
@@ -392,7 +395,7 @@ public abstract class WalletKey {
 		}
 
 		@Override
-		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
+		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes, Integer changeAddress) throws Failure {
 			try {
 				LedgerPrompt.Attest attestPrompt = new LedgerPrompt.Attest(ergoLedgerAppkit, unsignedTx.getInputs());
 				Utils.initDialog(attestPrompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
@@ -404,13 +407,18 @@ public abstract class WalletKey {
 						ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
 							case MAINNET -> ErgoNetworkType.MAINNET;
 							case TESTNET -> ErgoNetworkType.TESTNET;
-						}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(), null, null));
+						}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(),
+								changeAddress == null ? null : derivePublicAddress(Main.programData().nodeNetworkType.get(), changeAddress),
+								changeAddress == null ? null : parentExtPubKey.child(changeAddress).path()));
 				Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
-				byte[] bytes = prompt.showForResult().orElse(null);
+				byte[] signature = prompt.showForResult().orElse(null);
 				// not approved
-				if (bytes == null) return null;
+				if (signature == null) return null;
 
-				ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(List.of(new ProverResult(bytes, ContextExtension.empty()))).toIndexedSeq());
+				ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx()
+						.toSigned(JavaConverters.asScalaBuffer(unsignedTx.getInputs().stream()
+								.map(inputBox -> new ProverResult(signature, ((InputBoxImpl) inputBox).getExtension()))
+								.toList()).toIndexedSeq());
 				return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);
 			} catch (InvalidChannelException e) {
 				if (e.received == 0) {
