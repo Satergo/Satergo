@@ -213,7 +213,7 @@ public final class Wallet {
 	/**
 	 * @throws UnsupportedOperationException Cannot deserialize this formatVersion, it is too new
 	 */
-	private static Wallet deserialize(long formatVersion, DataInputStream in, Path path, char[] password) throws IncorrectPasswordException, UnsupportedOperationException, IOException {
+	private static Wallet deserialize(long formatVersion, DataInputStream in, Path path, char[] password) throws IncorrectPasswordException, WalletKey.WalletOpenException, UnsupportedOperationException, IOException {
 		if (formatVersion == 2) {
 			int memory = in.readInt();
 			int iterations = in.readUnsignedByte();
@@ -318,7 +318,7 @@ public final class Wallet {
 		} else throw new UnsupportedOperationException("Unsupported format version " + formatVersion + " (this release only supports " + NEWEST_SUPPORTED_FORMAT + " and older), the file is version " + formatVersion);
 	}
 
-	public static Wallet decrypt(byte[] bytes, Path path, char[] password) throws IncorrectPasswordException, IOException {
+	public static Wallet decrypt(byte[] bytes, Path path, char[] password) throws IncorrectPasswordException, WalletKey.WalletOpenException, IOException {
 		try {
 			try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
 				if (in.readInt() == MAGIC_NUMBER) {
@@ -334,7 +334,7 @@ public final class Wallet {
 		}
 	}
 
-	public static Wallet load(Path path, String password) throws IncorrectPasswordException {
+	public static Wallet load(Path path, String password) throws IncorrectPasswordException, WalletKey.WalletOpenException {
 		try {
 			Wallet wallet = decrypt(Files.readAllBytes(path), path, password.toCharArray());
 			wallet.saveToFile();

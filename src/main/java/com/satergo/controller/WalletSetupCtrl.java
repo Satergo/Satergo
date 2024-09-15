@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 
@@ -58,6 +59,8 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 				Main.get().displayWalletPage();
 			} catch (IncorrectPasswordException ex) {
 				Utils.alertIncorrectPassword();
+			} catch (WalletKey.WalletOpenException ex) {
+				Utils.alert(Alert.AlertType.ERROR, ex.getMessage());
 			}
 		}
 	}

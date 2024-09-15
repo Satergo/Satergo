@@ -186,7 +186,6 @@ public class HomeCtrl implements WalletTab, Initializable {
 					.onSuccess(unsignedTx -> {
 						try {
 							SignedTransaction signedTx = Main.get().getWallet().key().sign(ctx, unsignedTx, candidates, changeIndex);
-							if (signedTx == null) return; // todo make it never return null
 							new SimpleTask<>(() -> Main.get().getWallet().transact(signedTx))
 									.onSuccess(transactionId -> {
 										send.setDisable(false);

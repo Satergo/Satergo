@@ -151,6 +151,9 @@ public class Main extends Application {
 				} catch (IncorrectPasswordException e) {
 					Utils.alertIncorrectPassword();
 					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
+				} catch (WalletKey.WalletOpenException e) {
+					Utils.alert(Alert.AlertType.ERROR, e.getMessage());
+					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 				}
 			}
 		}
