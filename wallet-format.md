@@ -27,7 +27,7 @@ Encrypted wallet private key data: `(short) wallet key type id` followed by the 
 | Wallet key type ID | Value  | Details                                |
 |--------------------|--------|----------------------------------------|
 | 0                  | LOCAL  | The mnemonic is stored inside the file |
-| 50                 | LEDGER | Ledger                                 |
+| 54                 | LEDGER | Ledger                                 |
 
 `LOCAL` structure:
 
@@ -43,7 +43,7 @@ Encrypted wallet private key data: `(short) wallet key type id` followed by the 
 
 | Data type | Value          |
 |-----------|----------------|
-| int       | the product id |
+| short     | the product id |
 | byte\[33] | the public key |
 
 Encrypted wallet details data:

@@ -28,7 +28,6 @@ import org.ergoplatform.appkit.impl.SignedTransactionImpl;
 import org.ergoplatform.appkit.impl.UnsignedTransactionImpl;
 import org.hid4java.HidDevice;
 import scala.collection.JavaConverters;
-import sigmastate.interpreter.ContextExtension;
 import sigmastate.interpreter.ProverResult;
 
 import javax.crypto.AEADBadTagException;
@@ -57,6 +56,12 @@ public abstract class WalletKey {
 			super(message);
 		}
 	}
+	/** Thrown for errors occurred while opening the wallet, meaning the wallet could be read without issue but something prevented it from being opened. */
+	public static class WalletOpenException extends Exception {
+		public WalletOpenException(String message) {
+			super(message);
+		}
+	}
 
 	private static final HashMap<Integer, Type<?>> types = new HashMap<>();
 
@@ -67,7 +72,11 @@ public abstract class WalletKey {
 		}
 	}
 
-	public static WalletKey deserialize(byte[] encrypted, ByteBuffer decrypted) {
+	/**
+	 * Deserializes and opens the wallet. For some wallet types this could involve external processes.
+	 * @throws WalletOpenException If an external process was not successful and caused it to be unable to open the wallet
+	 */
+	public static WalletKey deserialize(byte[] encrypted, ByteBuffer decrypted) throws WalletOpenException {
 		Type<?> type = types.get(decrypted.getShort() & 0xFFFF);
 		if (type == null) throw new IllegalArgumentException("Unknown wallet type with ID " + decrypted.getShort(0));
 		WalletKey key = type.construct();
@@ -79,7 +88,7 @@ public abstract class WalletKey {
 	public static class Type<T extends WalletKey> {
 		public static final Type<Local> LOCAL = registerType("LOCAL", 0, Set.of(Property.SUPPORTS_REDUCED_TX), Local::new);
 //		public static final Type<ViewOnly> VIEW_ONLY = registerType("VIEW_ONLY", 1, ViewOnly::new);
-		public static final Type<Ledger> LEDGER = registerType("LEDGER", 50, Set.of(), Ledger::new);
+		public static final Type<Ledger> LEDGER = registerType("LEDGER", 54, Set.of(), Ledger::new);
 
 		private final String name;
 		private final Supplier<T> constructor;
@@ -133,11 +142,10 @@ public abstract class WalletKey {
 	 * 	It must only be used for preparing things like caches (for example, extended public key).
 	 * 	The ByteBuffer is already positioned at the data beginning.
 	 */
-	public void initCaches(ByteBuffer data) {}
+	public void initCaches(ByteBuffer data) throws WalletOpenException {}
 
 	/**
 	 * @param changeAddress The index of the change address. Does not affect the transaction, it is only used as a hint for certain wallet key types that might make use of it.
-	 * @apiNote May return null, for example if a request was sent to an external device but the user denied it.
 	 */
 	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes, Integer changeAddress) throws Failure;
 	public abstract SignedTransaction signReduced(BlockchainContext ctx, ReducedTransaction reducedTx, int baseCost, Collection<Integer> addressIndexes) throws Failure;
@@ -321,25 +329,25 @@ public abstract class WalletKey {
 	 * Using the pub key the wallet on the Ledger and the one that was used to create this key can be compared
 	 */
 	public static class Ledger extends WalletKey {
-		private static final int ID = 50;
+		private static final int ID = 54;
 
-		private static final int KEY_LENGTH = 33;
+		private static final int PUBLIC_KEY_LENGTH = 33;
 
 		private ErgoLedgerAppkit ergoLedgerAppkit;
 		private ExtendedPublicKey parentExtPubKey;
 
 		private int productId;
-		private byte[] storedKeyBytes;
+		private byte[] storedPublicKeyBytes;
 
 		private Ledger() {
 			super(Type.LEDGER);
 		}
 
 		@Override
-		public void initCaches(ByteBuffer data) {
-			productId = data.getInt();
-			storedKeyBytes = new byte[KEY_LENGTH];
-			data.get(storedKeyBytes);
+		public void initCaches(ByteBuffer data) throws WalletOpenException {
+			productId = Short.toUnsignedInt(data.getShort());
+			storedPublicKeyBytes = new byte[PUBLIC_KEY_LENGTH];
+			data.get(storedPublicKeyBytes);
 			LedgerPrompt.Connect connectionPrompt = new LedgerPrompt.Connect(productId);
 			Utils.initDialog(connectionPrompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 			connectionPrompt.setOnShown(event -> {
@@ -355,36 +363,42 @@ public abstract class WalletKey {
 				};
 				ledgerSelector.startListener();
 			});
-//			connectionPrompt.close();
 			ergoLedgerAppkit = connectionPrompt.showForResult().orElse(null);
 			if (ergoLedgerAppkit == null)
-				throw new IllegalStateException("Not accepted");
-			ergoLedgerAppkit.device.open();
+				throw new IllegalStateException();
+			try {
+				ergoLedgerAppkit.device.open();
+			} catch (Exception e) {
+				throw new WalletOpenException("Failed to open connection to the Ledger device. " + e.getMessage());
+			}
+			if (!ergoLedgerAppkit.isAppOpen()) {
+				throw new WalletOpenException("Please open the Ergo app on your Ledger first");
+			}
 			LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
 			Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 			ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
-			// not approved
-			if (parentExtPubKey == null) throw new RuntimeException();
-			if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
-				throw new IllegalStateException("This wallet does not belong to this device");
+			if (parentExtPubKey == null)
+				throw new WalletOpenException("You denied the request");
+			if (!Arrays.equals(storedPublicKeyBytes, parentExtPubKey.keyBytes()))
+				throw new WalletOpenException("This wallet does not belong to this device");
 			this.parentExtPubKey = parentExtPubKey;
 		}
 
 		private void initStoredKeyBytes(byte[] storedKeyBytes) {
-			this.storedKeyBytes = storedKeyBytes;
+			this.storedPublicKeyBytes = storedKeyBytes;
 		}
 
 		public static Ledger create(ExtendedPublicKey parentExtPubKey, ErgoLedgerAppkit ergoLedgerAppkit, char[] password) {
-			if (parentExtPubKey.keyBytes().length != KEY_LENGTH) throw new IllegalArgumentException("public key must be " + KEY_LENGTH + " bytes");
+			if (parentExtPubKey.keyBytes().length != PUBLIC_KEY_LENGTH) throw new IllegalArgumentException("public key must be " + PUBLIC_KEY_LENGTH + " bytes");
 			if (parentExtPubKey.chainCode().length != 32) throw new IllegalArgumentException("chain code must be 32 bytes");
 			Ledger key = new Ledger();
 			key.parentExtPubKey = parentExtPubKey;
 			key.ergoLedgerAppkit = ergoLedgerAppkit;
 			try {
 				byte[] iv = AESEncryption.generateNonce12();
-				ByteBuffer buffer = ByteBuffer.allocate(2 + 4 + KEY_LENGTH)
+				ByteBuffer buffer = ByteBuffer.allocate(2 + 2 + PUBLIC_KEY_LENGTH)
 						.putShort((short) ID)
-						.putInt(ergoLedgerAppkit.device.getProductId())
+						.putShort((short) ergoLedgerAppkit.device.getProductId())
 						.put(parentExtPubKey.keyBytes());
 				key.initEncryptedData(AESEncryption.encryptData(iv, AESEncryption.generateSecretKey(password, iv), buffer.array()));
 				key.initStoredKeyBytes(parentExtPubKey.keyBytes());
@@ -401,7 +415,8 @@ public abstract class WalletKey {
 				Utils.initDialog(attestPrompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 				List<AttestedBox> inputBoxes = attestPrompt.showForResult().orElse(null);
 				// not approved
-				if (inputBoxes == null) return null;
+				if (inputBoxes == null)
+					throw new Failure();
 
 				LedgerPrompt.Sign prompt = new LedgerPrompt.Sign(() ->
 						ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
@@ -413,7 +428,8 @@ public abstract class WalletKey {
 				Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 				byte[] signature = prompt.showForResult().orElse(null);
 				// not approved
-				if (signature == null) return null;
+				if (signature == null)
+					throw new Failure();
 
 				ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx()
 						.toSigned(JavaConverters.asScalaBuffer(unsignedTx.getInputs().stream()

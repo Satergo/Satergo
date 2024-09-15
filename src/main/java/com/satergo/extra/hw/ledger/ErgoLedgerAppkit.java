@@ -12,7 +12,6 @@ import org.ergoplatform.sdk.ErgoToken;
 import org.ergoplatform.sdk.JavaHelpers;
 import org.ergoplatform.sdk.wallet.secrets.DerivationPath;
 import org.ergoplatform.sdk.wallet.secrets.ExtendedPublicKey;
-import scala.collection.JavaConverters;
 import scala.jdk.CollectionConverters;
 import sigmastate.Values.ErgoTree;
 import sigmastate.interpreter.ContextExtension;
@@ -43,6 +42,14 @@ public class ErgoLedgerAppkit {
 		return sbw.toBytes();
 	}
 
+	public boolean isAppOpen() {
+		try {
+			return protocol.getAppName().equals("Ergo");
+		} catch (ErgoLedgerException ex) {
+			return false;
+		}
+	}
+
 	public ExtendedPublicKey requestParentExtendedPublicKey() throws ErgoLedgerException {
 		ErgoResponse.ExtendedPublicKey extPubKeyData = protocol.getExtendedPublicKey(new int[] { h(44), h(429), h(0) }, null);
 		DerivationPath path = new DerivationPath(JavaHelpers.toIndexedSeq(List.of(h(44), h(429), h(0))), false);
@@ -66,7 +73,7 @@ public class ErgoLedgerAppkit {
 			// max 6 tokens per exchange, so do it in chunks
 			int cs = 6;
 			for (int i = 0; i < Math.ceil(tokens.size() / (double) cs); i++) {
-				if (frameCount != -1) throw new IllegalStateException("Box frame is identified as finished but it is not");
+				if (frameCount != -1) throw new IllegalStateException("Received return value before everything was written");
 				frameCount = protocol.attestAddTokens(sessionId, tokens.stream()
 						.skip((long) i * cs).limit(cs)
 						.map(token -> new ErgoProtocol.TokenValue(token.getId().getBytes(), token.getValue()))
@@ -104,7 +111,6 @@ public class ErgoLedgerAppkit {
 			}
 		}
 
-		System.out.printf("inputBoxes.size() = %d, dataBoxes.size() = %d, distinctTokenIds.size() = %d, outputBoxes.size() = %d%n", inputBoxes.size(), dataBoxes.size(), distinctTokenIds.size(), outputBoxes.size());
 		protocol.startTransaction(sessionId, inputBoxes.size(), dataBoxes.size(), distinctTokenIds.size(), outputBoxes.size());
 
 		if (!distinctTokenIds.isEmpty()) {
@@ -140,8 +146,12 @@ public class ErgoLedgerAppkit {
 	}
 
 	private void addDataInputs(int sessionId, List<InputBox> dataBoxes) {
-		// TODO chunk
-		protocol.addDataInputs(sessionId, dataBoxes.stream().map(box -> box.getId().getBytes()).toList());
+		int cs = 7;
+		for (int i = 0; i < Math.ceil(dataBoxes.size() / (double) cs); i++) {
+			protocol.addDataInputs(sessionId, dataBoxes.stream()
+					.skip((long) i * cs).limit(cs)
+					.map(box -> box.getId().getBytes()).toList());
+		}
 	}
 
 	private void addOutputs(int sessionId, List<OutBox> boxes, ErgoNetworkType networkType, List<byte[]> distinctTokenIds, Address changeAddress, int[] changePath) {
