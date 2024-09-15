@@ -12,6 +12,8 @@ import org.ergoplatform.sdk.ErgoToken;
 import org.ergoplatform.sdk.JavaHelpers;
 import org.ergoplatform.sdk.wallet.secrets.DerivationPath;
 import org.ergoplatform.sdk.wallet.secrets.ExtendedPublicKey;
+import scala.collection.JavaConverters;
+import scala.jdk.CollectionConverters;
 import sigmastate.Values.ErgoTree;
 import sigmastate.interpreter.ContextExtension;
 import sigmastate.serialization.SigmaSerializer;
@@ -36,7 +38,7 @@ public class ErgoLedgerAppkit {
 	public static byte[] serializeContextExtension(ContextExtension contextExtension) {
 		if (contextExtension.values().isEmpty()) return new byte[0];
 		SigmaByteWriter sbw = SigmaSerializer.startWriter();
-		// why are you like this scala, why don't you let me use ContentExtension.serializer.serialize()???
+		// why are you like this scala, why don't you let me use ContentExtension.serializer.serialize()
 		ContextExtension.serializer$.MODULE$.serialize(contextExtension, sbw);
 		return sbw.toBytes();
 	}
@@ -48,63 +50,38 @@ public class ErgoLedgerAppkit {
 				.child(0);
 	}
 
-	public AttestedBoxFrame[] getAttestedBoxFrames(InputBox box) throws ErgoLedgerException {
-		byte[] txId = HexFormat.of().parseHex(box.getTransactionId());
+	public AttestedBoxFrame[] attestBox(InputBox box) throws ErgoLedgerException {
+		byte[] boxTxId = HexFormat.of().parseHex(box.getTransactionId());
 		byte[] ergoTree = box.getErgoTree().bytes();
 		byte[] registers = serializeRegisters(box.getRegisters());
-		List<ErgoToken> boxTokens = box.getTokens();
-		int sessionId = protocol.attestBoxStart(txId, box.getTransactionIndex(), box.getValue(), ergoTree.length, box.getCreationHeight(), boxTokens.size(), registers.length, null);
+		List<ErgoToken> tokens = box.getTokens();
+		int sessionId = protocol.attestBoxStart(boxTxId, box.getTransactionIndex(), box.getValue(), ergoTree.length, box.getCreationHeight(), tokens.size(), registers.length, null);
 		int frameCount = -1;
-		double chunkCount = Math.ceil(ergoTree.length / 255.0);
-		for (int i = 0; i < chunkCount; i++) {
-			if (frameCount != -1) throw new IllegalStateException("Box frame is identified as finished but it is not");
-			int start = i * 255;
-			byte[] chunk = Arrays.copyOfRange(ergoTree, start, Math.min(start + 255, ergoTree.length));
-			Optional<Integer> result = protocol.attestAddErgoTreeChunk(sessionId, chunk);
-			if (result.isPresent()) {
-				frameCount = result.get();
-			}
-		}
-		if (!boxTokens.isEmpty()) {
-			if (boxTokens.size() > 20) {
+		// Write ErgoTree
+		frameCount = writeInChunksWithResult(protocol::attestAddErgoTreeChunk, sessionId, ergoTree).orElse(frameCount);
+		if (!tokens.isEmpty()) {
+			if (tokens.size() > 20) {
 				throw new IllegalArgumentException("Max 20 tokens");
 			}
-			ArrayList<Map.Entry<byte[], Long>> tokens = new ArrayList<>();
-			for (ErgoToken boxToken : boxTokens) {
-				tokens.add(Map.entry(boxToken.getId().getBytes(), boxToken.getValue()));
-			}
 			// max 6 tokens per exchange, so do it in chunks
-			int perChunk = 6;
-			for (int i = 0; i < Math.ceil(tokens.size() / (double) perChunk); i++) {
+			int cs = 6;
+			for (int i = 0; i < Math.ceil(tokens.size() / (double) cs); i++) {
 				if (frameCount != -1) throw new IllegalStateException("Box frame is identified as finished but it is not");
-				LinkedHashMap<byte[], Long> chunk = new LinkedHashMap<>();
-				for (int j = i; j < Math.min(i + perChunk, tokens.size()); j++) {
-					chunk.put(tokens.get(j).getKey(), tokens.get(j).getValue());
-				}
-				Optional<Integer> result = protocol.attestAddTokens(sessionId, chunk);
-				if (result.isPresent()) {
-					frameCount = result.get();
-				}
+				frameCount = protocol.attestAddTokens(sessionId, tokens.stream()
+						.skip((long) i * cs).limit(cs)
+						.map(token -> new ErgoProtocol.TokenValue(token.getId().getBytes(), token.getValue()))
+						.toList()).orElse(frameCount);
 			}
 		}
-		if (!box.getRegisters().isEmpty()) {
-			for (int i = 0; i < Math.ceil(registers.length / 255.0); i++) {
-				if (frameCount != -1) throw new IllegalStateException("Box frame is identified as finished but it is not");
-				int start = i * 255;
-				byte[] chunk = Arrays.copyOfRange(registers, start, Math.min(start + 255, registers.length));
-				Optional<Integer> result = protocol.attestAddRegistersChunk(sessionId, chunk);
-				if (result.isPresent()) {
-					frameCount = result.get();
-				}
-			}
+		if (registers.length > 0) {
+			frameCount = writeInChunksWithResult(protocol::attestAddRegistersChunk, sessionId, registers).orElse(frameCount);
 		}
 		if (frameCount == -1) {
 			throw new IllegalStateException();
 		}
 		AttestedBoxFrame[] frames = new AttestedBoxFrame[frameCount];
 		for (int i = 0; i < frameCount; i++) {
-			AttestedBoxFrame frame = protocol.getAttestedBoxFrame(sessionId, i);
-			frames[i] = frame;
+			frames[i] = protocol.getAttestedBoxFrame(sessionId, i);
 		}
 		return frames;
 	}
@@ -114,18 +91,20 @@ public class ErgoLedgerAppkit {
 	 * @param changePath The derivation path of the change address. Can be null.
 	 * @return The signature of this transaction
 	 */
-	public byte[] signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, List<InputBox> dataBoxes, List<OutBox> outputBoxes, Address changeAddress, int[] changePath) throws ErgoLedgerException {
+	public byte[] signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, List<InputBox> dataBoxes, List<OutBox> outputBoxes, Address changeAddress, DerivationPath changePath) throws ErgoLedgerException {
 		int sessionId = protocol.startP2PKSigning(networkType, new int[] { h(44), h(429), h(0), 0, 0 }, null);
+		int[] changePathInts = changePath == null ? null : CollectionConverters.seqAsJavaList(changePath.decodedPath()).stream().mapToInt(p -> (int) p).toArray();
 
 		ArrayList<byte[]> distinctTokenIds = new ArrayList<>();
 		for (OutBox outputBox : outputBoxes) {
 			for (ErgoToken token : outputBox.getTokens()) {
 				byte[] id = token.getId().getBytes();
-				if (distinctTokenIds.stream().noneMatch(a -> Arrays.equals(a, id)))
+				if (indexOf(distinctTokenIds, id) == -1)
 					distinctTokenIds.add(id);
 			}
 		}
 
+		System.out.printf("inputBoxes.size() = %d, dataBoxes.size() = %d, distinctTokenIds.size() = %d, outputBoxes.size() = %d%n", inputBoxes.size(), dataBoxes.size(), distinctTokenIds.size(), outputBoxes.size());
 		protocol.startTransaction(sessionId, inputBoxes.size(), dataBoxes.size(), distinctTokenIds.size(), outputBoxes.size());
 
 		if (!distinctTokenIds.isEmpty()) {
@@ -142,7 +121,7 @@ public class ErgoLedgerAppkit {
 		addInputs(sessionId, inputBoxes);
 		if (!dataBoxes.isEmpty())
 			addDataInputs(sessionId, dataBoxes);
-		addOutputs(sessionId, outputBoxes, networkType, distinctTokenIds, changeAddress, changePath);
+		addOutputs(sessionId, outputBoxes, networkType, distinctTokenIds, changeAddress, changePathInts);
 
 		return protocol.confirmAndSign(sessionId);
 	}
@@ -151,10 +130,7 @@ public class ErgoLedgerAppkit {
 		for (AttestedBox attestedBox : boxesToSpend) {
 
 			for (AttestedBoxFrame frame : attestedBox.frames()) {
-				LinkedHashMap<byte[], Long> tokens = new LinkedHashMap<>();
-				frame.tokens().forEach((tokenId, value) -> tokens.put(tokenId.bytes(), value));
-				protocol.addInputBoxFrame(sessionId, frame.boxId(), frame.framesCount(), frame.frameIndex(), frame.amount(), tokens, frame.attestation(),
-						attestedBox.extension().length);
+				protocol.addInputBoxFrame(sessionId, frame, attestedBox.extension().length);
 			}
 
 			if (attestedBox.extension().length > 0) {
@@ -172,32 +148,27 @@ public class ErgoLedgerAppkit {
 		for (OutBox box : boxes) {
 			ErgoTree ergoTree = box.getErgoTree();
 			byte[] treeBytes = ergoTree.bytes();
+			ArrayList<ErgoProtocol.TokenIndexValue> tokens = new ArrayList<>();
+			for (ErgoToken token : box.getTokens()) {
+				int tokenIndex = indexOf(distinctTokenIds, token.getId().getBytes());
+				if (tokenIndex == -1) throw new IllegalStateException();
+				tokens.add(new ErgoProtocol.TokenIndexValue(tokenIndex, token.getValue()));
+			}
 			byte[] registers = serializeRegisters(box.getRegisters());
-			protocol.addOutputBoxStart(sessionId, box.getValue(), treeBytes.length, box.getCreationHeight(), distinctTokenIds.size(), registers.length);
+			protocol.addOutputBoxStart(sessionId, box.getValue(), treeBytes.length, box.getCreationHeight(), tokens.size(), registers.length);
 			if (ergoTree.equals(MINER_FEE_TREE)) {
-				protocol.addOutputBoxMinersFeeTree(sessionId);
+				protocol.addOutputBoxMinerFeeTree(sessionId);
 			} else if (Address.fromErgoTree(ergoTree, networkType == ErgoNetworkType.MAINNET ? NetworkType.MAINNET : NetworkType.TESTNET).equals(changeAddress)) {
 				protocol.addOutputBoxChangeTree(sessionId, changePath);
 			} else {
 				writeInChunks(protocol::addOutputBoxErgoTreeChunk, sessionId, treeBytes);
 			}
-			LinkedHashMap<Integer, Long> tokens = new LinkedHashMap<>();
-			for (ErgoToken token : box.getTokens()) {
-				int tokenIndex = -1;
-				for (int i = 0; i < distinctTokenIds.size(); i++) {
-					if (Arrays.equals(distinctTokenIds.get(i), token.getId().getBytes())) {
-						tokenIndex = i;
-						break;
-					}
-				}
-				if (tokenIndex == -1) throw new IllegalStateException();
-				tokens.put(tokenIndex, token.getValue());
-			}
 			if (!tokens.isEmpty())
 				protocol.addOutputBoxTokens(sessionId, tokens);
 			// write registers
-			if (registers.length > 0)
+			if (registers.length > 0) {
 				writeInChunks(protocol::addOutputBoxRegistersChunk, sessionId, registers);
+			}
 		}
 	}
 
@@ -233,9 +204,16 @@ public class ErgoLedgerAppkit {
 		return sbw.toBytes();
 	}
 
-	private static final int HARDENED = 0x80000000;
+	private static int indexOf(List<byte[]> byteArrays, byte[] bytes) {
+		for (int i = 0; i < byteArrays.size(); i++) {
+			if (Arrays.equals(byteArrays.get(i), bytes))
+				return i;
+		}
+		return -1;
+	}
 
+	/** turns a BIP44 path index into a hardened index */
 	public static int h(int x) {
-		return x + HARDENED;
+		return x + 0x80000000;
 	}
 }

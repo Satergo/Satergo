@@ -24,13 +24,7 @@ public abstract class LedgerSelector {
 	}
 
 	public static String getModelName(int productId) {
-		return switch (productId) {
-			case LedgerDevice.BLUE_PRODUCT_ID -> "Ledger Blue";
-			case LedgerDevice.NANO_S_PRODUCT_ID -> "Ledger Nano S";
-			case LedgerDevice.NANO_X_PRODUCT_ID -> "Ledger Nano X";
-			case LedgerDevice.NANO_S_PLUS_PRODUCT_ID -> "Ledger Nano S Plus";
-			default -> "Ledger";
-		};
+		return LedgerDevice.PRODUCT_IDS.get(productId);
 	}
 
 	public final List<HidDevice> getAttachedHidDevices() {
