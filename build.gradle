@@ -156,6 +156,7 @@ satergoRuntime {
 
 	createArchive = !buildInstaller
 	archiveOutputPath = file("runtimes/${project.name}-v${project.version}-${platformName}.zip").toPath()
+	reproducibleArchive = true
 
 	// Create a convenient run file in the top level
 	doBeforeArchival {

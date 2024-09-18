@@ -7,12 +7,16 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
+import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import proguard.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 public class ShrinkJarTask extends DefaultTask {
@@ -35,8 +39,17 @@ public class ShrinkJarTask extends DefaultTask {
 		RuntimeBuildExt ext = getProject().getExtensions().getByType(RuntimeBuildExt.class);
 		File shadowJarFile = getShadowArchiveFile(getProject());
 
+		boolean preserveTimestamps = ((AbstractArchiveTask) getProject().getTasks().getByName("shadowJar")).isPreserveFileTimestamps();
+		boolean reproducibleFileOrder = ((AbstractArchiveTask) getProject().getTasks().getByName("shadowJar")).isReproducibleFileOrder();
+		boolean recompress = !preserveTimestamps || reproducibleFileOrder;
+
 		// Run proguard
-		File proguardOutputFile = new File(getProject().getLayout().getBuildDirectory().get().getAsFile(), "libs/" + ext.proguardOutputName);
+		File finalOutputFile = new File(getProject().getLayout().getBuildDirectory().get().getAsFile(), "libs/" + ext.proguardOutputName);
+		File proguardOutputFile = !recompress ? finalOutputFile : new File(getProject().getLayout().getBuildDirectory().get().getAsFile(), "tmp/shrinkJarTask/" + ext.proguardOutputName);
+		if (!proguardOutputFile.getParentFile().exists()) {
+			if (!proguardOutputFile.getParentFile().mkdirs())
+				throw new IOException();
+		}
 		Configuration config = new Configuration();
 		try (ConfigurationParser configurationParser = new ConfigurationParser(ext.proguardConfig.toFile(), System.getProperties())) {
 			configurationParser.parse(config);
@@ -65,6 +78,14 @@ public class ShrinkJarTask extends DefaultTask {
 		} catch (Exception e) {
 			throw new RuntimeException("ProGuard exception", e);
 		}
-		getExtensions().add("output", proguardOutputFile);
+
+		if (recompress) {
+			// Create a new archive from the temporary archive's contents
+			try (var fs = FileSystems.newFileSystem(proguardOutputFile.toPath(), Map.of("enablePosixFileAttributes", true))) {
+				FileUtils.zipContent(fs.getPath("/"), finalOutputFile.toPath(), preserveTimestamps, reproducibleFileOrder);
+			}
+			Files.delete(proguardOutputFile.toPath());
+		}
+		getExtensions().add("output", finalOutputFile);
 	}
 }

@@ -74,6 +74,10 @@ public class RuntimeBuildExt {
 	 * Whether to create a zip archive of the final runtime
 	 */
 	public boolean createArchive = false;
+	/**
+	 * This is equal to configuring a Gradle archive task with preserveFileTimestamps=false and reproducibleFileOrder=true
+	 */
+	public boolean reproducibleArchive = true;
 	public Path archiveOutputPath;
 
 }

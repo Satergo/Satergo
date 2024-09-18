@@ -15,8 +15,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.*;
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -35,21 +39,46 @@ class FileUtils {
 		}
 	}
 
-	static void zipContent(Path sourceDirectory, Path output) throws IOException {
-		try (ZipArchiveOutputStream zs = new ZipArchiveOutputStream(output);
-			 Stream<Path> pathStream = Files.walk(sourceDirectory)) {
-			for (Iterator<Path> iterator = pathStream
-					.filter(path -> !Files.isDirectory(path)).iterator(); iterator.hasNext();) {
-				Path path = iterator.next();
-				ZipArchiveEntry zipEntry = new ZipArchiveEntry(path, sourceDirectory.relativize(path).toString());
-				zipEntry.setUnixMode(PermissionUtils.modeFromPermissions(Files.getPosixFilePermissions(path), PermissionUtils.FileType.of(path)));
-				try {
+	/**
+	 * @param sourceDirectory The source directory to compress. The contents of the directory will be compressed.
+	 * @param output The path to write the compressed archive to.
+	 * @param preserveTimestamps Whether file timestamps should be kept.
+	 * @param reproducibleFileOrder Whether two invocations of this method should produce the same file order in the zip.
+	 */
+	static void zipContent(Path sourceDirectory, Path output, boolean preserveTimestamps, boolean reproducibleFileOrder) throws IOException {
+		try (ZipArchiveOutputStream zs = new ZipArchiveOutputStream(output)) {
+			FileVisitor<Path> fileVisitor = new FileVisitor<>() {
+				@Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+					ZipArchiveEntry zipEntry = new ZipArchiveEntry(path, sourceDirectory.relativize(path).toString());
+					if (!preserveTimestamps) {
+						zipEntry.setCreationTime(FileTime.from(Instant.EPOCH));
+						zipEntry.setLastModifiedTime(FileTime.from(Instant.EPOCH));
+						zipEntry.setLastAccessTime(FileTime.from(Instant.EPOCH));
+					}
+					zipEntry.setUnixMode(PermissionUtils.modeFromPermissions(Files.getPosixFilePermissions(path), PermissionUtils.FileType.of(path)));
 					zs.putArchiveEntry(zipEntry);
 					Files.copy(path, zs);
 					zs.closeArchiveEntry();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
+					return FileVisitResult.CONTINUE;
 				}
+
+				@Override public FileVisitResult visitFileFailed(Path file, IOException e) throws IOException {
+					throw e;
+				}
+
+				@Override public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+					return FileVisitResult.CONTINUE;
+				}
+			};
+			if (reproducibleFileOrder) {
+				ReproducibleDirWalker.visit(sourceDirectory, fileVisitor);
+			} else {
+				Files.walkFileTree(sourceDirectory, fileVisitor);
 			}
 		}
 	}

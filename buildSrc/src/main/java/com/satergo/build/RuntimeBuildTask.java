@@ -127,7 +127,7 @@ public class RuntimeBuildTask extends DefaultTask {
 				extension.doBeforeArchival.run();
 			}
 			Files.createDirectories(extension.archiveOutputPath.getParent());
-			FileUtils.zipContent(runtimeOutput, extension.archiveOutputPath);
+			FileUtils.zipContent(runtimeOutput, extension.archiveOutputPath, !extension.reproducibleArchive, extension.reproducibleArchive);
 		}
 	}
 
