@@ -354,6 +354,12 @@
 	-fx-background-insets: 0;
 }
 
+/* text flow */
+
+TextFlow > Text {
+	-fx-fill: -fx-text-base-color;
+}
+
 /* Disable features of FXSkins. Enabled features: text-field, password-field. */
 .button { -fx-skin: "javafx.scene.control.skin.ButtonSkin"; }
 .toggle-button { -fx-skin: "javafx.scene.control.skin.ToggleButtonSkin"; }

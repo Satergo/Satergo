@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Utils {
 
@@ -448,5 +449,13 @@ public class Utils {
 	public static void initDialog(AbstractSatDialog<?, ?> dialog, Window owner, MoveStyle moveStyle) {
 		initDialog(dialog, owner);
 		dialog.setMoveStyle(moveStyle);
+	}
+
+	/**
+	 * Consumes the stream parameter and combines every instance of {@link ErgoToken} that refers to the same token into one instance by summing them.
+	 */
+	public static Collection<ErgoToken> foldErgoTokens(Stream<ErgoToken> stream) {
+		return stream.collect(Collectors.toMap(ErgoToken::getId, Function.identity(), (a, b) -> new ErgoToken(a.getId(), a.getValue() + b.getValue())))
+				.values();
 	}
 }

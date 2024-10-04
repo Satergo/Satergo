@@ -80,7 +80,7 @@ public class WalletCtrl implements Initializable {
 	@FXML private Label thingLeft;
 	@FXML private ToggleGroup group;
 
-	@FXML private ToggleButton home, account, transactions, node, settings;
+	@FXML private ToggleButton home, account, transactions, node, tools, settings;
 
 	final SimpleBooleanProperty priceError = new SimpleBooleanProperty(false);
 
@@ -173,6 +173,7 @@ public class WalletCtrl implements Initializable {
 			((Pane) node.getParent()).getChildren().remove(node);
 			group.getToggles().remove(node);
 		}
+		tabs.put("tools", Load.fxmlNodeAndController("/tools.fxml"));
 		// I don't know how to bind to controller properties from FXML, it does not work
 		connectionWarning.visibleProperty().bind(offlineMode);
 		home.disableProperty().bind(offlineMode);

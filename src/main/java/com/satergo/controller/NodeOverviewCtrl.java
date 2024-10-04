@@ -65,7 +65,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 				}
 			} catch (IOException | InterruptedException e) {
 				if (!e.getMessage().contains("Stream closed"))
-					e.printStackTrace();
+					Utils.alertUnexpectedException(e);
 				else System.out.println("[info] Node log stream closed");
 			}
 		}, "Node log transfer").start();

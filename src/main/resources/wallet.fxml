@@ -33,6 +33,7 @@
 						<ToggleButton fx:id="transactions" text="%transactions" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="about" text="%about" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="node" text="%node" toggleGroup="$group" maxWidth="Infinity"/>
+						<ToggleButton fx:id="tools" text="%tools" toggleGroup="$group" maxWidth="Infinity"/>
 						<ToggleButton fx:id="settings" text="%settings" toggleGroup="$group" maxWidth="Infinity"/>
 					</VBox>
 				</VBox>

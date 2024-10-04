@@ -1,5 +1,6 @@
 package com.satergo.ergo;
 
+import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
@@ -14,13 +15,17 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.Function;
 
 import static com.satergo.Utils.HTTP;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
 
 public class ErgoInterface {
+
+	public static final String ERG_ID = "0".repeat(64);
 
 	public static String getExplorerUrl(NetworkType networkType) {
 		return switch (networkType) {
@@ -65,6 +70,21 @@ public class ErgoInterface {
 		} catch (JsonParserException | IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static List<InputBox> selectAllBoxes(List<Address> addresses, BlockchainContext ctx) {
+		BoxOperations.ExplorerApiUnspentLoader loader = new ExplorerAndPoolUnspentBoxesLoader().withAllowChainedTx(true);
+		ArrayList<InputBox> inputBoxes = new ArrayList<>();
+		for (Address address : addresses) {
+			int page = 0;
+			while (true) {
+				List<InputBox> result = loader.loadBoxesPage(ctx, address, page++);
+				inputBoxes.addAll(result);
+				if (result.size() < BlockchainContext.DEFAULT_LIMIT_FOR_API)
+					break;
+			}
+		}
+		return inputBoxes;
 	}
 
 	/**
@@ -135,13 +155,13 @@ public class ErgoInterface {
 				.build();
 	}
 
-	private static final long COST_PER_BYTE = 360;
+	private static final long MIN_VALUE_PER_BYTE = 360;
 	public static OutBox buildWithMinimumBoxValue(OutBoxBuilder outBoxBuilder, int boxIndex) {
 		// Build a box with 0.001 to get the size that it would be
 		int boxSize = ((OutBoxImpl) outBoxBuilder.value(toNanoErg(new BigDecimal("0.001"))).build())
 				.getErgoBoxCandidate().toBox("0".repeat(64), (short) boxIndex).bytes().length;
 		// Build a box with the calculated minimum ERG value
-		outBoxBuilder.value(boxSize * COST_PER_BYTE);
+		outBoxBuilder.value(boxSize * MIN_VALUE_PER_BYTE);
 		return outBoxBuilder.build();
 	}
 
@@ -163,6 +183,30 @@ public class ErgoInterface {
 			JsonObject body = JsonParser.object().from(HTTP.send(request, ofString()).body());
 			return new TokenInfo(body.getString("id"), body.getString("boxId"), body.getLong("emissionAmount"),
 					body.getString("name"), body.getString("description"), body.getString("type"), body.getInt("decimals"));
+		} catch (IOException | InterruptedException | JsonParserException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static final int DEMURRAGE_EVERY = 1051200;
+	public static OptionalInt getOldestUTXOCreationHeight(Address address) {
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create(getExplorerUrl(address.getNetworkType()))
+				.resolve("/api/v1/boxes/unspent/byAddress/" + address + "?limit=1&sortDirection=desc")).build();
+		try {
+			JsonObject body = JsonParser.object().from(HTTP.send(request, ofString()).body());
+			JsonArray items = body.getArray("items");
+			if (items.isEmpty()) return OptionalInt.empty();
+			return OptionalInt.of(items.getObject(0).getInt("creationHeight"));
+		} catch (IOException | InterruptedException | JsonParserException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static int getNetworkHeight() {
+		HttpRequest request = Utils.httpRequestBuilder().uri(URI.create("https://api.ergoplatform.com/api/v1/blocks?limit=1")).build();
+		try {
+			JsonObject body = JsonParser.object().from(HTTP.send(request, ofString()).body());
+			return body.getArray("items").getObject(0).getInt("height");
 		} catch (IOException | InterruptedException | JsonParserException e) {
 			throw new RuntimeException(e);
 		}

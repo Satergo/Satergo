@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import com.satergo.extra.FlexibleTilePane?>
+<?import javafx.geometry.Insets?>
+<FlexibleTilePane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.ToolsCtrl" fx:id="root">
+	<padding><Insets topRightBottomLeft="20"/></padding>
+	<maxColumns>6</maxColumns>
+	<hgap>20</hgap>
+	<vgap>20</vgap>
+</FlexibleTilePane>
