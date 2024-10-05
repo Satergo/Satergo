@@ -1,9 +1,6 @@
 package com.satergo;
 
-import java.io.IOException;
 import java.util.Optional;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 
 import static java.lang.System.getProperty;
 
@@ -27,37 +24,18 @@ public class SystemProperties {
 		return Boolean.getBoolean("satergo.alwaysNonstandardDerivation");
 	}
 
-	// Manifest
+	public static String packagePlatform() {
+		return System.getProperty("satergo.packagePlatform", "DEV");
+	}
 
 	public enum PackageType {
 		PORTABLE, INSTALLATION;
-
-		public static final PackageType FALLBACK = PORTABLE;
 	}
-
-	private static final Attributes manifestSection;
-	private static final Attributes.Name
-			PACKAGE_TYPE = new Attributes.Name("Package-Type"),
-			PACKAGE_PLATFORM = new Attributes.Name("Package-Platform");
-
-	static {
-		Manifest manifest = null;
-		try {
-			manifest = new Manifest(SystemProperties.class.getResourceAsStream("/META-INF/MANIFEST.MF"));
-		} catch (IOException ignored) {
-		}
-		manifestSection = manifest == null ? null : manifest.getAttributes("Satergo");
-	}
+	public static final PackageType FALLBACK_PACKAGE_TYPE = PackageType.PORTABLE;
 
 	public static PackageType packageType() {
-		return manifestSection == null
-				? PackageType.FALLBACK
-				: PackageType.valueOf(manifestSection.getValue(PACKAGE_TYPE));
-	}
-
-	public static String packagePlatform() {
-		return manifestSection == null
-				? "src"
-				: manifestSection.getValue(PACKAGE_PLATFORM);
+		return System.getProperties().contains("satergo.packageType")
+				? PackageType.valueOf(System.getProperty("satergo.packageType"))
+				: FALLBACK_PACKAGE_TYPE;
 	}
 }

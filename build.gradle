@@ -17,6 +17,7 @@ java {
 
 group 'com.satergo'
 version '1.7.0'
+def versionCode = 9
 
 application {
 	mainClass = "com.satergo.Launcher"
@@ -49,7 +50,7 @@ if (platformProvided && project.findProperty("platform") != "auto") {
 	if (arch != "amd64") platform += "-" + arch
 }
 
-def javaFxVersion = '22.0.1'
+def javaFxVersion = '23'
 def javaFxModules = [ 'base', 'controls', 'fxml', 'graphics' ]
 
 configurations {
@@ -79,8 +80,7 @@ jar {
 	manifest {
 		attributes("Specification-Version": project.version)
 		attributes(
-				"Package-Type": buildInstaller ? "INSTALLATION" : "PORTABLE",
-				"Package-Platform": platform,
+				"Version-Code": versionCode,
 				/* Section name */ "Satergo")
 	}
 }
@@ -108,7 +108,7 @@ satergoRuntime {
 	cacheRuntimes = true
 
 	proguardConfig = file("proguard.pro").toPath()
-	proguardOutputName = "Satergo-${project.version}-${platform}-shrunk.jar"
+	proguardOutputName = "Satergo-${project.version}-shrunk.jar"
 
 	includeJarInRuntime = !buildInstaller
 
@@ -117,7 +117,8 @@ satergoRuntime {
 		name = "Satergo"
 		mainClass = application.mainClass.get()
 		defaultJvmOpts = ['-Dsatergo.launcher={APP_HOME}/bin/Satergo',
-						  '-Dsatergo.platform=' + platform ]
+						  '-Dsatergo.packagePlatform=' + platform,
+						  '-Dsatergo.packageType=' + (buildInstaller ? "installer" : "portable")]
 		windowsConsole = false
 	}
 	if (buildInstaller)
@@ -126,28 +127,28 @@ satergoRuntime {
 	switch (platform) {
 		case "linux": {
 			platformName = "linux-x64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_x64_linux_hotspot_22.0.1_8.tar.gz")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_x64_linux_hotspot_22.0.2_9.tar.gz")
 			break
 		}
 		case "linux-aarch64": {
 			platformName = "linux-aarch64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_aarch64_linux_hotspot_22.0.1_8.tar.gz")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_aarch64_linux_hotspot_22.0.2_9.tar.gz")
 			break
 		}
 		case "win": {
 			platformName = "windows-x64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_x64_windows_hotspot_22.0.1_8.zip")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_x64_windows_hotspot_22.0.2_9.zip")
 			break
 		}
 		case "mac": {
 			platformName = "mac-x64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_x64_mac_hotspot_22.0.1_8.tar.gz")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_x64_mac_hotspot_22.0.2_9.tar.gz")
 			jdkRuntimeRoot = "Contents/Home/"
 			break
 		}
 		case "mac-aarch64": {
 			platformName = "mac-aarch64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_aarch64_mac_hotspot_22.0.1_8.tar.gz")
+			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_aarch64_mac_hotspot_22.0.2_9.tar.gz")
 			jdkRuntimeRoot = "Contents/Home/"
 			break
 		}

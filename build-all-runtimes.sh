@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
-platforms=(win linux linux-aarch64 mac)
+platforms=(win linux linux-aarch64 mac mac-aarch64)
 for platform in "${platforms[@]}"; do
-  rm -rf build/{classes,generated,libs,resources}
-  ./gradlew satergoRuntime -Pplatform="$platform"
+  echo "--- Building runtime for $platform ---"
+  ./gradlew satergoRuntime -Pplatform="$platform" "$@"
 done
 echo "All runtimes built"

@@ -149,6 +149,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 
 	@FXML
 	public void send(ActionEvent event) {
+		send.setDisable(true);
 		Utils.createErgoClient().execute(ctx -> {
 			UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
 			Optional<Long> fee = ((TXOutputForm) outputTabPane.getTabs().getFirst().getContent()).getFee();
@@ -188,8 +189,8 @@ public class HomeCtrl implements WalletTab, Initializable {
 										txIdContainer.setVisible(true);
 									})
 									.onFail(ex -> {
-										Utils.alertUnexpectedException(ex);
 										send.setDisable(false);
+										Utils.alertUnexpectedException(ex);
 									})
 									.newThread();
 						} catch (WalletKey.Failure e) {
