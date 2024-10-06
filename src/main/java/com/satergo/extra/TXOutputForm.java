@@ -72,24 +72,23 @@ public class TXOutputForm extends VBox implements Initializable {
 		addTokenContextMenu.show(addToken, Side.BOTTOM, 0, 0);
 	}
 
-	/**
-	 * @return null if an error occurred (the error will have been reported to the user)
-	 */
-	public OutBox createOutBox(UnsignedTransactionBuilder txBuilder, int boxIndex) {
+	public static class InputDataException extends Exception {
+		public InputDataException(String message) {
+			super(message);
+		}
+	}
+	public OutBox createOutBox(UnsignedTransactionBuilder txBuilder, int boxIndex) throws InputDataException {
 		if (address.getText().isBlank()) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("addressRequired"));
-			return null;
+			throw new InputDataException(Main.lang("addressRequired"));
 		}
 		Address recipient;
 		try {
 			recipient = Address.create(address.getText());
 			if (recipient.isMainnet() && Main.programData().nodeNetworkType.get() != NetworkType.MAINNET) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("recipientIsAMainnetAddress"));
-				return null;
+				throw new InputDataException(Main.lang("recipientIsAMainnetAddress"));
 			}
 			if (!recipient.isMainnet() && Main.programData().nodeNetworkType.get() != NetworkType.TESTNET) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("recipientIsATestnetAddress"));
-				return null;
+				throw new InputDataException(Main.lang("recipientIsATestnetAddress"));
 			}
 		} catch (RuntimeException e) {
 			// Invalid address, check if it is a stealth address instead
@@ -97,8 +96,7 @@ public class TXOutputForm extends VBox implements Initializable {
 				ErgoStealthAddress stealth = new ErgoStealthAddress(address.getText());
 				recipient = stealth.generatePaymentAddress(Main.programData().nodeNetworkType.get());
 			} catch (Exception ex) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("invalidAddress"));
-				return null;
+				throw new InputDataException(Main.lang("invalidAddress"));
 			}
 		}
 		boolean dynamicMinimum;
@@ -110,18 +108,15 @@ public class TXOutputForm extends VBox implements Initializable {
 		} else {
 			dynamicMinimum = false;
 			if (amount.getText().isBlank()) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("amountRequired"));
-				return null;
+				throw new InputDataException(Main.lang("amountRequired"));
 			} else {
 				try {
 					amountFullErg = new BigDecimal(amount.getText());
 				} catch (NumberFormatException ex) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("amountInvalid"));
-					return null;
+					throw new InputDataException(Main.lang("amountInvalid"));
 				}
 				if (!ErgoInterface.hasValidNumberOfDecimals(amountFullErg)) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("amountHasTooManyDecimals"));
-					return null;
+					throw new InputDataException(Main.lang("amountHasTooManyDecimals"));
 				}
 			}
 		}
@@ -129,12 +124,10 @@ public class TXOutputForm extends VBox implements Initializable {
 		for (int i = 0; i < tokenList.getChildren().size(); i++) {
 			TokenLine tokenLine = (TokenLine) tokenList.getChildren().get(i);
 			if (!tokenLine.hasAmount()) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_needsAmount").formatted(tokenLine.tokenSummary.name()));
-				return null;
+				throw new InputDataException(Main.lang("token_s_needsAmount").formatted(tokenLine.tokenSummary.name()));
 			}
 			if (!tokenLine.amountIsValid()) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("token_s_hasInvalidAmount").formatted(tokenLine.tokenSummary.name()));
-				return null;
+				throw new InputDataException(Main.lang("token_s_hasInvalidAmount").formatted(tokenLine.tokenSummary.name()));
 			}
 			tokensToSend[i] = new ErgoToken(tokenLine.tokenSummary.id(), ErgoInterface.longTokenAmount(tokenLine.getAmount(), tokenLine.tokenSummary.decimals()));
 		}
@@ -145,8 +138,7 @@ public class TXOutputForm extends VBox implements Initializable {
 		return dynamicMinimum ? ErgoInterface.buildWithMinimumBoxValue(outBoxBuilder, boxIndex) : outBoxBuilder.value(ErgoInterface.toNanoErg(amountFullErg)).build();
 	}
 
-	/** @return empty if an error occurred (the user will have been informed) */
-	public Optional<Long> getFee() {
+	public long getFee() throws InputDataException {
 		if (!showFee.get())
 			throw new IllegalStateException("This form does not ask for the fee");
 		BigDecimal feeFullErg = null;
@@ -154,20 +146,17 @@ public class TXOutputForm extends VBox implements Initializable {
 			try {
 				feeFullErg = new BigDecimal(fee.getText());
 			} catch (NumberFormatException ex) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("feeInvalid"));
-				return Optional.empty();
+				throw new InputDataException(Main.lang("feeInvalid"));
 			}
 			if (!ErgoInterface.hasValidNumberOfDecimals(feeFullErg)) {
-				Utils.alert(Alert.AlertType.ERROR, Main.lang("feeHasTooManyDecimals"));
-				return Optional.empty();
+				throw new InputDataException(Main.lang("feeHasTooManyDecimals"));
 			}
 		}
 		long feeNanoErg = feeFullErg == null ? Parameters.MinFee : ErgoInterface.toNanoErg(feeFullErg);
 		if (feeNanoErg < Parameters.MinFee) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("feeTooLow").formatted(ErgoInterface.toFullErg(Parameters.MinFee)));
-			return Optional.empty();
+			throw new InputDataException(Main.lang("feeTooLow").formatted(ErgoInterface.toFullErg(Parameters.MinFee)));
 		}
-		return Optional.of(feeNanoErg);
+		return feeNanoErg;
 	}
 
 	public static TXOutputForm forErgoURI(ErgoURI ergoURI) {
@@ -186,7 +175,7 @@ public class TXOutputForm extends VBox implements Initializable {
 						form.tokenList.getChildren().add(tokenLine);
 					});
 		} catch (Exception e) {
-			Utils.alertUnexpectedException(e);
+			throw new RuntimeException(e);
 		}
 		return form;
 	}

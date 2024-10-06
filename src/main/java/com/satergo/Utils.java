@@ -27,6 +27,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
 import org.ergoplatform.appkit.*;
 import org.ergoplatform.sdk.ErgoId;
 import org.ergoplatform.sdk.ErgoToken;
@@ -457,5 +458,22 @@ public class Utils {
 	public static Collection<ErgoToken> foldErgoTokens(Stream<ErgoToken> stream) {
 		return stream.collect(Collectors.toMap(ErgoToken::getId, Function.identity(), (a, b) -> new ErgoToken(a.getId(), a.getValue() + b.getValue())))
 				.values();
+	}
+
+	public static StringConverter<Integer> indexToAddressLabelConverter(Wallet wallet) {
+		return new StringConverter<>() {
+			@Override
+			public String toString(Integer index) {
+				if (index == null) return null;
+				String label = wallet.myAddresses.get(index);
+				if (label.isEmpty()) return "#" + FormatNumber.integer(index);
+				return label;
+			}
+
+			@Override
+			public Integer fromString(String string) {
+				throw new RuntimeException();
+			}
+		};
 	}
 }

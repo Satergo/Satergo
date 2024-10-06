@@ -36,7 +36,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.util.Pair;
-import javafx.util.StringConverter;
 import org.ergoplatform.appkit.Address;
 import org.ergoplatform.appkit.Mnemonic;
 import org.ergoplatform.sdk.ErgoId;
@@ -68,9 +67,9 @@ public class AccountCtrl implements Initializable, WalletTab {
 		try {
 			SatVoidDialog dialog = new SatVoidDialog();
 			Utils.initDialog(dialog, totalBalance.getScene().getWindow(), MoveStyle.FOLLOW_OWNER);
-			dialog.setTitle("Your seed");
-			dialog.setHeaderText("Your seed");
+			dialog.setTitle(Main.lang("yourSeedPhrase"));
 			Mnemonic mnemonic = key.getMnemonic();
+			dialog.setHeaderText(mnemonic.getPassword().isEmpty() ? Main.lang("yourSeedPhrase") : Main.lang("yourSeedPhraseAndExtended"));
 			if (mnemonic.getPassword().isEmpty()) {
 				dialog.getDialogPane().setContent(new Label(mnemonic.getPhrase().toStringUnsecure()));
 				ButtonType copy = new ButtonType(Main.lang("copy"));
@@ -203,26 +202,26 @@ public class AccountCtrl implements Initializable, WalletTab {
 		SatVoidDialog dialog = new SatVoidDialog();
 		Utils.initDialog(dialog, totalBalance.getScene().getWindow(), MoveStyle.FOLLOW_OWNER);
 		dialog.getDialogPane().setPrefWidth(Math.min(500, Main.get().stage().getWidth() * 0.5));
-		dialog.setTitle("Wallet settings");
-		dialog.setHeaderText("Wallet settings");
+		dialog.setTitle(Main.lang("walletSettings"));
+		dialog.setHeaderText(Main.lang("walletSettings"));
 
 		VBox root = new VBox(4);
 
-		Button changeName = new Button("Change name");
+		Button changeName = new Button(Main.lang("changeWalletName"));
 		changeName.setMaxWidth(Double.POSITIVE_INFINITY);
 		changeName.setOnAction(ae -> {
 			dialog.close();
 			changeWalletName();
 		});
 
-		Button changePass = new Button("Change password");
+		Button changePass = new Button(Main.lang("changePassword"));
 		changePass.setMaxWidth(Double.POSITIVE_INFINITY);
 		changePass.setOnAction(ae -> {
 			dialog.close();
 			changeWalletPassword();
 		});
 
-		Button viewSeed = new Button("View seed");
+		Button viewSeed = new Button(Main.lang("viewSeedPhrase"));
 		viewSeed.setMaxWidth(Double.POSITIVE_INFINITY);
 		viewSeed.setOnAction(ae -> {
 			dialog.close();
@@ -344,17 +343,7 @@ public class AccountCtrl implements Initializable, WalletTab {
 			qrCodeAddress.setValue(Main.get().getWallet().myAddresses.size() - 1);
 		});
 
-		qrCodeAddress.setConverter(new StringConverter<>() {
-			@Override
-			public String toString(Integer index) {
-				return index == null ? null : Main.get().getWallet().myAddresses.get(index);
-			}
-
-			@Override
-			public Integer fromString(String string) {
-				throw new RuntimeException();
-			}
-		});
+		qrCodeAddress.setConverter(Utils.indexToAddressLabelConverter(Main.get().getWallet()));
 		qrCodeAddress.setOnAction(e -> {
 			if (qrCodeAddress.getValue() == null) {
 				qrCodeImage.setVisible(false);

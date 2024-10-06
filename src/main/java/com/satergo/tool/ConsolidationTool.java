@@ -34,18 +34,7 @@ public class ConsolidationTool implements Tool {
 			dialog.setHeaderText(Main.lang("consolidationInfo"));
 			ComboBox<Integer> comboBox = new ComboBox<>();
 			comboBox.getItems().addAll(Main.get().getWallet().myAddresses.keySet());
-			comboBox.setConverter(new StringConverter<>() {
-				@Override
-				public String toString(Integer index) {
-					String label = Main.get().getWallet().myAddresses.get(index);
-					return label.isBlank() ? "#" + FormatNumber.integer(index) : label;
-				}
-
-				@Override
-				public Integer fromString(String string) {
-					throw new UnsupportedOperationException();
-				}
-			});
+			comboBox.setConverter(Utils.indexToAddressLabelConverter(Main.get().getWallet()));
 			comboBox.setValue(0);
 			dialog.getDialogPane().setContent(comboBox);
 			ButtonType ok = new ButtonType(Main.lang("consolidate"), ButtonBar.ButtonData.OK_DONE);

@@ -35,13 +35,11 @@
 
 			<TitledPane text="%advancedOptions" maxWidth="${seedPhraseArea.width}" expanded="false">
 				<VBox>
-					<ToggleSwitch fx:id="extendWithPassphrase" text="Extend this seed with a passphrase" contentDisplay="RIGHT"/>
+					<ToggleSwitch fx:id="extendWithPassphrase" text="%extendSeedWithPassphrase" contentDisplay="RIGHT"/>
 					<VBox visible="${extendWithPassphrase.selected}" managed="${extendWithPassphrase.selected}">
 						<TextFlow>
 							<padding><Insets top="4"/></padding>
-							<Text text="Also known as the &quot;BIP39 passphrase&quot; or &quot;mnemonic password&quot;, this passphrase changes the wallet that is made with the seed phrase. You need to store this passphrase with your seed phrase as both will be required to restore your wallet.">
-								<style>-fx-fill: -fx-text-base-color;</style>
-							</Text>
+							<Text text="%extendSeedWithPassphraseExplanation"/>
 							<LinkedHyperlink uri="https://github.com/Satergo/Satergo/wiki/Extending-the-wallet-seed-with-a-passphrase" text="%readMore"/>
 						</TextFlow>
 						<PasswordField fx:id="extendedSeedPassphrase" promptText="%extendedSeedPassphrase"/>

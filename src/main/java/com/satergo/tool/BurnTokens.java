@@ -33,11 +33,15 @@ public class BurnTokens implements Tool {
 			ColumnConstraints col0 = new ColumnConstraints();
 			col0.setHalignment(HPos.CENTER);
 			grid.getColumnConstraints().addAll(col0);
-			grid.add(new Label("Burn"), 0, 0);
-			grid.add(new Label("Token name"), 1, 0);
-			grid.add(new Label("Token ID"), 2, 0);
-			grid.add(new Label("Amount"), 3, 0);
+			grid.add(new Label(Main.lang("burn")), 0, 0);
+			grid.add(new Label(Main.lang("tokenName")), 1, 0);
+			grid.add(new Label(Main.lang("tokenId")), 2, 0);
+			grid.add(new Label(Main.lang("amount")), 3, 0);
 			List<TokenBalance> tokenBalances = Main.get().getWallet().lastKnownBalance.get().confirmedTokens();
+			if (tokenBalances.isEmpty()) {
+				Utils.alert(Alert.AlertType.INFORMATION, Main.lang("yourWalletHasNoTokens"));
+				return;
+			}
 			for (int i = 0; i < tokenBalances.size(); i++) {
 				TokenBalance tb = tokenBalances.get(i);
 				CheckBox checkBox = new CheckBox();

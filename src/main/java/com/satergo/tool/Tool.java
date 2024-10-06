@@ -1,5 +1,6 @@
 package com.satergo.tool;
 
+import com.satergo.Main;
 import com.satergo.Utils;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -49,6 +50,10 @@ public interface Tool {
 			});
 
 			setAccessibleRole(AccessibleRole.BUTTON);
+			Main.programData().lightTheme.subscribe(light -> {
+				getStyleClass().add(light ? "light" : "dark");
+				getStyleClass().remove(light ? "dark" : "light");
+			});
 		}
 
 		public Tile(int colSpan, int rowSpan, Node child) {

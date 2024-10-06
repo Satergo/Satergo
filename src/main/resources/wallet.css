@@ -68,21 +68,39 @@
 }
 
 .tool-tile {
-	-fx-background-color: linear-gradient(from 0% 0% to 100% 0%, derive(#2d2e30, 20%), derive(#212224, 20%));
 	-fx-border-width: 0 0.5px 0 0;
-	-fx-border-color: rgba(255, 255, 255, 0.3);
-	-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0.1, 2, 0);
 	-fx-background-radius: 5px;
 	-fx-border-radius: 5px;
 }
 
-.tool-tile:hover {
+.tool-tile.dark {
+	-fx-background-color: linear-gradient(from 0% 0% to 100% 0%, derive(#2d2e30, 20%), derive(#212224, 20%));
+	-fx-border-color: rgba(255, 255, 255, 0.3);
+	-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0.1, 2, 0);
+}
+
+.tool-tile.light {
+	-fx-border-width: 0 0 0 0.5px;
+	-fx-background-color: linear-gradient(from 0% 0% to 100% 0%, derive(rgb(255, 255, 255, 0.3), -10%), rgb(170, 171, 253, 0.3));
+	-fx-border-color: rgba(170, 170, 170, 0.3);
+	-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0.1, 2, 0);
+}
+
+.tool-tile.dark:hover {
 	-fx-background-color: linear-gradient(from 0% 0% to 100% 0%, derive(#2d2e30, 24%), derive(#212224, 24%));
 }
 
-.tool-tile:focus-visible {
+.tool-tile.light:hover {
+	-fx-background-color: linear-gradient(from 0% 0% to 100% 0%, derive(rgb(255, 255, 255, 0.3), -14%), derive(rgb(170, 171, 253, 0.3), -8%));
+}
+
+.tool-tile.dark:focus-visible {
 	-fx-border-color: white;
-	-fx-effect: dropshadow(gaussian, rgba(255, 255,255, 0.1), 10, 0.6, 2, 0);
+	-fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.1), 10, 0.6, 2, 0);
+}
+
+.tool-tile.light:focus-visible {
+	-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0.6, 2, 0);
 }
 
 .tool-tile:armed {

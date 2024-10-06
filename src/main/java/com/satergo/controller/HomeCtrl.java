@@ -152,28 +152,32 @@ public class HomeCtrl implements WalletTab, Initializable {
 		send.setDisable(true);
 		Utils.createErgoClient().execute(ctx -> {
 			UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
-			Optional<Long> fee = ((TXOutputForm) outputTabPane.getTabs().getFirst().getContent()).getFee();
-			if (fee.isEmpty()) return null;
 			long erg = 0;
 			HashMap<ErgoId, String> tokenNames = new HashMap<>();
 			HashMap<ErgoId, ErgoToken> tokens = new HashMap<>();
 			ArrayList<OutBox> outBoxes = new ArrayList<>();
-			for (int i = 0; i < outputTabPane.getTabs().size(); i++) {
-				Tab tab = outputTabPane.getTabs().get(i);
-				TXOutputForm form = (TXOutputForm) tab.getContent();
-				OutBox outBox = form.createOutBox(txBuilder, i);
-				erg += outBox.getValue();
-				for (ErgoToken token : outBox.getTokens()) {
-					ErgoToken existing = tokens.get(token.getId());
-					if (existing == null) tokens.put(token.getId(), token);
-					else tokens.put(token.getId(), new ErgoToken(token.getId(), token.getValue() + existing.getValue()));
+			long fee;
+			try {
+				for (int i = 0; i < outputTabPane.getTabs().size(); i++) {
+					Tab tab = outputTabPane.getTabs().get(i);
+					TXOutputForm form = (TXOutputForm) tab.getContent();
+					OutBox outBox = form.createOutBox(txBuilder, i);
+					erg += outBox.getValue();
+					for (ErgoToken token : outBox.getTokens()) {
+						tokens.merge(token.getId(), token, (a, b) -> new ErgoToken(a.getId(), a.getValue() + b.getValue()));
+					}
+					outBoxes.add(outBox);
+					tokenNames.putAll(form.tokenNames());
 				}
-				outBoxes.add(outBox);
-				tokenNames.putAll(form.tokenNames());
+				fee = ((TXOutputForm) outputTabPane.getTabs().getFirst().getContent()).getFee();
+			} catch (TXOutputForm.InputDataException e) {
+				send.setDisable(false);
+				Utils.alert(Alert.AlertType.ERROR, e.getMessage());
+				return null;
 			}
 			List<Address> inputAddresses = candidates.stream().map(Main.get().getWallet()::publicAddress).toList();
 			long ergFinal = erg;
-			new SimpleTask<>(() -> ErgoInterface.createUnsignedTransaction(ctx, inputAddresses, outBoxes, ergFinal, List.copyOf(tokens.values()), fee.get(), change))
+			new SimpleTask<>(() -> ErgoInterface.createUnsignedTransaction(ctx, inputAddresses, outBoxes, ergFinal, List.copyOf(tokens.values()), fee, change))
 					.onSuccess(unsignedTx -> {
 						try {
 							SignedTransaction signedTx = Main.get().getWallet().key().sign(ctx, unsignedTx, candidates);
@@ -182,7 +186,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 										send.setDisable(false);
 										txLink.setText(transactionId);
 										txLink.setUri(Utils.explorerTransactionUrl(transactionId));
-										copyTxId.setOnAction(ce -> {
+										copyTxId.setOnAction(e -> {
 											Utils.copyStringToClipboard(transactionId);
 											Utils.showTemporaryTooltip(copyTxId, new Tooltip(Main.lang("copied")), Utils.COPIED_TOOLTIP_MS);
 										});
@@ -238,7 +242,11 @@ public class HomeCtrl implements WalletTab, Initializable {
 	}
 
 	public void insertErgoURI(ErgoURI ergoURI) {
-		outputTabPane.getTabs().setAll(createOutputTab(TXOutputForm.forErgoURI(ergoURI)));
-		paymentRequestIndicator.setVisible(true);
+		try {
+			outputTabPane.getTabs().setAll(createOutputTab(TXOutputForm.forErgoURI(ergoURI)));
+			paymentRequestIndicator.setVisible(true);
+		} catch (RuntimeException e) {
+			Utils.alertUnexpectedException(e);
+		}
 	}
 }

@@ -132,7 +132,7 @@ public final class Wallet {
 		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
 			throw new RuntimeException(e);
 		}
-		Wallet wallet = new Wallet(path, WalletKey.Local.create(nonstandardDerivation, mnemonic, password), name, Map.of(0, "Master"), detailsIv, detailsSecretKey);
+		Wallet wallet = new Wallet(path, WalletKey.Local.create(nonstandardDerivation, mnemonic, password), name, Map.of(0, Main.lang("masterAddressLabel")), detailsIv, detailsSecretKey);
 		wallet.saveToFile();
 		return wallet;
 	}

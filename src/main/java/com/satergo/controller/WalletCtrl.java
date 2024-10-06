@@ -339,7 +339,7 @@ public class WalletCtrl implements Initializable {
 				});
 				SatVoidDialog result = new SatVoidDialog();
 				Utils.initDialog(result, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
-				result.setHeaderText("The transaction succeeded");
+				result.setHeaderText(Main.lang("ergoPay.transactionSucceeded"));
 				ButtonType copyId = new ButtonType(Main.lang("ergoPay.copyId"), ButtonBar.ButtonData.OK_DONE);
 				ButtonType viewOnExplorer = new ButtonType(Main.lang("ergoPay.viewOnExplorer"), ButtonBar.ButtonData.OK_DONE);
 				result.getDialogPane().getButtonTypes().addAll(copyId, viewOnExplorer);

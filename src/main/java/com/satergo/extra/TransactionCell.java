@@ -95,7 +95,7 @@ public class TransactionCell extends BorderPane implements Initializable {
 		copyTxId.setOnAction(e -> Utils.copyStringToClipboard(tx.getId()));
 		MenuItem copyErgAmount = new MenuItem(Main.lang("copyErgAmount"));
 		copyErgAmount.setOnAction(e -> Utils.copyStringToClipboard(FormatNumber.ergExact(ErgoInterface.toFullErg(ergDiff))));
-		MenuItem viewOnExplorer = new MenuItem("View on explorer");
+		MenuItem viewOnExplorer = new MenuItem(Main.lang("viewOnExplorer"));
 		viewOnExplorer.setOnAction(e -> Utils.showDocument(Utils.explorerTransactionUrl(tx.getId())));
 		ContextMenu context = new ContextMenu(copyTxId, copyErgAmount, viewOnExplorer);
 		top.setOnContextMenuRequested(e -> {

@@ -46,7 +46,7 @@ public class AboutCtrl implements Initializable, WalletTab {
 	@FXML
 	public void donate(ActionEvent e) {
 		if (Main.programData().nodeNetworkType.get() != NetworkType.MAINNET) {
-			Utils.alert(Alert.AlertType.ERROR, "You can't donate on testnet");
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("cannotDonateOnTestnet"));
 			return;
 		}
 
