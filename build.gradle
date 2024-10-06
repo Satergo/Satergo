@@ -108,7 +108,7 @@ satergoRuntime {
 	cacheRuntimes = true
 
 	proguardConfig = file("proguard.pro").toPath()
-	proguardOutputName = "Satergo-${project.version}-shrunk.jar"
+	proguardOutputName = "Satergo-${project.version}-shrunken.jar"
 
 	includeJarInRuntime = !buildInstaller
 
@@ -159,8 +159,24 @@ satergoRuntime {
 	archiveOutputPath = file("runtimes/${project.name}-v${project.version}-${platformName}.zip").toPath()
 	reproducibleArchive = true
 
-	// Create a convenient run file in the top level
 	doBeforeArchival {
+		// Delete unused native libraries
+		String[] unusedLibs = ["splashscreen", "jsound"]
+		for (final def lib in unusedLibs) {
+			String path = platform == "win"
+					? "bin/" + lib
+					: "lib/lib" + lib
+			if (platform == "win") {
+				path += ".dll"
+			} else if (platform == "mac" || platform == "mac-aarch64") {
+				path += ".dylib"
+			} else path += ".so"
+
+			if (!delete(layout.buildDirectory.file("${runtimeDirectoryName}/${path}")))
+				throw new RuntimeException("Could not delete native library " + lib + " (file " + path + ")")
+		}
+		// Create a convenient run file in the top level
+		String buildDir = layout.buildDirectory.asFile.get().getPath()
 		if (platform == "win") {
 			def runFile = file("${buildDir}/${runtimeDirectoryName}/run.bat")
 			runFile.write('@start /min "" "%~dp0\\bin\\' + project.name + '.bat" %*')
