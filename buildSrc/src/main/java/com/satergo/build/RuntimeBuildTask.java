@@ -69,7 +69,7 @@ public class RuntimeBuildTask extends DefaultTask {
 		for (File extraModuleJar : extension.extraModuleJars) {
 			modulePaths.add(extraModuleJar.getParentFile().getAbsolutePath());
 		}
-		args.add(String.join(":", modulePaths));
+		args.add(String.join(File.pathSeparator, modulePaths));
 
 		args.add("--add-modules");
 		args.add(String.join(",", modules));

@@ -16,8 +16,8 @@ java {
 }
 
 group 'com.satergo'
-version '1.7.0'
-def versionCode = 9
+version '1.8.0'
+def versionCode = 10
 
 application {
 	mainClass = "com.satergo.Launcher"
@@ -101,7 +101,7 @@ satergoRuntime {
 
 	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets"]
 	javaFxModules.forEach { extraModules.add("javafx." + it) }
-	excludeModules = ["java.sql"]
+	excludeModules = []
 	extraModuleJars = configurations.javaFxDeps.files
 	extraJlinkOptions = ["--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"]
 	cleanupRuntimeContent = true

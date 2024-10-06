@@ -103,9 +103,9 @@ public class ConsolidationTool implements Tool {
 							// user already informed
 						}
 					}).onFail(ex -> {
+						canBeClosed.set(true);
+						loading.close();
 						if (ex instanceof EmptyWalletException) {
-							canBeClosed.set(true);
-							loading.close();
 							Utils.alert(Alert.AlertType.INFORMATION, Main.lang("yourWalletIsEmpty"));
 						} else if (ex instanceof OnlyOneUTXOException)
 							Utils.alert(Alert.AlertType.INFORMATION, Main.lang("yourWalletOnlyOneUTXO"));
