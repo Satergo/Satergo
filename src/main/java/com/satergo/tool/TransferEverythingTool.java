@@ -85,8 +85,10 @@ public class TransferEverythingTool implements Tool {
 						if (ex instanceof EmptyWalletException) {
 							loading.close();
 							Utils.alert(Alert.AlertType.INFORMATION, Main.lang("yourWalletIsEmpty"));
-						} else if (!(ex instanceof CancelledException))
+						} else if (!(ex instanceof CancelledException)) {
+							loading.close();
 							Utils.alertUnexpectedException(ex);
+						}
 					}).newThread();
 					return null;
 				});
