@@ -166,10 +166,13 @@ public class Utils {
 	private static NetworkType ecNetworkType;
 	private static String ecNodeAddress;
 	public static ErgoClient createErgoClient() {
-		if (ergoClient == null || ecNetworkType != Main.programData().nodeNetworkType.get() || !Main.programData().nodeAddress.get().equals(ecNodeAddress))
+		if (ergoClient == null || ecNetworkType != Main.programData().nodeNetworkType.get() || !Main.programData().nodeAddress.get().equals(ecNodeAddress)) {
+			ecNetworkType = Main.programData().nodeNetworkType.get();
+			ecNodeAddress = Main.programData().nodeAddress.get();
 			return ergoClient = ErgoInterface.newNodeApiClient(
 					Main.programData().nodeNetworkType.get(),
 					Main.programData().nodeAddress.get());
+		}
 		return ergoClient;
 	}
 

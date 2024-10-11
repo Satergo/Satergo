@@ -87,66 +87,29 @@ public class ErgoInterface {
 		return inputBoxes;
 	}
 
-	/**
-	 * @param ergoClient ErgoClient, see for example {@link #newNodeApiClient}
-	 * @param inputAddresses Input addresses
-	 * @param recipient Address to send to
-	 * @param amountToSend Amount to send (in nanoERGs)
-	 * @param feeAmount Fee, minimum {@link Parameters#MinFee}
-	 * @param changeAddress The address where leftover ERG or tokens from UTXOs will be sent
-	 * @param tokensToSend Tokens to send
-	 * @throws InputBoxesSelectionException If not enough ERG or not enough tokens were found
-	 * @return The transaction ID with quotes around it
-	 */
-	public static UnsignedTransaction createUnsignedTransaction(ErgoClient ergoClient, List<Address> inputAddresses,
-								  Address recipient, long amountToSend, long feeAmount, Address changeAddress, ErgoToken... tokensToSend) throws InputBoxesSelectionException {
-		if (feeAmount < Parameters.MinFee) {
-			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
-		}
-		return ergoClient.execute(ctx -> {
-			List<InputBox> boxesToSpend = BoxOperations.createForSenders(inputAddresses, ctx)
-					.withAmountToSpend(amountToSend)
-					.withFeeAmount(feeAmount)
-					.withTokensToSpend(List.of(tokensToSend))
-					.withInputBoxesLoader(new ExplorerAndPoolUnspentBoxesLoader().withAllowChainedTx(true))
-					.loadTop();
-			UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
-			OutBoxBuilder newBoxBuilder = txBuilder.outBoxBuilder();
-			newBoxBuilder.value(amountToSend);
-			if (tokensToSend.length > 0) {
-				newBoxBuilder.tokens(tokensToSend);
-			}
-			newBoxBuilder.contract(recipient.toErgoContract());
-			OutBox newBox = newBoxBuilder.build();
-			return txBuilder
-					.addInputs(boxesToSpend.toArray(new InputBox[0])).addOutputs(newBox)
-					.fee(feeAmount)
-					.sendChangeTo(changeAddress)
-					.build();
-		});
+	public static BoxOperations boxSelector(BlockchainContext ctx, List<Address> inputAddresses, long erg, List<ErgoToken> tokens, long fee) {
+		return BoxOperations.createForSenders(inputAddresses, ctx)
+				.withAmountToSpend(erg)
+				.withTokensToSpend(tokens)
+				.withFeeAmount(fee)
+				.withInputBoxesLoader(new ExplorerAndPoolUnspentBoxesLoader().withAllowChainedTx(true));
 	}
 
 	/**
 	 * @param inputAddresses Input addresses
-	 * @param totalErg Amount to send (in nanoERGs)
+	 * @param outBoxes Output boxes
 	 * @param feeAmount Fee, minimum {@link Parameters#MinFee}
 	 * @param changeAddress The address where leftover ERG or tokens from UTXOs will be sent
-	 * @param totalTokens Tokens to send
+	 * @param totalTokens The total amounts of tokens that the outBoxes have
 	 * @throws InputBoxesSelectionException If not enough ERG or not enough tokens were found
 	 * @return The transaction ID with quotes around it
 	 */
-	public static UnsignedTransaction createUnsignedTransaction(BlockchainContext ctx, List<Address> inputAddresses,
-																List<OutBox> outBoxes, long totalErg, List<ErgoToken> totalTokens, long feeAmount, Address changeAddress) throws InputBoxesSelectionException {
+	public static UnsignedTransaction createUnsignedTransaction(BlockchainContext ctx, UnsignedTransactionBuilder txBuilder, List<Address> inputAddresses,
+																List<OutBox> outBoxes, List<ErgoToken> totalTokens, long feeAmount, Address changeAddress) throws InputBoxesSelectionException {
 		if (feeAmount < Parameters.MinFee) {
 			throw new IllegalArgumentException("fee cannot be less than MinFee (" + Parameters.MinFee + " nanoERG)");
 		}
-		List<InputBox> boxesToSpend = BoxOperations.createForSenders(inputAddresses, ctx)
-				.withAmountToSpend(totalErg)
-				.withFeeAmount(feeAmount)
-				.withTokensToSpend(totalTokens)
-				.withInputBoxesLoader(new ExplorerAndPoolUnspentBoxesLoader().withAllowChainedTx(true))
-				.loadTop();
-		UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
+		List<InputBox> boxesToSpend = boxSelector(ctx, inputAddresses, outBoxes.stream().mapToLong(OutBox::getValue).sum(), totalTokens, feeAmount).loadTop();
 		return txBuilder
 				.addInputs(boxesToSpend.toArray(new InputBox[0]))
 				.addOutputs(outBoxes.toArray(new OutBox[0]))
@@ -159,7 +122,7 @@ public class ErgoInterface {
 	public static OutBox buildWithMinimumBoxValue(OutBoxBuilder outBoxBuilder, int boxIndex) {
 		// Build a box with 0.001 to get the size that it would be
 		int boxSize = ((OutBoxImpl) outBoxBuilder.value(toNanoErg(new BigDecimal("0.001"))).build())
-				.getErgoBoxCandidate().toBox("0".repeat(64), (short) boxIndex).bytes().length;
+				.getErgoBoxCandidate().toBox(ERG_ID, (short) boxIndex).bytes().length;
 		// Build a box with the calculated minimum ERG value
 		outBoxBuilder.value(boxSize * MIN_VALUE_PER_BYTE);
 		return outBoxBuilder.build();
@@ -214,13 +177,6 @@ public class ErgoInterface {
 
 	public static String generateMnemonicPhrase(String languageId) {
 		return Mnemonic.generate(languageId, Mnemonic.DEFAULT_STRENGTH, Mnemonic.getEntropy(Mnemonic.DEFAULT_STRENGTH));
-	}
-
-	/**
-	 * @param index 0 is the master address
-	 */
-	public static Address getPublicEip3Address(NetworkType networkType, boolean nonstandard, Mnemonic mnemonic, int index) {
-		return Address.createEip3Address(index, networkType, mnemonic.getPhrase(), mnemonic.getPassword(), nonstandard);
 	}
 
 

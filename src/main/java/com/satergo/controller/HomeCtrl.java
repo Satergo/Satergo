@@ -177,7 +177,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 			}
 			List<Address> inputAddresses = candidates.stream().map(Main.get().getWallet()::publicAddress).toList();
 			long ergFinal = erg;
-			new SimpleTask<>(() -> ErgoInterface.createUnsignedTransaction(ctx, inputAddresses, outBoxes, ergFinal, List.copyOf(tokens.values()), fee, change))
+			new SimpleTask<>(() -> ErgoInterface.createUnsignedTransaction(ctx, txBuilder, inputAddresses, outBoxes, List.copyOf(tokens.values()), fee, change))
 					.onSuccess(unsignedTx -> {
 						try {
 							SignedTransaction signedTx = Main.get().getWallet().key().sign(ctx, unsignedTx, candidates);

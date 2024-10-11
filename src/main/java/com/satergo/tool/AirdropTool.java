@@ -6,7 +6,10 @@ import com.satergo.ergo.TokenBalance;
 import com.satergo.ergo.TokenSummary;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
@@ -180,16 +183,11 @@ public class AirdropTool implements Tool {
 				else outBoxes.add(builder.value(output.value).build());
 				index++;
 			}
-			long ergSpentFinal = outBoxes.stream().mapToLong(OutBox::getValue).sum();
+			long ergSpent = outBoxes.stream().mapToLong(OutBox::getValue).sum();
 			long fee = Parameters.MinFee;
 			List<ErgoToken> tokenList = tokensSpent.entrySet().stream().map(e -> new ErgoToken(e.getKey(), e.getValue())).toList();
 			new SimpleTask<>(() -> {
-				List<InputBox> inputBoxes = BoxOperations.createForSenders(wallet.addressStream().toList(), ctx)
-						.withAmountToSpend(ergSpentFinal)
-						.withFeeAmount(fee)
-						.withTokensToSpend(tokenList)
-						.withInputBoxesLoader(new ExplorerAndPoolUnspentBoxesLoader().withAllowChainedTx(true))
-						.loadTop();
+				List<InputBox> inputBoxes = ErgoInterface.boxSelector(ctx, wallet.addressStream().toList(), ergSpent, tokenList, fee).loadTop();
 				return txBuilder
 						.addInputs(inputBoxes.toArray(new InputBox[0]))
 						.addOutputs(outBoxes.toArray(new OutBox[0]))
@@ -199,10 +197,10 @@ public class AirdropTool implements Tool {
 			}).onSuccess(unsignedTx -> {
 				cf.complete(new Airdrop(
 						unsignedTx,
-						ergSpentFinal + fee,
+						ergSpent + fee,
 						tokensSpent.entrySet().stream().map(e -> new TokenBalance(e.getKey(), e.getValue(), tokenInfo.get(e.getKey()).decimals(), tokenInfo.get(e.getKey()).name())).toList()));
 			}).onFail(t -> {
-				Utils.alertTxBuildException(t, ergSpentFinal, tokenList, id -> tokenInfo.get(id.toString()).name());
+				Utils.alertTxBuildException(t, ergSpent, tokenList, id -> tokenInfo.get(id.toString()).name());
 				cf.completeExceptionally(t);
 			}).newThread();
 			return null;

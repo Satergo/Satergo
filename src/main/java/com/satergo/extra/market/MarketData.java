@@ -3,6 +3,7 @@ package com.satergo.extra.market;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.satergo.Utils;
+import com.satergo.ergo.ErgoInterface;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,7 +34,7 @@ public class MarketData {
 
 	/** Can return null */
 	public BigDecimal tokensPerErg(String tokenId) {
-		return tokenPrices.stream().filter(p -> p.baseId.equals("0".repeat(64)) && p.quoteId.equals(tokenId)).findAny().map(TokenPrice::lastPrice).orElse(null);
+		return tokenPrices.stream().filter(p -> p.baseId.equals(ErgoInterface.ERG_ID) && p.quoteId.equals(tokenId)).findAny().map(TokenPrice::lastPrice).orElse(null);
 	}
 
 	public BigDecimal ergPriceOfToken(String tokenId) {

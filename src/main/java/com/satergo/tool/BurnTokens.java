@@ -4,6 +4,7 @@ import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.Wallet;
 import com.satergo.WalletKey;
+import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
@@ -82,12 +83,7 @@ public class BurnTokens implements Tool {
 					new SimpleTask<>(() -> Utils.createErgoClient().execute(ctx -> {
 						long fee = Parameters.MinFee;
 						List<ErgoToken> ergoTokensToBurn = tokensToBurn.stream().map(t -> new ErgoToken(t.id(), t.amount())).toList();
-						List<InputBox> boxesToSpend = BoxOperations.createForSenders(wallet.addressStream().toList(), ctx)
-								.withAmountToSpend(0)
-								.withFeeAmount(fee)
-								.withTokensToSpend(ergoTokensToBurn)
-								.withInputBoxesLoader(new ExplorerAndPoolUnspentBoxesLoader().withAllowChainedTx(true))
-								.loadTop();
+						List<InputBox> boxesToSpend = ErgoInterface.boxSelector(ctx, wallet.addressStream().toList(), 0, ergoTokensToBurn, fee).loadTop();
 						UnsignedTransactionBuilder txBuilder = ctx.newTxBuilder();
 
 						// Manually build a change box that does not contain the tokens to be burnt

@@ -110,8 +110,8 @@ public class RestoreFromSeedCtrl implements SetupPage.WithoutExtra, Initializabl
 		Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Utils.getLastWalletDir(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 		if (path == null) return;
 
-		Address masterStandard = ErgoInterface.getPublicEip3Address(Main.programData().nodeNetworkType.get(), false, mnemonic, 0);
-		Address masterNonstandard = ErgoInterface.getPublicEip3Address(Main.programData().nodeNetworkType.get(), true, mnemonic, 0);
+		Address masterStandard = Address.createEip3Address(0, Main.programData().nodeNetworkType.get(), mnemonic.getPhrase(), mnemonic.getPassword(), false);
+		Address masterNonstandard = Address.createEip3Address(0, Main.programData().nodeNetworkType.get(), mnemonic.getPhrase(), mnemonic.getPassword(), true);
 
 		boolean nonstandardDerivation = false;
 
