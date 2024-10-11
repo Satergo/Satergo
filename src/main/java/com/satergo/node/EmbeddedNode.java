@@ -43,20 +43,20 @@ public class EmbeddedNode {
 
 	public static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.ERROR;
 
-	public final File nodeDirectory;
+	public final Path nodeDirectory;
 	private Process process;
 	private long startedTime;
 
-	public final File nodeJar;
-	public final File confFile;
-	public final File infoFile;
+	public final Path nodeJar;
+	public final Path confFile;
+	public final Path infoFile;
 	public EmbeddedNodeInfo info;
 	public final ErgoNodeAccess nodeAccess;
 
-	private EmbeddedNode(File nodeDirectory, File infoFile, EmbeddedNodeInfo info) {
+	private EmbeddedNode(Path nodeDirectory, Path infoFile, EmbeddedNodeInfo info) {
 		this.nodeDirectory = nodeDirectory;
-		this.nodeJar = new File(nodeDirectory, info.jarFileName());
-		this.confFile = new File(nodeDirectory, info.confFileName());
+		this.nodeJar = nodeDirectory.resolve(info.jarFileName());
+		this.confFile = nodeDirectory.resolve(info.confFileName());
 		this.infoFile = infoFile;
 		this.info = info;
 		this.nodeAccess = new ErgoNodeAccess(URI.create(localApiHttpAddress()));
@@ -73,10 +73,10 @@ public class EmbeddedNode {
 		return info.logLevel();
 	}
 
-	public static EmbeddedNode fromLocalNodeInfo(File infoFile) {
+	public static EmbeddedNode fromLocalNodeInfo(Path infoFile) {
 		try {
-			File root = infoFile.getParentFile();
-			return new EmbeddedNode(root, infoFile, EmbeddedNodeInfo.fromJson(Files.readString(infoFile.toPath())));
+			Path root = infoFile.getParent();
+			return new EmbeddedNode(root, infoFile, EmbeddedNodeInfo.fromJson(Files.readString(infoFile)));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -103,7 +103,7 @@ public class EmbeddedNode {
 	}
 
 	public String readVersion() {
-		try (JarFile jar = new JarFile(nodeJar)) {
+		try (JarFile jar = new JarFile(nodeJar.toFile())) {
 			Config nodeAppConf = ConfigFactory.parseString(new String(jar.getInputStream(jar.getEntry("application.conf")).readAllBytes(), StandardCharsets.UTF_8));
 			return nodeAppConf.getString("scorex.network.appVersion");
 		} catch (IOException e) {
@@ -114,7 +114,7 @@ public class EmbeddedNode {
 	public void firstTimeSetup(boolean nipopow, boolean utxoSetSnapshot) {
 		try {
 			// create .conf file
-			Files.writeString(nodeDirectory.toPath().resolve("ergo.conf"), Utils.makeNodeConfig(nipopow, utxoSetSnapshot));
+			Files.writeString(nodeDirectory.resolve("ergo.conf"), Utils.makeNodeConfig(nipopow, utxoSetSnapshot));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -183,6 +183,12 @@ public class EmbeddedNode {
 						new Label(Main.lang("updatingErgoNode...")),
 						progress
 				));
+				String jarName = "ergo-" + latestVersionString + ".jar";
+				if (nodeJar.equals(nodeDirectory.resolve(jarName))) {
+					updatingAlert.close();
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("nodeUpdateSameVersion"), Main.lang("nodeUpdateSameVersionInfo"));
+					return;
+				}
 				DownloadTask task = createDownloadTask(nodeDirectory, latestVersionString, URI.create(latestNodeData.getArray("assets").getObject(0).getString("browser_download_url")));
 				progress.progressProperty().bind(task.progressProperty());
 				task.setOnSucceeded(e -> {
@@ -194,7 +200,7 @@ public class EmbeddedNode {
 					stop();
 					waitForExit();
 					try {
-						Files.delete(nodeJar.toPath());
+						Files.delete(nodeJar);
 					} catch (IOException ex) {
 						throw new RuntimeException(ex);
 					}
@@ -217,25 +223,24 @@ public class EmbeddedNode {
 	/**
 	 * downloads the jar and updates the node info file
 	 */
-	private static DownloadTask createDownloadTask(File dir, String version, URI uri) {
+	private static DownloadTask createDownloadTask(Path dir, String jarName, URI uri) {
 		try {
-			String jarName = "ergo-" + version + ".jar";
 			return new DownloadTask(
 					HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build(),
 					Utils.httpRequestBuilder().uri(uri).build(),
-					new FileOutputStream(new File(dir, jarName))
+					Files.newOutputStream(dir.resolve(jarName))
 			) {
 				@Override
 				protected Void call() throws Exception {
 					super.call();
-					Path infoPath = dir.toPath().resolve(EmbeddedNodeInfo.FILE_NAME);
+					Path infoPath = dir.resolve(EmbeddedNodeInfo.FILE_NAME);
 					EmbeddedNodeInfo newInfo = EmbeddedNodeInfo.fromJson(Files.readString(infoPath))
 							.withJarFileName(jarName);
 					Files.writeString(infoPath, newInfo.toJson());
 					return null;
 				}
 			};
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -254,12 +259,12 @@ public class EmbeddedNode {
 				command[i] = info.vmArguments().get(i - 1);
 			}
 			command[i++] = "-jar";
-			command[i++] = nodeJar.getAbsolutePath();
+			command[i++] = nodeJar.toAbsolutePath().toString();
 			command[i++] = "--" + info.networkType().toString().toLowerCase(Locale.ROOT);
 			command[i++] = "-c";
-			command[i] = confFile.getName();
+			command[i] = confFile.getFileName().toString();
 			System.out.println("running node with command: " + Arrays.toString(command));
-			process = new ProcessBuilder().command(command).directory(nodeDirectory).start();
+			process = new ProcessBuilder().command(command).directory(nodeDirectory.toFile()).start();
 			scheduleRepeatingTasks();
 			startedTime = System.currentTimeMillis();
 		} catch (IOException ex) {
@@ -274,14 +279,14 @@ public class EmbeddedNode {
 	}
 
 	public Optional<Object> getConfValue(String propertyPath) {
-		Config config = ConfigFactory.parseFile(confFile);
+		Config config = ConfigFactory.parseFile(confFile.toFile());
 		if (!config.hasPath(propertyPath))
 			return Optional.empty();
 		return Optional.of(config.getValue(propertyPath).unwrapped());
 	}
 
 	public void setConfValue(String propertyPath, Object value) throws IOException {
-		Files.writeString(confFile.toPath(), ConfigFactory.parseFile(confFile)
+		Files.writeString(confFile, ConfigFactory.parseFile(confFile.toFile())
 				.withValue(propertyPath, ConfigValueFactory.fromAnyRef(value))
 				.root().render(ConfigRenderOptions.defaults()
 						.setOriginComments(false)
@@ -289,11 +294,15 @@ public class EmbeddedNode {
 	}
 
 	public void writeInfo() throws IOException {
-		Files.writeString(infoFile.toPath(), info.toJson());
+		Files.writeString(infoFile, info.toJson());
 	}
 
 	public InputStream standardOutput() {
 		return process.getInputStream();
+	}
+
+	public InputStream standardError() {
+		return process.getErrorStream();
 	}
 
 	public boolean isRunning() {

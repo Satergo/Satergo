@@ -55,13 +55,21 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	public void transferLog() {
 		new Thread(() -> {
 			try {
-				InputStream inputStream = Main.node.standardOutput();
+				InputStream stdout = Main.node.standardOutput(), stderr = Main.node.standardError();
 				byte[] buffer = new byte[8192];
-				int read;
-				while ((read = inputStream.read(buffer, 0, 8192)) >= 0) {
-					String s = new String(buffer, 0, read, StandardCharsets.UTF_8);
-					Platform.runLater(() -> appendText(s));
-					Thread.sleep(10);
+				while (true) {
+					int read = stdout.read(buffer, 0, 8192);
+					if (read > 0) {
+						String s = new String(buffer, 0, read, StandardCharsets.UTF_8);
+						Platform.runLater(() -> appendText(s));
+						Thread.sleep(10);
+					}
+					int errRead = stderr.read(buffer, 0, 8192);
+					if (errRead > 0) {
+						String s = new String(buffer, 0, errRead, StandardCharsets.UTF_8);
+						Platform.runLater(() -> appendText(s));
+					}
+					if (read < 0 && errRead < 0) break;
 				}
 			} catch (IOException | InterruptedException e) {
 				if (!e.getMessage().contains("Stream closed"))
@@ -181,7 +189,7 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 
 	@FXML
 	public void openConf(ActionEvent e) {
-		Utils.showDocument(Main.node.confFile.getAbsolutePath());
+		Utils.showDocument(Main.node.confFile.toAbsolutePath().toString());
 	}
 
 	@FXML

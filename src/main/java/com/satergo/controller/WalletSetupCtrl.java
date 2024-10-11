@@ -24,10 +24,10 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 		String param2;
 		if (Main.programData().blockchainNodeKind.get() == ProgramData.NodeKind.EMBEDDED_FULL_NODE) {
 			langProperty = "nodeConfigurationEmbedded_path";
-			param2 = Main.node.nodeDirectory.getAbsolutePath();
+			param2 = Main.node.nodeDirectory.toAbsolutePath().toString();
 		} else if (Main.programData().blockchainNodeKind.get() == ProgramData.NodeKind.EMBEDDED_LIGHT_NODE) {
 			langProperty = "nodeConfigurationEmbeddedLight_path";
-			param2 = Main.node.nodeDirectory.getAbsolutePath();
+			param2 = Main.node.nodeDirectory.toAbsolutePath().toString();
 		} else {
 			langProperty = "nodeConfigurationRemote_address";
 			param2 = Main.programData().nodeAddress.get();

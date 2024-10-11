@@ -182,7 +182,7 @@ public class Main extends Application {
 	}
 
 	public EmbeddedNode nodeFromInfo() {
-		return EmbeddedNode.fromLocalNodeInfo(programData.embeddedNodeInfo.get().toFile());
+		return EmbeddedNode.fromLocalNodeInfo(programData.embeddedNodeInfo.get());
 	}
 
 	private final LinkedList<Parent> pages = new LinkedList<>();
