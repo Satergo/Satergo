@@ -17,10 +17,17 @@ public class WinInstallerBuildExt {
 	public String vendor;
 	public String description;
 
+	public boolean startMenuEntry = true;
+	public boolean startMenuEntryInGroup = false;
+	public String startMenuGroup = null;
+
+	public boolean shortcut = true;
+	public boolean shortcutPrompt = false;
+
 	public String aboutUrl;
 	public String updateUrl;
 
-	public String windowsUpgradeUUID;
+	public String upgradeUUID;
 
 	public List<Path> fileAssociations = Collections.emptyList();
 

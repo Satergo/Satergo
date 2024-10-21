@@ -234,7 +234,7 @@ satergoWinInstaller {
 	aboutUrl = "https://satergo.com"
 	updateUrl = "https://satergo.com"
 
-	windowsUpgradeUUID = "ef3fc1f4-414b-43e6-a2c2-cb4f7ccab4de"
+	upgradeUUID = "ef3fc1f4-414b-43e6-a2c2-cb4f7ccab4de"
 
 	fileAssociations = [ packagingDir.resolve("erg-file-association.properties") ]
 

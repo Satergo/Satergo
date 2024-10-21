@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.spi.ToolProvider;
 
 public class WinInstallerBuildTask extends DefaultTask {
@@ -61,17 +62,25 @@ public class WinInstallerBuildTask extends DefaultTask {
 		// Windows-specific
 
 		// Start menu entry
-		args.add("win-menu");
+		if (ext.startMenuEntry)
+			args.add("win-menu");
+		if (ext.startMenuEntryInGroup) {
+			Objects.requireNonNull(ext.startMenuGroup, "startMenuGroup");
+			args.add("win-menu-group", ext.startMenuGroup);
+		} else args.add("win-menu-group", "");
 		// Install to C:\Users\name\AppData\Local instead of C:\Program Files
 		// This makes it so no UAC prompt is shown (as no admin privileges are needed),
 		// and that updates can be performed without admin privileges
 		args.add("win-per-user-install");
 		// Desktop shortcut
-		args.add("win-shortcut");
+		if (ext.shortcutPrompt)
+			args.add("win-shortcut-prompt");
+		else if (ext.shortcut)
+			args.add("win-shortcut");
 		// URL that has information regarding updates
 		args.add("win-update-url", ext.updateUrl);
 		// A unique ID that will let the OS know that upgrade installers are related to this application
-		args.add("win-upgrade-uuid", ext.windowsUpgradeUUID);
+		args.add("win-upgrade-uuid", ext.upgradeUUID);
 
 		StringWriter err = new StringWriter();
 		ToolProvider jpackage = ToolProvider.findFirst("jpackage").orElseThrow();
@@ -92,7 +101,10 @@ public class WinInstallerBuildTask extends DefaultTask {
 
 		private final ArrayList<Arg> args = new ArrayList<>();
 		/** Adds a valued parameter, prefixing the key with -- */
-		public void add(String key, String value) { args.add(new Arg("--" + key, value)); }
+		public void add(String key, String value) {
+			Objects.requireNonNull(value, "value for " + key);
+			args.add(new Arg("--" + key, value));
+		}
 		/** Adds a non-valued parameter, prefixing it with -- */
 		public void add(String arg) { args.add(new Arg("--" + arg, null)); }
 
