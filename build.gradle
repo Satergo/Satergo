@@ -130,7 +130,7 @@ shadowJar {
 
 satergoRuntime {
 
-	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets"]
+	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets", "jdk.zipfs"]
 	javaFxModules.forEach { extraModules.add("javafx." + it) }
 	excludeModules = []
 	extraModuleJars = configurations.javaFxDeps.files
@@ -147,9 +147,10 @@ satergoRuntime {
 		type = platform == "win" ? "bat" : "sh"
 		name = "Satergo"
 		mainClass = application.mainClass.get()
-		defaultJvmOpts = ['-Dsatergo.launcher={APP_HOME}/bin/Satergo',
+		defaultJvmOpts = ['-Dsatergo.appHome={APP_HOME}',
+						  '-Dsatergo.launcher={APP_HOME}/bin/Satergo',
 						  '-Dsatergo.packagePlatform=' + platform,
-						  '-Dsatergo.packageType=' + (buildInstaller ? "installer" : "portable")]
+						  '-Dsatergo.packageType=' + (buildInstaller ? "INSTALLATION" : "PORTABLE")]
 		windowsConsole = false
 	}
 	if (buildInstaller)
@@ -238,7 +239,9 @@ satergoWinInstaller {
 
 	fileAssociations = [ packagingDir.resolve("erg-file-association.properties") ]
 
-	extraArgs = [ "--resource-dir", packagingDir.resolve("windows-resources").toAbsolutePath().toString() ]
+	extraArgs = [ "--resource-dir", packagingDir.resolve("windows-resources").toAbsolutePath().toString(), "--win-console" ]
+
+	javaOptions = [ '-Dsatergo.packagePlatform=' + platform, '-Dsatergo.packageType=INSTALLATION' ]
 
 	outputDir = file("installers").toPath()
 

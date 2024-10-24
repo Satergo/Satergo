@@ -32,6 +32,7 @@
 -keep class impl.com.pixelduke.control.** { *; }
 -keep class com.google.zxing.** { *; }
 
+-dontwarn java.lang.invoke.VarHandle
 -dontwarn org.controlsfx.**
 
 -dontwarn scala.concurrent.**

@@ -1,5 +1,6 @@
 package com.satergo;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 import static java.lang.System.getProperty;
@@ -41,8 +42,19 @@ public class SystemProperties {
 	public static final PackageType FALLBACK_PACKAGE_TYPE = PackageType.PORTABLE;
 
 	public static PackageType packageType() {
-		return System.getProperties().contains("satergo.packageType")
+		PackageType packageType = nullablePackageType();
+		return packageType == null ? FALLBACK_PACKAGE_TYPE : packageType;
+	}
+
+	public static PackageType nullablePackageType() {
+		return System.getProperties().containsKey("satergo.packageType")
 				? PackageType.valueOf(System.getProperty("satergo.packageType"))
-				: FALLBACK_PACKAGE_TYPE;
+				: null;
+	}
+
+	public static Path appHome() {
+		return System.getProperties().containsKey("satergo.appHome")
+				? Path.of(System.getProperty("satergo.appHome"))
+				: Path.of(System.getProperty("user.dir"));
 	}
 }

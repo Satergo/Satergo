@@ -32,6 +32,7 @@ public class WinInstallerBuildExt {
 	public List<Path> fileAssociations = Collections.emptyList();
 
 	public List<String> extraArgs = Collections.emptyList();
+	public List<String> javaOptions = Collections.emptyList();
 
 	public Path outputDir;
 }

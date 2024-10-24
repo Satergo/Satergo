@@ -159,10 +159,10 @@ public class Main extends Application {
 			}
 		}
 
-		new SimpleTask<>(UpdateChecker::fetchLatestInfo)
+		new SimpleTask<>(UpdateHandler::fetchLatestInfo)
 				.onSuccess(latest -> {
-					if (UpdateChecker.isNewer(latest.versionCode())) {
-						UpdateChecker.showUpdatePopup(latest);
+					if (UpdateHandler.isNewer(latest.versionCode())) {
+						UpdateHandler.showUpdateDialog(latest);
 					}
 				}).newThread();
 

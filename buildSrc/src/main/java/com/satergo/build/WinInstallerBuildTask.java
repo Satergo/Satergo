@@ -62,12 +62,13 @@ public class WinInstallerBuildTask extends DefaultTask {
 		// Windows-specific
 
 		// Start menu entry
-		if (ext.startMenuEntry)
+		if (ext.startMenuEntry) {
 			args.add("win-menu");
-		if (ext.startMenuEntryInGroup) {
-			Objects.requireNonNull(ext.startMenuGroup, "startMenuGroup");
-			args.add("win-menu-group", ext.startMenuGroup);
-		} else args.add("win-menu-group", "");
+			if (ext.startMenuEntryInGroup) {
+				Objects.requireNonNull(ext.startMenuGroup, "startMenuGroup");
+				args.add("win-menu-group", ext.startMenuGroup);
+			} else args.add("win-menu-group", "");
+		}
 		// Install to C:\Users\name\AppData\Local instead of C:\Program Files
 		// This makes it so no UAC prompt is shown (as no admin privileges are needed),
 		// and that updates can be performed without admin privileges
@@ -81,6 +82,10 @@ public class WinInstallerBuildTask extends DefaultTask {
 		args.add("win-update-url", ext.updateUrl);
 		// A unique ID that will let the OS know that upgrade installers are related to this application
 		args.add("win-upgrade-uuid", ext.upgradeUUID);
+
+		for (String javaOption : ext.javaOptions) {
+			args.add("java-options", javaOption);
+		}
 
 		StringWriter err = new StringWriter();
 		ToolProvider jpackage = ToolProvider.findFirst("jpackage").orElseThrow();
