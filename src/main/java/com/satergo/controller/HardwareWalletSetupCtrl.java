@@ -16,4 +16,9 @@ public class HardwareWalletSetupCtrl implements SetupPage.WithoutExtra {
 	public void ledger(ActionEvent e) {
 		Main.get().displaySetupPage(Load.<LedgerSetupCtrl>fxmlController("/setup-page/hw-ledger.fxml"));
 	}
+
+	@FXML
+	public void svault(ActionEvent e) {
+		Main.get().displaySetupPage(Load.<SVaultSetupCtrl>fxmlController("/setup-page/hw-svault.fxml"));
+	}
 }

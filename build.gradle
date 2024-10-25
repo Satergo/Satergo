@@ -30,6 +30,9 @@ repositories {
 		url 'https://oss.sonatype.org/content/repositories/snapshots/'
 		content { includeGroup 'org.scorexfoundation' }
 	}
+	mavenLocal() {
+		content { includeGroup 'com.github.weliem' }
+	}
 }
 
 boolean buildInstaller = project.hasProperty("buildInstaller")
@@ -78,6 +81,12 @@ dependencies {
 	// ledger
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 	implementation 'org.hid4java:hid4java:0.8.0'
+
+	// android bluetooth signer
+//	implementation 'ch.qos.logback:logback-core:1.4.14'
+//	implementation 'ch.qos.logback:logback-classic:1.4.12'
+	implementation 'com.github.hypfvieh:dbus-java:3.3.2'
+	implementation 'com.github.weliem:blessed:0.62'
 }
 
 jar {
