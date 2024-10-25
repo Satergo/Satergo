@@ -146,6 +146,19 @@ public final class Wallet {
 		return create(path, mnemonic, name, password, false);
 	}
 
+	public static Wallet create(Path path, WalletKey walletKey, String name, char[] password) {
+		byte[] detailsIv = AESEncryption.generateNonce12();
+		SecretKey detailsSecretKey;
+		try {
+			detailsSecretKey = AESEncryption.generateSecretKey(password, detailsIv);
+		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+			throw new RuntimeException(e);
+		}
+		Wallet wallet = new Wallet(path, walletKey, name, Map.of(0, Main.lang("masterAddressLabel")), detailsIv, detailsSecretKey);
+		wallet.saveToFile();
+		return wallet;
+	}
+
 	// ENCRYPTION, SERIALIZATION & STORING
 
 	private byte[] detailsIv;

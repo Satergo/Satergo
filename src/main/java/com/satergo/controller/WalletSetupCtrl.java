@@ -13,6 +13,7 @@ import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ResourceBundle;
 
 public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, SetupPage.CustomLeft {
