@@ -3,7 +3,7 @@ package com.satergo.controller;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.Wallet;
-import com.satergo.WalletKey;
+import com.satergo.keystore.WalletKey;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.LinkedHyperlink;
 import com.satergo.extra.dialog.MoveStyle;

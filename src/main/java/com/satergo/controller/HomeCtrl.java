@@ -8,6 +8,7 @@ import com.satergo.extra.SimpleTask;
 import com.satergo.extra.TXOutputForm;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
+import com.satergo.keystore.WalletKey;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.SimpleBooleanProperty;

@@ -4,6 +4,7 @@ import com.satergo.ergo.Balance;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
 import com.satergo.extra.IncorrectPasswordException;
+import com.satergo.keystore.WalletKey;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;

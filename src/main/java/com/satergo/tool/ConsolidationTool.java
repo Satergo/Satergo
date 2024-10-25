@@ -1,9 +1,8 @@
 package com.satergo.tool;
 
-import com.satergo.FormatNumber;
 import com.satergo.Main;
 import com.satergo.Utils;
-import com.satergo.WalletKey;
+import com.satergo.keystore.WalletKey;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.MoveStyle;
@@ -14,7 +13,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
-import javafx.util.StringConverter;
 import org.ergoplatform.appkit.*;
 import org.ergoplatform.sdk.ErgoToken;
 

@@ -1,5 +1,7 @@
-package com.satergo;
+package com.satergo.keystore;
 
+import com.satergo.Main;
+import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.AESEncryption;
 import javafx.scene.control.Alert;
@@ -86,7 +88,7 @@ public abstract class WalletKey {
 	private byte[] encrypted;
 	protected final Type<?> type;
 
-	private WalletKey(Type<?> type) {
+	WalletKey(Type<?> type) {
 		this.type = type;
 	}
 

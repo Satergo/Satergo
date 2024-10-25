@@ -6,6 +6,7 @@ import com.satergo.ergo.TokenBalance;
 import com.satergo.ergo.TokenSummary;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
+import com.satergo.keystore.WalletKey;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;

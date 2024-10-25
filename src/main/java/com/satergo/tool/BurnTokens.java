@@ -3,7 +3,7 @@ package com.satergo.tool;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.Wallet;
-import com.satergo.WalletKey;
+import com.satergo.keystore.WalletKey;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
 import com.satergo.extra.SimpleTask;

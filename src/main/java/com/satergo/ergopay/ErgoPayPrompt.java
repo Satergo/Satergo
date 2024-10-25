@@ -3,7 +3,6 @@ package com.satergo.ergopay;
 import com.satergo.FormatNumber;
 import com.satergo.Load;
 import com.satergo.Main;
-import com.satergo.WalletKey;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenBalance;
 import com.satergo.extra.dialog.SatPromptDialog;
