@@ -1,4 +1,4 @@
-package com.satergo.extra.hw.ledger;
+package com.satergo.hw.ledger;
 
 import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;

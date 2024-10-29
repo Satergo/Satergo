@@ -1,4 +1,4 @@
-package com.satergo.extra.hw.ledger;
+package com.satergo.hw.ledger;
 
 import com.satergo.Main;
 import com.satergo.extra.SimpleTask;
