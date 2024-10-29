@@ -80,7 +80,7 @@ public class ConsolidationTool implements Tool {
 						canBeClosed.set(true);
 						loading.close();
 						try {
-							SignedTransaction tx = Main.get().getWallet().key().sign(ctx, unsignedTx, Main.get().getWallet().myAddresses.keySet());
+							SignedTransaction tx = Main.get().getWallet().key().sign(ctx, unsignedTx, Main.get().getWallet().myAddresses.keySet(), null);
 							new SimpleTask<>(() -> Main.get().getWallet().transact(tx))
 									.onSuccess(txId -> {
 										if (txId != null) Utils.textDialogWithCopy(Main.lang("transactionId"), txId);

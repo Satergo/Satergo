@@ -112,7 +112,7 @@ public class BurnTokens implements Tool {
 					})).onSuccess(unsignedTx -> {
 						SignedTransaction signedTx = Utils.createErgoClient().execute(ctx -> {
 							try {
-								return wallet.key().sign(ctx, unsignedTx, wallet.myAddresses.keySet());
+								return wallet.key().sign(ctx, unsignedTx, wallet.myAddresses.keySet(), null);
 							} catch (WalletKey.Failure e) {
 								// user already informed
 								return null;
