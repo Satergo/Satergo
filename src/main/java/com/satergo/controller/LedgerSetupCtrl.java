@@ -9,6 +9,7 @@ import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.transport.hid4java.HidLedgerDevice;
 import com.satergo.jledger.transport.speculos.SpeculosLedgerDevice;
+import com.satergo.keystore.LedgerKey;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -91,7 +92,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 			if (path == null) return;
 			char[] pass = password.getText().toCharArray();
-			WalletKey.Ledger key = WalletKey.Ledger.create(parentExtPubKey, ergoLedgerAppkit, pass);
+			LedgerKey key = LedgerKey.create(parentExtPubKey, ergoLedgerAppkit, pass);
 			Wallet wallet = Wallet.create(path, key, walletName.getText(), pass);
 			Main.get().setWallet(wallet);
 			Main.get().displayWalletPage();

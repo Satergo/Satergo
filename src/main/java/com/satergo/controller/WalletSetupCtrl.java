@@ -2,6 +2,7 @@ package com.satergo.controller;
 
 import com.satergo.*;
 import com.satergo.extra.IncorrectPasswordException;
+import com.satergo.keystore.WalletKey;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;

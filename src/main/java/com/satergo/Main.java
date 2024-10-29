@@ -7,6 +7,7 @@ import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.market.MarketData;
 import com.satergo.extra.SimpleTask;
+import com.satergo.keystore.WalletKey;
 import com.satergo.node.EmbeddedNode;
 import javafx.application.Application;
 import javafx.application.ColorScheme;

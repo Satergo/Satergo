@@ -97,7 +97,7 @@ public class AirdropTool implements Tool {
 					if (t != send) return null;
 					SignedTransaction tx = Utils.createErgoClient().execute(ctx -> {
 						try {
-							return Main.get().getWallet().key().sign(ctx, airdrop.unsignedTx, Main.get().getWallet().myAddresses.keySet());
+							return Main.get().getWallet().key().sign(ctx, airdrop.unsignedTx, Main.get().getWallet().myAddresses.keySet(),null);
 						} catch (WalletKey.Failure e) {
 							return null;
 						}
