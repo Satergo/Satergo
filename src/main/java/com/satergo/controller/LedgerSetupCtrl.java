@@ -2,9 +2,9 @@ package com.satergo.controller;
 
 import com.satergo.*;
 import com.satergo.extra.dialog.MoveStyle;
-import com.satergo.extra.hw.ledger.ErgoLedgerAppkit;
-import com.satergo.extra.hw.ledger.LedgerPrompt;
-import com.satergo.extra.hw.ledger.LedgerSelector;
+import com.satergo.hw.ledger.ErgoLedgerAppkit;
+import com.satergo.hw.ledger.LedgerPrompt;
+import com.satergo.hw.ledger.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.transport.hid4java.HidLedgerDevice;
