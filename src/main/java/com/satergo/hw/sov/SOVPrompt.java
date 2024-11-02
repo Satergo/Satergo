@@ -1,5 +1,6 @@
 package com.satergo.hw.sov;
 
+import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.welie.blessed.BluetoothPeripheral;
@@ -27,7 +28,7 @@ public sealed interface SOVPrompt {
 	final class Connect extends SatPromptDialog<SOVComm> implements SOVPrompt {
 
 		public Connect() {
-			setHeaderText("Initializing Bluetooth manager...");
+			setHeaderText(Main.lang("svault.initializingBluetoothManager"));
 			SOVFinder sovFinder = new SOVFinder() {
 				@Override
 				public void discovered(BluetoothPeripheral peripheral) {
@@ -40,9 +41,9 @@ public sealed interface SOVPrompt {
 					Platform.runLater(() -> setResult(sovComm));
 				}
 			};
-			setHeaderText("Starting scan");
+			setHeaderText(Main.lang("svault.startingScan"));
 			sovFinder.scan();
-			setHeaderText("Scanning... Open the app on your mobile device");
+			setHeaderText(Main.lang("svault.scanning"));
 		}
 	}
 
@@ -70,21 +71,25 @@ public sealed interface SOVPrompt {
 			setHeaderText("Waiting for action on the mobile app");
 			getDialogPane().setContent(new Label("Sign transaction"));
 			ReducedTransaction reducedTx = ctx.newProverBuilder().build().reduce(unsignedTx, 0);
-			sovComm.sendSignRequest(reducedTx.toBytes());
-			sovComm.getSignatures().handle((signatures, throwable) -> {
-				if (throwable != null) {
-					Utils.alertUnexpectedException(throwable);
-					return null;
-				}
-				ArrayList<ProverResult> proofs = new ArrayList<>();
-				List<InputBox> inputs = unsignedTx.getInputs();
-				if (signatures.size() != inputs.size())
-					throw new IllegalStateException();
-				for (int i = 0; i < inputs.size(); i++) {
-					proofs.add(new ProverResult(signatures.get(i), ((InputBoxImpl) inputs.get(i)).getExtension()));
-				}
-				ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(proofs).toIndexedSeq());
-				setResult(new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0));
+			sovComm.sendSignRequest(reducedTx.toBytes()).handle((unused, throwable) -> {
+				if (throwable != null) Platform.runLater(() -> Utils.alertUnexpectedException(throwable));
+				else sovComm.getSignatures().handle((signatures, signThrowable) -> {
+					Platform.runLater(() -> {
+						if (signThrowable != null) {
+							Utils.alertUnexpectedException(signThrowable);
+							return;
+						}
+						ArrayList<ProverResult> proofs = new ArrayList<>();
+						List<InputBox> inputs = unsignedTx.getInputs();
+						if (signatures.size() != inputs.size())
+							throw new IllegalStateException();
+						for (int i = 0; i < inputs.size(); i++) {
+							proofs.add(new ProverResult(signatures.get(i), ((InputBoxImpl) inputs.get(i)).getExtension()));
+						}
+						ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(proofs).toIndexedSeq());
+						setResult(new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0));
+					});
+				});
 				return null;
 			});
 		}

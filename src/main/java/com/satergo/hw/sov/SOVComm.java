@@ -47,6 +47,7 @@ public class SOVComm {
 
 	private final ArrayList<TaskFuture<?, ?>> pendingReads = new ArrayList<>();
 
+	private CompletableFuture<Void> pendingChunkedWrite;
 	private UUID chunkedWriteUuid;
 	private byte[] chunkedWrite;
 	private int chunkedWriteOffset = 0;
@@ -105,19 +106,25 @@ public class SOVComm {
 
 		@Override
 		public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic ch, BluetoothCommandStatus status) {
-			if (status != BluetoothCommandStatus.COMMAND_SUCCESS) {
-				System.out.println("FAILED TO WRITE!");
-				throw new IllegalStateException("Failed to write");
-			}
 			System.out.println("Written " + ch);
 			if (ch.getUuid().equals(chunkedWriteUuid) && chunkedWrite != null) {
-				int to = Math.min(chunkedWrite.length, chunkedWriteOffset + perChunk);
-				peripheral.writeCharacteristic(ch, Arrays.copyOfRange(chunkedWrite, chunkedWriteOffset, to), WriteType.WITHOUT_RESPONSE);
-				if (to == chunkedWrite.length) {
-					chunkedWriteUuid = null;
-					chunkedWrite = null;
+				if (status != BluetoothCommandStatus.COMMAND_SUCCESS) {
+					pendingChunkedWrite.completeExceptionally(new IllegalStateException("Illegal status " + status));
 				} else {
-					chunkedWriteOffset += perChunk;
+					int to = Math.min(chunkedWrite.length, chunkedWriteOffset + perChunk);
+					peripheral.writeCharacteristic(ch, Arrays.copyOfRange(chunkedWrite, chunkedWriteOffset, to), WriteType.WITHOUT_RESPONSE);
+					if (to == chunkedWrite.length) {
+						pendingChunkedWrite.complete(null);
+						chunkedWriteUuid = null;
+						chunkedWrite = null;
+					} else {
+						chunkedWriteOffset += perChunk;
+					}
+				}
+			} else {
+				if (status != BluetoothCommandStatus.COMMAND_SUCCESS) {
+					System.out.println("FAILED TO WRITE!");
+					throw new IllegalStateException("Failed to write");
 				}
 			}
 		}
@@ -155,10 +162,10 @@ public class SOVComm {
 
 	// Sending data
 
-	public void sendSignRequest(byte[] data) {
+	public CompletableFuture<Void> sendSignRequest(byte[] data) {
 		if (ptf(Task.SIGN_REQUEST).isPresent())
 			throw new IllegalStateException();
-		// The limit is 512 bytes, so we need to do it in chunks.
+		// The limit is 512 bytes, so we might need to do it in chunks.
 		System.out.println("Writing " + data.length + " tx bytes");
 		if (data.length <= 510) {
 			byte[] fullData = ByteBuffer.allocate(2 + data.length)
@@ -166,15 +173,18 @@ public class SOVComm {
 					.put(data)
 					.array();
 			peripheral.writeCharacteristic(SERVICE, Task.SIGN_REQUEST.chUuid, fullData, WriteType.WITHOUT_RESPONSE);
+			return CompletableFuture.completedFuture(null);
 		} else {
 			byte[] firstChunk = ByteBuffer.allocate(512)
 					.putShort((short) data.length)
 					.put(data, 0, 510).array();
+			pendingChunkedWrite = new CompletableFuture<>();
 			chunkedWriteUuid = Task.SIGN_REQUEST.chUuid;
 			chunkedWrite = data;
 			chunkedWriteOffset = 510;
 			perChunk = 512;
 			peripheral.writeCharacteristic(SERVICE, Task.SIGN_REQUEST.chUuid, firstChunk, WriteType.WITHOUT_RESPONSE);
+			return pendingChunkedWrite;
 		}
 	}
 }
