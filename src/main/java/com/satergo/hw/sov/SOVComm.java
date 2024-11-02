@@ -75,6 +75,15 @@ public class SOVComm {
 		public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, BluetoothCommandStatus status) {
 			Task<?> task = Stream.of(Task.APP_INFO, Task.EXT_PUB_KEY, Task.SIGNATURES).filter(t -> t.chUuid.equals(characteristic.getUuid())).findAny().orElse(null);
 			if (status == BluetoothCommandStatus.COMMAND_SUCCESS) {
+				if (chunkedRead != null && chunkedRead.characteristic.equals(characteristic.getUuid())) {
+					System.arraycopy(value, 0, chunkedRead.data, chunkedRead.offset, value.length);
+					chunkedRead.offset += value.length;
+					if (chunkedRead.offset == chunkedRead.data.length) {
+						chunkedRead.future.complete(null);
+						chunkedRead = null;
+					}
+					return;
+				}
 				try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(value))) {
 					if (task == Task.APP_INFO) {
 						var ptf = ptf(Task.APP_INFO).orElseThrow();
