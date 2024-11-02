@@ -89,6 +89,7 @@ public sealed interface SOVPrompt {
 						ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(proofs).toIndexedSeq());
 						setResult(new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0));
 					});
+					return null;
 				});
 				return null;
 			});
