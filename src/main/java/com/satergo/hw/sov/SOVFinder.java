@@ -1,16 +1,18 @@
 package com.satergo.hw.sov;
 
-import com.welie.blessed.BluetoothCentralManager;
-import com.welie.blessed.BluetoothCentralManagerCallback;
-import com.welie.blessed.BluetoothPeripheral;
-import com.welie.blessed.ScanResult;
+import com.welie.blessed.*;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
 
 @SuppressWarnings({"NullableProblems", "FieldCanBeLocal"})
-public abstract class SOVFinder {
+public abstract class SOVFinder implements Closeable {
 
+	private boolean closed = false;
+
+	private SOVComm sovComm;
 	private BluetoothPeripheral discovered;
 	private final BluetoothCentralManager manager;
 	private final BluetoothCentralManagerCallback managerCallback = new BluetoothCentralManagerCallback() {
@@ -19,6 +21,12 @@ public abstract class SOVFinder {
 			manager.stopScan();
 			discovered = peripheral;
 			discovered(peripheral);
+		}
+
+		@Override
+		public void onDisconnectedPeripheral(BluetoothPeripheral peripheral, BluetoothCommandStatus status) {
+			if (!closed)
+				disconnected(sovComm, status);
 		}
 	};
 
@@ -31,7 +39,7 @@ public abstract class SOVFinder {
 	}
 
 	public final void connectToDiscovered() {
-		SOVComm sovComm = new SOVComm();
+		sovComm = new SOVComm();
 		sovComm.onServicesDiscovered = (bluetoothPeripheral, bluetoothGattServices) -> {
 			connected(sovComm);
 		};
@@ -41,4 +49,15 @@ public abstract class SOVFinder {
 	public abstract void discovered(BluetoothPeripheral peripheral);
 
 	public abstract void connected(SOVComm sovComm);
+
+	public abstract void disconnected(SOVComm sovComm, BluetoothCommandStatus status);
+
+	/**
+	 * Only makes any future disconnection events not happen
+	 */
+	@Override
+	public void close() {
+		manager.cancelConnection(sovComm.peripheral());
+		closed = true;
+	}
 }

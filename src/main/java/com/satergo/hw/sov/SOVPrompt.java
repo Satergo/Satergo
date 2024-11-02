@@ -2,9 +2,12 @@ package com.satergo.hw.sov;
 
 import com.satergo.Main;
 import com.satergo.Utils;
+import com.satergo.controller.WalletCtrl;
 import com.satergo.extra.dialog.SatPromptDialog;
+import com.welie.blessed.BluetoothCommandStatus;
 import com.welie.blessed.BluetoothPeripheral;
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import org.ergoplatform.ErgoLikeTransaction;
@@ -39,6 +42,15 @@ public sealed interface SOVPrompt {
 				@Override
 				public void connected(SOVComm sovComm) {
 					Platform.runLater(() -> setResult(sovComm));
+				}
+
+				@Override
+				public void disconnected(SOVComm sovComm, BluetoothCommandStatus status) {
+					WalletCtrl walletPage = Main.get().getWalletPage();
+					if (walletPage != null) {
+						Utils.alert(Alert.AlertType.ERROR, "Lost connection to the device running Satergo Offline Vault.");
+						walletPage.logout();
+					}
 				}
 			};
 			setHeaderText(Main.lang("svault.startingScan"));

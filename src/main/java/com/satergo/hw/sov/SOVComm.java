@@ -47,11 +47,16 @@ public class SOVComm {
 
 	private final ArrayList<TaskFuture<?, ?>> pendingReads = new ArrayList<>();
 
-	private CompletableFuture<Void> pendingChunkedWrite;
-	private UUID chunkedWriteUuid;
-	private byte[] chunkedWrite;
-	private int chunkedWriteOffset = 0;
-	private int perChunk = 512;
+	private static class ChunkedProcess {
+		CompletableFuture<Void> future;
+		UUID characteristic;
+		byte[] data;
+		int offset;
+		public int perChunk;
+	}
+
+	private ChunkedProcess chunkedRead;
+	private ChunkedProcess chunkedWrite;
 
 	@SuppressWarnings("unchecked")
 	private <T>Optional<TaskFuture<Task<T>, T>> ptf(Task<T> task) {
@@ -80,18 +85,34 @@ public class SOVComm {
 						pendingReads.remove(ptf);
 						ptf.complete(ExtendedPublicKeySerializer.parse(SigmaSerializer.startReader(value, 0)));
 					} else if (task == Task.SIGNATURES) {
-						System.out.println("SIGNATURES status = " + status);
-						System.out.println("SIGNATURES value = " + Arrays.toString(value));
-						ArrayList<byte[]> signatures = new ArrayList<>();
-						while (in.available() > 0) {
-							int signatureLength = Short.toUnsignedInt(in.readShort());
-							byte[] signature = new byte[signatureLength];
-							in.readFully(signature);
-							signatures.add(signature);
+						int length = in.readUnsignedShort();
+						if (length <= 510) {
+							var ptf = ptf(Task.SIGNATURES).orElseThrow();
+							pendingReads.remove(ptf);
+							ptf.complete(deserializeSignatures(in));
+						} else {
+							ChunkedProcess cr = new ChunkedProcess();
+							cr.future = new CompletableFuture<>();
+							cr.future.handle((unused, throwable) -> {
+								var ptf = ptf(Task.SIGNATURES).orElseThrow();
+								pendingReads.remove(ptf);
+								if (throwable != null) ptf.completeExceptionally(throwable);
+								else {
+									try {
+										ptf.complete(deserializeSignatures(new DataInputStream(new ByteArrayInputStream(cr.data))));
+									} catch (IOException e) {
+										throw new RuntimeException(e);
+									}
+								}
+								return null;
+							});
+							cr.characteristic = Task.SIGNATURES.chUuid;
+							cr.data = new byte[length];
+							in.readFully(cr.data);
+							cr.offset = 510;
+							cr.perChunk = 512;
+							chunkedRead = cr;
 						}
-						var ptf = ptf(Task.SIGNATURES).orElseThrow();
-						pendingReads.remove(ptf);
-						ptf.complete(Collections.unmodifiableList(signatures));
 					}
 				} catch (IOException ignore) {
 				}
@@ -107,18 +128,17 @@ public class SOVComm {
 		@Override
 		public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic ch, BluetoothCommandStatus status) {
 			System.out.println("Written " + ch);
-			if (ch.getUuid().equals(chunkedWriteUuid) && chunkedWrite != null) {
+			if (chunkedWrite != null && ch.getUuid().equals(chunkedWrite.characteristic)) {
 				if (status != BluetoothCommandStatus.COMMAND_SUCCESS) {
-					pendingChunkedWrite.completeExceptionally(new IllegalStateException("Illegal status " + status));
+					chunkedWrite.future.completeExceptionally(new IllegalStateException("Illegal status " + status));
 				} else {
-					int to = Math.min(chunkedWrite.length, chunkedWriteOffset + perChunk);
-					peripheral.writeCharacteristic(ch, Arrays.copyOfRange(chunkedWrite, chunkedWriteOffset, to), WriteType.WITHOUT_RESPONSE);
-					if (to == chunkedWrite.length) {
-						pendingChunkedWrite.complete(null);
-						chunkedWriteUuid = null;
+					int to = Math.min(chunkedWrite.data.length, chunkedWrite.offset + chunkedWrite.perChunk);
+					peripheral.writeCharacteristic(ch, Arrays.copyOfRange(chunkedWrite.data, chunkedWrite.offset, to), WriteType.WITHOUT_RESPONSE);
+					if (to == chunkedWrite.data.length) {
+						chunkedWrite.future.complete(null);
 						chunkedWrite = null;
 					} else {
-						chunkedWriteOffset += perChunk;
+						chunkedWrite.offset += chunkedWrite.perChunk;
 					}
 				}
 			} else {
@@ -178,13 +198,29 @@ public class SOVComm {
 			byte[] firstChunk = ByteBuffer.allocate(512)
 					.putShort((short) data.length)
 					.put(data, 0, 510).array();
-			pendingChunkedWrite = new CompletableFuture<>();
-			chunkedWriteUuid = Task.SIGN_REQUEST.chUuid;
-			chunkedWrite = data;
-			chunkedWriteOffset = 510;
-			perChunk = 512;
+			ChunkedProcess cw = new ChunkedProcess();
+			cw.future = new CompletableFuture<>();
+			cw.characteristic = Task.SIGN_REQUEST.chUuid;
+			cw.data = data;
+			cw.offset = 510;
+			cw.perChunk = 512;
+			chunkedWrite = cw;
 			peripheral.writeCharacteristic(SERVICE, Task.SIGN_REQUEST.chUuid, firstChunk, WriteType.WITHOUT_RESPONSE);
-			return pendingChunkedWrite;
+			return cw.future;
 		}
+	}
+
+
+
+
+	private static List<byte[]> deserializeSignatures(DataInputStream in) throws IOException {
+		ArrayList<byte[]> signatures = new ArrayList<>();
+		while (in.available() > 0) {
+			int signatureLength = Short.toUnsignedInt(in.readShort());
+			byte[] signature = new byte[signatureLength];
+			in.readFully(signature);
+			signatures.add(signature);
+		}
+		return Collections.unmodifiableList(signatures);
 	}
 }

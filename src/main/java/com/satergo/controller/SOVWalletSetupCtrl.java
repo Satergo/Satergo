@@ -7,6 +7,7 @@ import com.satergo.hw.sov.SOVComm;
 import com.satergo.hw.sov.SOVFinder;
 import com.satergo.hw.sov.SOVPrompt;
 import com.satergo.keystore.SVaultKey;
+import com.welie.blessed.BluetoothCommandStatus;
 import com.welie.blessed.BluetoothPeripheral;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -52,6 +53,14 @@ public class SOVWalletSetupCtrl implements SetupPage.WithoutExtra, Initializable
 					status.setText("Connected to device with name " + sovComm.peripheral().getName());
 					walletForm.setVisible(true);
 				});
+			}
+
+			@Override
+			public void disconnected(SOVComm sovComm, BluetoothCommandStatus status) {
+				if (Main.get().getWalletPage() != null) {
+					Utils.alert(Alert.AlertType.ERROR, "Lost connection to the device running Satergo Offline Vault.");
+					Main.get().getWalletPage().logout();
+				}
 			}
 		};
 		sovFinder.scan();
