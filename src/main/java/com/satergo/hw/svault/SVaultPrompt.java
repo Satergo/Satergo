@@ -21,6 +21,7 @@ import sigmastate.interpreter.ProverResult;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 @SuppressWarnings("FieldCanBeLocal")
 public sealed interface SVaultPrompt {
@@ -28,7 +29,7 @@ public sealed interface SVaultPrompt {
 
 	final class Connect extends SatPromptDialog<SVaultComm> implements SVaultPrompt {
 
-		public Connect() {
+		public Connect(BiConsumer<SVaultComm, BluetoothCommandStatus> disconnectionHandler) {
 			setHeaderText(Main.lang("svault.initializingBluetoothManager"));
 			SVaultFinder svaultFinder = new SVaultFinder() {
 				@Override
@@ -44,11 +45,7 @@ public sealed interface SVaultPrompt {
 
 				@Override
 				public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
-					WalletCtrl walletPage = Main.get().getWalletPage();
-					if (walletPage != null) {
-						Utils.alert(Alert.AlertType.ERROR, Main.lang("svault.lostConnection"));
-						walletPage.logout();
-					}
+					if (disconnectionHandler != null) disconnectionHandler.accept(svaultComm, status);
 				}
 			};
 			setHeaderText(Main.lang("svault.startingScan"));

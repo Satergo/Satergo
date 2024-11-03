@@ -33,6 +33,7 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 	@FXML private TextField walletName;
 	@FXML private PasswordField password;
+	private SVaultKey createdKey;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -57,9 +58,14 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 			@Override
 			public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
-				if (Main.get().getWalletPage() != null) {
-					Utils.alert(Alert.AlertType.ERROR, Main.lang("svault.lostConnection"));
-					Main.get().getWalletPage().logout();
+				if (createdKey != null && Main.get().getWallet() != null && Main.get().getWallet().key() == createdKey) {
+					Platform.runLater(() -> {
+						WalletCtrl walletPage = Main.get().getWalletPage();
+						if (walletPage != null) {
+							Utils.alert(Alert.AlertType.ERROR, Main.lang("svault.lostConnection"));
+							walletPage.logout();
+						}
+					});
 				}
 			}
 		};
@@ -92,6 +98,7 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 				Wallet wallet = Wallet.create(path, key, walletName.getText(), pass);
 				Main.get().setWallet(wallet);
 				Main.get().displayWalletPage();
+				createdKey = key;
 			});
 		}
 	}

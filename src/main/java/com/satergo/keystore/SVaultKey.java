@@ -5,6 +5,7 @@ import com.satergo.Utils;
 import com.satergo.hw.svault.SVaultComm;
 import com.satergo.hw.svault.SVaultPrompt;
 import com.satergo.extra.AESEncryption;
+import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.P2PKAddress;
 import org.ergoplatform.appkit.*;
@@ -35,7 +36,12 @@ public class SVaultKey extends WalletKey {
 		storedKeyBytes = new byte[KEY_LENGTH];
 		data.get(storedKeyBytes);
 
-		SVaultPrompt.Connect connectionPrompt = new SVaultPrompt.Connect();
+		SVaultPrompt.Connect connectionPrompt = new SVaultPrompt.Connect((sVaultComm, status) -> {
+			// Disconnection handler
+			if (logoutFromWallet()) {
+				Utils.alert(Alert.AlertType.ERROR, Main.lang("svault.lostConnection"));
+			}
+		});
 		Utils.initDialog(connectionPrompt, Main.get().stage());
 		svaultComm = connectionPrompt.showForResult().orElse(null);
 		if (svaultComm == null)
