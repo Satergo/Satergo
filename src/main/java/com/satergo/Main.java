@@ -249,6 +249,9 @@ public class Main extends Application {
 	}
 
 	public void setWallet(Wallet wallet) {
+		if (wallet == null) {
+			this.wallet.key().close();
+		}
 		this.wallet = wallet;
 		programData.lastWallet.set(wallet == null ? null : wallet.path);
 	}

@@ -112,6 +112,9 @@ public abstract class WalletKey {
 	public byte[] copyIv() { return Arrays.copyOf(encrypted, 12); }
 	public byte[] encrypted() { return encrypted; }
 
+	/** Useful for WalletKeys that connect to things */
+	public void close() {}
+
 	/**
 	 * The key is encrypted and embedded into the wallet file
 	 * The default behavior of this class is:
