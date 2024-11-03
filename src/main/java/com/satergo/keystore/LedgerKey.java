@@ -2,6 +2,7 @@ package com.satergo.keystore;
 
 import com.satergo.Main;
 import com.satergo.Utils;
+import com.satergo.controller.WalletCtrl;
 import com.satergo.extra.AESEncryption;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.hw.ledger.AttestedBox;
@@ -70,7 +71,16 @@ public class LedgerKey extends WalletKey {
 						connectionPrompt.setResult(new ErgoLedgerAppkit(new ErgoProtocol(new HidLedgerDevice(hidDevice))));
 						connectionPrompt.close();
 					});
-					stop();
+				}
+				@Override
+				public void deviceDetached(HidDevice hidDevice) {
+					Platform.runLater(() -> {
+						WalletCtrl walletPage = Main.get().getWalletPage();
+						if (walletPage != null) {
+							Utils.alert(Alert.AlertType.ERROR, Main.lang("ledger.lostConnection"));
+							walletPage.logout();
+						}
+					});
 				}
 			};
 			ledgerSelector.startListener();
@@ -81,18 +91,18 @@ public class LedgerKey extends WalletKey {
 		try {
 			ergoLedgerAppkit.device.open();
 		} catch (Exception e) {
-			throw new WalletOpenException("Failed to open connection to the Ledger device. " + e.getMessage());
+			throw new WalletOpenException(Main.lang("ledger.failedToOpenConnection").formatted(e.getMessage()));
 		}
 		if (!ergoLedgerAppkit.isAppOpen()) {
-			throw new WalletOpenException("Please open the Ergo app on your Ledger first");
+			throw new WalletOpenException(Main.lang("ledger.openAppFirst"));
 		}
 		LedgerPrompt.ExtPubKey prompt = new LedgerPrompt.ExtPubKey(ergoLedgerAppkit);
 		Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		ExtendedPublicKey parentExtPubKey = prompt.showForResult().orElse(null);
 		if (parentExtPubKey == null)
-			throw new WalletOpenException("You denied the request");
+			throw new WalletOpenException(Main.lang("ledger.youDeniedTheRequest"));
 		if (!Arrays.equals(storedPublicKeyBytes, parentExtPubKey.keyBytes()))
-			throw new WalletOpenException("This wallet does not belong to this device");
+			throw new WalletOpenException(Main.lang("ledger.walletDoesNotBelong"));
 		this.parentExtPubKey = parentExtPubKey;
 	}
 

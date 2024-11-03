@@ -43,7 +43,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		emulator = SystemProperties.ledgerEmulator().isPresent() && SystemProperties.ledgerEmulatorPort().isPresent();
 		if (emulator) {
-			status.setText("Found emulator");
+			status.setText("Using emulator");
 			found.setVisible(true);
 			return;
 		}
@@ -52,13 +52,22 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			public void deviceFound(HidDevice device) {
 				Platform.runLater(() -> {
 					if (LedgerDevice.PRODUCT_IDS.containsKey(device.getProductId())) {
-						status.setText("Found a " + getModelName(device.getProductId()) + " device.");
+						status.setText(Main.lang("ledger.found_model_device").formatted(getModelName(device.getProductId())));
 					} else {
-						status.setText("Found a Ledger device, the model is unknown.");
+						status.setText(Main.lang("ledger.foundUnknownModelDevice"));
 					}
 					found.setVisible(true);
 				});
-				stop();
+			}
+			@Override
+			public void deviceDetached(HidDevice hidDevice) {
+				Platform.runLater(() -> {
+					WalletCtrl walletPage = Main.get().getWalletPage();
+					if (walletPage != null) {
+						Utils.alert(Alert.AlertType.ERROR, Main.lang("ledger.lostConnection"));
+						walletPage.logout();
+					}
+				});
 			}
 		};
 		ledgerSelector.startListener();
@@ -69,20 +78,20 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 	@FXML
 	public void createWallet(ActionEvent e) {
-		if (!emulator) ledgerSelector.stop();
+		if (!emulator) ledgerSelector.stopScanning();
 		LedgerDevice ledgerDevice = emulator
 				? new SpeculosLedgerDevice(SystemProperties.ledgerEmulator().get(), SystemProperties.ledgerEmulatorPort().get(), 0x1011)
 				: new HidLedgerDevice(ledgerSelector.getDevice());
 		try {
 			ledgerDevice.open();
 		} catch (Exception ex) {
-			Utils.alert(Alert.AlertType.ERROR, "Failed to open connection to the Ledger device. " + ex.getMessage());
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("ledger.failedToOpenConnection_s").formatted(ex.getMessage()));
 			return;
 		}
 		ErgoProtocol proto = new ErgoProtocol(ledgerDevice);
 		ErgoLedgerAppkit ergoLedgerAppkit = new ErgoLedgerAppkit(proto);
 		if (!ergoLedgerAppkit.isAppOpen()) {
-			Utils.alert(Alert.AlertType.ERROR, "Please open the Ergo app on your Ledger first");
+			Utils.alert(Alert.AlertType.ERROR, Main.lang("ledger.openAppFirst"));
 			return;
 		}
 		status.setText(Main.lang("ledger.pleaseAcceptRequest"));
@@ -114,6 +123,6 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 	@Override
 	public void cleanup() {
-		if (!emulator) ledgerSelector.stop();
+		if (!emulator) ledgerSelector.stopScanning();
 	}
 }
