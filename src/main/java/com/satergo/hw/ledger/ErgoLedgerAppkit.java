@@ -32,6 +32,7 @@ public class ErgoLedgerAppkit {
 		this.device = protocol.device;
 	}
 
+	private static final int MAX_TOKENS = 100;
 	private static final ErgoTree MINER_FEE_TREE = ErgoTreePredef.feeProposition(720);
 
 	public static byte[] serializeContextExtension(ContextExtension contextExtension) {
@@ -67,8 +68,8 @@ public class ErgoLedgerAppkit {
 		// Write ErgoTree
 		frameCount = writeInChunksWithResult(protocol::attestAddErgoTreeChunk, sessionId, ergoTree).orElse(frameCount);
 		if (!tokens.isEmpty()) {
-			if (tokens.size() > 20) {
-				throw new IllegalArgumentException("Max 20 tokens");
+			if (tokens.size() > MAX_TOKENS) {
+				throw new IllegalArgumentException("Max " + MAX_TOKENS + " tokens");
 			}
 			// max 6 tokens per exchange, so do it in chunks
 			int cs = 6;
@@ -96,11 +97,29 @@ public class ErgoLedgerAppkit {
 	/**
 	 * @param changeAddress This is used to mark the change output box and make the Ledger not show the amount as part of the total outgoing amount. Can be null.
 	 * @param changePath The derivation path of the change address. Can be null.
-	 * @return The signature of this transaction
+	 * @return A list of signatures for each every input boxes (in the same order)
 	 */
-	public byte[] signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, List<InputBox> dataBoxes, List<OutBox> outputBoxes, Address changeAddress, DerivationPath changePath) throws ErgoLedgerException {
-		int sessionId = protocol.startP2PKSigning(networkType, new int[] { h(44), h(429), h(0), 0, 0 }, null);
-		int[] changePathInts = changePath == null ? null : CollectionConverters.seqAsJavaList(changePath.decodedPath()).stream().mapToInt(p -> (int) p).toArray();
+	public List<byte[]> signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, List<DerivationPath> inputPaths, List<InputBox> dataBoxes, List<OutBox> outputBoxes, Address changeAddress, DerivationPath changePath) throws ErgoLedgerException {
+		if (inputBoxes.size() != inputPaths.size())
+			throw new IllegalArgumentException();
+		ArrayList<byte[]> signatures = new ArrayList<>();
+		HashMap<DerivationPath, byte[]> processedPaths = new HashMap<>();
+		for (int i = 0; i < inputBoxes.size(); i++) {
+			DerivationPath path = inputPaths.get(i);
+			if (processedPaths.containsKey(path))
+				signatures.add(processedPaths.get(path));
+			else {
+				byte[] signature = signTransaction(networkType, inputBoxes, inputPaths.get(i), dataBoxes, outputBoxes, changeAddress, changePath);
+				processedPaths.put(path, signature);
+				signatures.add(signature);
+			}
+		}
+		return Collections.unmodifiableList(signatures);
+	}
+
+	private byte[] signTransaction(ErgoNetworkType networkType, List<AttestedBox> inputBoxes, DerivationPath derivationPath, List<InputBox> dataBoxes, List<OutBox> outputBoxes, Address changeAddress, DerivationPath changePath) throws ErgoLedgerException {
+		int sessionId = protocol.startP2PKSigning(networkType, convertPath(derivationPath), null);
+		int[] changePathInts = changePath == null ? null : convertPath(changePath);
 
 		ArrayList<byte[]> distinctTokenIds = new ArrayList<>();
 		for (OutBox outputBox : outputBoxes) {
@@ -114,8 +133,8 @@ public class ErgoLedgerAppkit {
 		protocol.startTransaction(sessionId, inputBoxes.size(), dataBoxes.size(), distinctTokenIds.size(), outputBoxes.size());
 
 		if (!distinctTokenIds.isEmpty()) {
-			if (distinctTokenIds.size() > 20) {
-				throw new IllegalArgumentException("Max 20 tokens");
+			if (distinctTokenIds.size() > MAX_TOKENS) {
+				throw new IllegalArgumentException("Max " + MAX_TOKENS + " tokens");
 			}
 			// max 7 tokens IDs per exchange, so do it in chunks
 			int cs = 7;
@@ -173,8 +192,13 @@ public class ErgoLedgerAppkit {
 			} else {
 				writeInChunks(protocol::addOutputBoxErgoTreeChunk, sessionId, treeBytes);
 			}
-			if (!tokens.isEmpty())
-				protocol.addOutputBoxTokens(sessionId, tokens);
+			if (!tokens.isEmpty()) {
+				// It is possible to add a maximum of 21 tokens per call (21*12 = 252, max 255 bytes)
+				int cs = 21;
+				for (int i = 0; i < Math.ceil(tokens.size() / (double) cs); i++) {
+					protocol.addOutputBoxTokens(sessionId, tokens.subList(i * cs, Math.min((i + 1) * cs, tokens.size())));
+				}
+			}
 			// write registers
 			if (registers.length > 0) {
 				writeInChunks(protocol::addOutputBoxRegistersChunk, sessionId, registers);
@@ -220,6 +244,10 @@ public class ErgoLedgerAppkit {
 				return i;
 		}
 		return -1;
+	}
+
+	private static int[] convertPath(DerivationPath path) {
+		return CollectionConverters.seqAsJavaList(path.decodedPath()).stream().mapToInt(p -> (int) p).toArray();
 	}
 
 	/** turns a BIP44 path index into a hardened index */
