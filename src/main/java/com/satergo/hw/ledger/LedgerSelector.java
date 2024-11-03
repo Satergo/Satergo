@@ -40,24 +40,24 @@ public abstract class LedgerSelector {
 
 	public final void startListener() {
 		servicesListener = new HidServicesListener() {
-			@Override
-			public void hidDeviceAttached(HidServicesEvent event) {
+			@Override public void hidDeviceAttached(HidServicesEvent event) {
 				if (device == null)
 					handleDevice(event.getHidDevice());
 			}
+			@Override public void hidDeviceDetached(HidServicesEvent event) {
+				deviceDetached(event.getHidDevice());
+			}
 
 			public void hidDataReceived(HidServicesEvent event) {}
-			@Override public void hidDeviceDetached(HidServicesEvent event) {}
 			@Override public void hidFailure(HidServicesEvent event) {}
 		};
 		hidServices.addHidServicesListener(servicesListener);
 	}
 
-	public final void stopListener() {
-		hidServices.removeHidServicesListener(servicesListener);
-	}
-
-	public final void stop() {
+	/**
+	 * Stops scanning, which also means device detaches will not be noticed.
+	 */
+	public final void stopScanning() {
 		hidServices.stop();
 	}
 
@@ -83,4 +83,5 @@ public abstract class LedgerSelector {
 	}
 
 	public abstract void deviceFound(HidDevice hidDevice);
+	public abstract void deviceDetached(HidDevice hidDevice);
 }
