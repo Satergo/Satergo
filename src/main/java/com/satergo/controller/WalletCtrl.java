@@ -192,10 +192,10 @@ public class WalletCtrl implements Initializable {
 				Balance totalBalance = Main.get().getWallet().totalBalance();
 				Platform.runLater(() -> {
 					// This seems very unlikely but it appears to have happened
-					if (Main.get().getWallet() != null)
-						return;
-					revertOfflineMode();
-					setBalance(totalBalance);
+					if (Main.get().getWallet() != null) {
+						revertOfflineMode();
+						setBalance(totalBalance);
+					}
 				});
 			} catch (ConnectException e) {
 				Platform.runLater(this::offlineMode);

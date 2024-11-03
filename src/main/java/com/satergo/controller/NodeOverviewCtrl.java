@@ -175,7 +175,8 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@FXML
 	public void setApiKey(ActionEvent e) throws IOException {
 		SatTextInputDialog dialog = new SatTextInputDialog();
-		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);		dialog.setTitle(Main.lang("changeApiKey"));
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
+		dialog.setTitle(Main.lang("changeApiKey"));
 		dialog.setHeaderText(Main.lang("willBeChangedOnNodeRestart"));
 		dialog.getEditor().setPromptText(Main.lang("newApiKey"));
 		String key = dialog.showForResult().orElse(null);
@@ -195,7 +196,8 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@FXML
 	public void unlockServerWallet(ActionEvent e) {
 		SatPromptDialog<Pair<String, String>> dialog = new SatPromptDialog<>();
-		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);		dialog.setTitle(Main.lang("unlockServerWallet"));
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
+		dialog.setTitle(Main.lang("unlockServerWallet"));
 		dialog.setHeaderText(Main.lang("unlockServerWallet"));
 		dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.APPLY);
 		GridPane gridPane = new GridPane();
@@ -229,7 +231,8 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 	@FXML
 	public void setPublicAddress(ActionEvent e) throws IOException {
 		SatPromptDialog<Pair<String, Integer>> dialog = new SatPromptDialog<>();
-		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);		dialog.setTitle(Main.lang("setPublicAddress"));
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
+		dialog.setTitle(Main.lang("setPublicAddress"));
 		dialog.setHeaderText(Main.lang("setPublicAddress"));
 		dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.APPLY);
 		GridPane gridPane = new GridPane();
@@ -336,7 +339,8 @@ public class NodeOverviewCtrl implements Initializable, WalletTab {
 		d.free.setPromptText(Main.lang("fullyCustomArguments"));
 
 		SatPromptDialog<String> dialog = new SatPromptDialog<>();
-		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);		dialog.getDialogPane().setContent(d);
+		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
+		dialog.getDialogPane().setContent(d);
 
 		ButtonType reset = new ButtonType(Main.lang("reset"), ButtonBar.ButtonData.NO);
 		dialog.getDialogPane().getButtonTypes().addAll(reset, ButtonType.APPLY, ButtonType.CANCEL);
