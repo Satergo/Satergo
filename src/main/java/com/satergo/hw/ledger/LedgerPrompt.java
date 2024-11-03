@@ -130,10 +130,10 @@ public sealed interface LedgerPrompt {
 		}
 	}
 
-	final class Sign extends WithRetry<byte[]> implements LedgerPrompt {
-		private final Callable<byte[]> request;
+	final class Sign extends WithRetry<List<byte[]>> implements LedgerPrompt {
+		private final Callable<List<byte[]>> request;
 
-		public Sign(Callable<byte[]> request) {
+		public Sign(Callable<List<byte[]>> request) {
 			this.request = request;
 			resetState();
 			setOnShown(event -> request());

@@ -22,6 +22,7 @@ import org.ergoplatform.appkit.impl.BlockchainContextBase;
 import org.ergoplatform.appkit.impl.InputBoxImpl;
 import org.ergoplatform.appkit.impl.SignedTransactionImpl;
 import org.ergoplatform.appkit.impl.UnsignedTransactionImpl;
+import org.ergoplatform.sdk.wallet.secrets.DerivationPath;
 import org.ergoplatform.sdk.wallet.secrets.ExtendedPublicKey;
 import org.hid4java.HidDevice;
 import scala.collection.JavaConverters;
@@ -29,6 +30,7 @@ import sigmastate.interpreter.ProverResult;
 
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -122,6 +124,7 @@ public class LedgerKey extends WalletKey {
 	@Override
 	public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes, Integer changeAddress) throws Failure {
 		try {
+			NetworkType networkType = Main.programData().nodeNetworkType.get();
 			LedgerPrompt.Attest attestPrompt = new LedgerPrompt.Attest(ergoLedgerAppkit, unsignedTx.getInputs());
 			Utils.initDialog(attestPrompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 			List<AttestedBox> inputBoxes = attestPrompt.showForResult().orElse(null);
@@ -129,23 +132,31 @@ public class LedgerKey extends WalletKey {
 			if (inputBoxes == null)
 				throw new Failure();
 
+			List<DerivationPath> inputPaths = unsignedTx.getInputs().stream().map(input -> {
+				Address address = Address.fromErgoTree(input.getErgoTree(), networkType);
+				int index = addressIndexes.stream().filter(i -> derivePublicAddress(networkType, i).equals(address)).findAny().orElseThrow();
+				return parentExtPubKey.child(index).path();
+			}).toList();
 			LedgerPrompt.Sign prompt = new LedgerPrompt.Sign(() ->
-					ergoLedgerAppkit.signTransaction(switch (Main.programData().nodeNetworkType.get()) {
+					ergoLedgerAppkit.signTransaction(switch (networkType) {
 								case MAINNET -> ErgoNetworkType.MAINNET;
 								case TESTNET -> ErgoNetworkType.TESTNET;
-							}, inputBoxes, unsignedTx.getDataInputs(), unsignedTx.getOutputs(),
-							changeAddress == null ? null : derivePublicAddress(Main.programData().nodeNetworkType.get(), changeAddress),
+							}, inputBoxes, inputPaths, unsignedTx.getDataInputs(), unsignedTx.getOutputs(),
+							changeAddress == null ? null : derivePublicAddress(networkType, changeAddress),
 							changeAddress == null ? null : parentExtPubKey.child(changeAddress).path()));
 			Utils.initDialog(prompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
-			byte[] signature = prompt.showForResult().orElse(null);
+			List<byte[]> signatures = prompt.showForResult().orElse(null);
 			// not approved
-			if (signature == null)
+			if (signatures == null)
 				throw new Failure();
 
+			ArrayList<ProverResult> proverResults = new ArrayList<>();
+			List<InputBox> inputs = unsignedTx.getInputs();
+			for (int i = 0; i < inputs.size(); i++) {
+				proverResults.add(new ProverResult(signatures.get(i), ((InputBoxImpl) inputs.get(i)).getExtension()));
+			}
 			ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx()
-					.toSigned(JavaConverters.asScalaBuffer(unsignedTx.getInputs().stream()
-							.map(inputBox -> new ProverResult(signature, ((InputBoxImpl) inputBox).getExtension()))
-							.toList()).toIndexedSeq());
+					.toSigned(JavaConverters.asScalaBuffer(proverResults).toIndexedSeq());
 			return new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0);
 		} catch (InvalidChannelException e) {
 			if (e.received == 0) {
