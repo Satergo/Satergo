@@ -2,8 +2,8 @@ package com.satergo.keystore;
 
 import com.satergo.Main;
 import com.satergo.Utils;
-import com.satergo.hw.sov.SOVComm;
-import com.satergo.hw.sov.SOVPrompt;
+import com.satergo.hw.svault.SVaultComm;
+import com.satergo.hw.svault.SVaultPrompt;
 import com.satergo.extra.AESEncryption;
 import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.P2PKAddress;
@@ -23,7 +23,7 @@ public class SVaultKey extends WalletKey {
 
 	private byte[] storedKeyBytes;
 
-	private SOVComm sovComm;
+	private SVaultComm svaultComm;
 	private ExtendedPublicKey parentExtPubKey;
 
 	SVaultKey() {
@@ -35,15 +35,12 @@ public class SVaultKey extends WalletKey {
 		storedKeyBytes = new byte[KEY_LENGTH];
 		data.get(storedKeyBytes);
 
-		SOVPrompt.Connect connectionPrompt = new SOVPrompt.Connect();
+		SVaultPrompt.Connect connectionPrompt = new SVaultPrompt.Connect();
 		Utils.initDialog(connectionPrompt, Main.get().stage());
-		connectionPrompt.setOnShown(event -> {
-
-		});
-		sovComm = connectionPrompt.showForResult().orElse(null);
-		if (sovComm == null)
+		svaultComm = connectionPrompt.showForResult().orElse(null);
+		if (svaultComm == null)
 			throw new IllegalStateException("Failed");
-		SOVPrompt.ExtPubKey keyPrompt = new SOVPrompt.ExtPubKey(sovComm);
+		SVaultPrompt.ExtPubKey keyPrompt = new SVaultPrompt.ExtPubKey(svaultComm);
 		Utils.initDialog(keyPrompt, Main.get().stage());
 		parentExtPubKey = keyPrompt.showForResult().orElse(null);
 		if (parentExtPubKey == null)
@@ -56,12 +53,12 @@ public class SVaultKey extends WalletKey {
 		this.storedKeyBytes = storedKeyBytes;
 	}
 
-	public static SVaultKey create(ExtendedPublicKey parentExtPubKey, SOVComm sovComm, char[] password) {
+	public static SVaultKey create(ExtendedPublicKey parentExtPubKey, SVaultComm svaultComm, char[] password) {
 		if (parentExtPubKey.keyBytes().length != KEY_LENGTH) throw new IllegalArgumentException("public key must be " + KEY_LENGTH + " bytes");
 		if (parentExtPubKey.chainCode().length != 32) throw new IllegalArgumentException("chain code must be 32 bytes");
 		SVaultKey key = new SVaultKey();
 		key.parentExtPubKey = parentExtPubKey;
-		key.sovComm = sovComm;
+		key.svaultComm = svaultComm;
 		try {
 			byte[] iv = AESEncryption.generateNonce12();
 			ByteBuffer buffer = ByteBuffer.allocate(2 + KEY_LENGTH)
@@ -77,7 +74,7 @@ public class SVaultKey extends WalletKey {
 
 	@Override
 	public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
-		SOVPrompt.Sign prompt = new SOVPrompt.Sign(sovComm, unsignedTx, ctx);
+		SVaultPrompt.Sign prompt = new SVaultPrompt.Sign(svaultComm, unsignedTx, ctx);
 		Utils.initDialog(prompt, Main.get().stage());
 		return prompt.showForResult().orElse(null);
 	}
@@ -93,12 +90,12 @@ public class SVaultKey extends WalletKey {
 	}
 
 	@Override
-	public WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure {
-		return create(parentExtPubKey, sovComm, newPassword);
+	public WalletKey changedPassword(char[] currentPassword, char[] newPassword) {
+		return create(parentExtPubKey, svaultComm, newPassword);
 	}
 
 	@Override
 	public void close() {
-		sovComm.close(true);
+		svaultComm.close(true);
 	}
 }

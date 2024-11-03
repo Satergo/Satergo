@@ -3,9 +3,9 @@ package com.satergo.controller;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.Wallet;
-import com.satergo.hw.sov.SOVComm;
-import com.satergo.hw.sov.SOVFinder;
-import com.satergo.hw.sov.SOVPrompt;
+import com.satergo.hw.svault.SVaultComm;
+import com.satergo.hw.svault.SVaultFinder;
+import com.satergo.hw.svault.SVaultPrompt;
 import com.satergo.keystore.SVaultKey;
 import com.welie.blessed.BluetoothCommandStatus;
 import com.welie.blessed.BluetoothPeripheral;
@@ -21,10 +21,10 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ResourceBundle;
 
-public class SOVWalletSetupCtrl implements SetupPage.WithoutExtra, Initializable {
+public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
-	private SOVFinder sovFinder;
-	private SOVComm sovComm;
+	private SVaultFinder svaultFinder;
+	private SVaultComm svaultComm;
 
 	@FXML private Parent root;
 	@FXML private Label status;
@@ -36,7 +36,7 @@ public class SOVWalletSetupCtrl implements SetupPage.WithoutExtra, Initializable
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		sovFinder = new SOVFinder() {
+		svaultFinder = new SVaultFinder() {
 			@Override
 			public void discovered(BluetoothPeripheral peripheral) {
 				Platform.runLater(() -> {
@@ -46,24 +46,24 @@ public class SOVWalletSetupCtrl implements SetupPage.WithoutExtra, Initializable
 			}
 
 			@Override
-			public void connected(SOVComm sovComm) {
-				SOVWalletSetupCtrl.this.sovComm = sovComm;
+			public void connected(SVaultComm svaultComm) {
+				SVaultSetupCtrl.this.svaultComm = svaultComm;
 				Platform.runLater(() -> {
 					connect.setDisable(true);
-					status.setText("Connected to device with name " + sovComm.peripheral().getName());
+					status.setText("Connected to device with name " + svaultComm.peripheral().getName());
 					walletForm.setVisible(true);
 				});
 			}
 
 			@Override
-			public void disconnected(SOVComm sovComm, BluetoothCommandStatus status) {
+			public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
 				if (Main.get().getWalletPage() != null) {
 					Utils.alert(Alert.AlertType.ERROR, "Lost connection to the device running Satergo Offline Vault.");
 					Main.get().getWalletPage().logout();
 				}
 			}
 		};
-		sovFinder.scan();
+		svaultFinder.scan();
 		status.setText("Scanning for devices. Open the app and start the server.");
 	}
 
@@ -74,7 +74,7 @@ public class SOVWalletSetupCtrl implements SetupPage.WithoutExtra, Initializable
 
 	@FXML
 	public void connect(ActionEvent e) {
-		sovFinder.connectToDiscovered();
+		svaultFinder.connectToDiscovered();
 	}
 
 	@FXML
@@ -82,13 +82,13 @@ public class SOVWalletSetupCtrl implements SetupPage.WithoutExtra, Initializable
 		if (walletName.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("walletNameRequired"));
 		else if (password.getText().isBlank()) Utils.alert(Alert.AlertType.ERROR, Main.lang("passwordRequired"));
 		else {
-			SOVPrompt.ExtPubKey prompt = new SOVPrompt.ExtPubKey(sovComm);
+			SVaultPrompt.ExtPubKey prompt = new SVaultPrompt.ExtPubKey(svaultComm);
 			Utils.initDialog(prompt, root.getScene().getWindow());
 			prompt.showForResult().ifPresent(parentExtPubKey -> {
 				Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 				if (path == null) return;
 				char[] pass = password.getText().toCharArray();
-				SVaultKey key = SVaultKey.create(parentExtPubKey, sovComm, pass);
+				SVaultKey key = SVaultKey.create(parentExtPubKey, svaultComm, pass);
 				Wallet wallet = Wallet.create(path, key, walletName.getText(), pass);
 				Main.get().setWallet(wallet);
 				Main.get().displayWalletPage();

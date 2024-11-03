@@ -6,7 +6,7 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.geometry.Insets?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.SOVWalletSetupCtrl" fx:id="root">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.SVaultSetupCtrl" fx:id="root">
 
 	<Label fx:id="status" text="%loading..."/>
 	<Button fx:id="connect" onAction="#connect" text="%connect" disable="true"/>

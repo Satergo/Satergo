@@ -1,18 +1,16 @@
-package com.satergo.hw.sov;
+package com.satergo.hw.svault;
 
 import com.welie.blessed.*;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
 
 @SuppressWarnings({"NullableProblems", "FieldCanBeLocal"})
-public abstract class SOVFinder implements Closeable {
+public abstract class SVaultFinder {
 
 	private boolean closed = false;
 
-	private SOVComm sovComm;
+	private SVaultComm svaultComm;
 	private BluetoothPeripheral discovered;
 	private final BluetoothCentralManager manager;
 	private final BluetoothCentralManagerCallback managerCallback = new BluetoothCentralManagerCallback() {
@@ -26,41 +24,40 @@ public abstract class SOVFinder implements Closeable {
 		@Override
 		public void onDisconnectedPeripheral(BluetoothPeripheral peripheral, BluetoothCommandStatus status) {
 			if (!closed)
-				disconnected(sovComm, status);
+				disconnected(svaultComm, status);
 		}
 	};
 
-	public SOVFinder() {
+	public SVaultFinder() {
 		manager = new BluetoothCentralManager(managerCallback, Set.of(BluetoothCentralManager.SCANOPTION_NO_NULL_NAMES));
 	}
 
 	public void scan() {
-		manager.scanForPeripheralsWithServices(new UUID[] { SOVComm.SERVICE });
+		manager.scanForPeripheralsWithServices(new UUID[] { SVaultComm.SERVICE });
 	}
 
 	public final void connectToDiscovered() {
-		sovComm = new SOVComm(shutdown -> {
+		svaultComm = new SVaultComm(shutdown -> {
 			if (shutdown) closed = true;
-			manager.cancelConnection(sovComm.peripheral());
+			manager.cancelConnection(svaultComm.peripheral());
 		});
-		sovComm.onServicesDiscovered = (bluetoothPeripheral, bluetoothGattServices) -> {
-			connected(sovComm);
+		svaultComm.onServicesDiscovered = (bluetoothPeripheral, bluetoothGattServices) -> {
+			connected(svaultComm);
 		};
-		manager.connectPeripheral(discovered, sovComm.peripheralCallback);
+		manager.connectPeripheral(discovered, svaultComm.peripheralCallback);
 	}
 
 	public abstract void discovered(BluetoothPeripheral peripheral);
 
-	public abstract void connected(SOVComm sovComm);
+	public abstract void connected(SVaultComm svaultComm);
 
-	public abstract void disconnected(SOVComm sovComm, BluetoothCommandStatus status);
+	public abstract void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status);
 
 	/**
 	 * Only makes any future disconnection events not happen
 	 */
-	@Override
 	public void close() {
 		closed = true;
-		manager.cancelConnection(sovComm.peripheral());
+		manager.cancelConnection(svaultComm.peripheral());
 	}
 }

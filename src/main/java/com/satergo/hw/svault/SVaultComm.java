@@ -1,4 +1,4 @@
-package com.satergo.hw.sov;
+package com.satergo.hw.svault;
 
 import com.welie.blessed.*;
 import com.welie.blessed.BluetoothGattCharacteristic.WriteType;
@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @SuppressWarnings("NullableProblems")
-public class SOVComm {
+public class SVaultComm {
 
 	static final UUID SERVICE = UUID.fromString("fb5c5415-fa44-4c3c-a9bb-9f913f2de7dc");
 
@@ -28,7 +28,7 @@ public class SOVComm {
 	/**
 	 * @param closeConnection boolean: whether to shut down manager
 	 */
-	public SOVComm(Consumer<Boolean> closeConnection) {
+	public SVaultComm(Consumer<Boolean> closeConnection) {
 		this.closeConnection = closeConnection;
 	}
 
@@ -81,7 +81,7 @@ public class SOVComm {
 	public final BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback() {
 		@Override
 		public void onServicesDiscovered(BluetoothPeripheral peripheral, List<BluetoothGattService> services) {
-			SOVComm.this.peripheral = peripheral;
+			SVaultComm.this.peripheral = peripheral;
 			if (onServicesDiscovered != null)
 				onServicesDiscovered.accept(peripheral, services);
 		}

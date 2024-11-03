@@ -1,4 +1,4 @@
-package com.satergo.hw.sov;
+package com.satergo.hw.svault;
 
 import com.satergo.Main;
 import com.satergo.Utils;
@@ -8,7 +8,6 @@ import com.welie.blessed.BluetoothCommandStatus;
 import com.welie.blessed.BluetoothPeripheral;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import org.ergoplatform.ErgoLikeTransaction;
 import org.ergoplatform.appkit.*;
@@ -22,17 +21,16 @@ import sigmastate.interpreter.ProverResult;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("FieldCanBeLocal")
-public sealed interface SOVPrompt {
+public sealed interface SVaultPrompt {
 
 
-	final class Connect extends SatPromptDialog<SOVComm> implements SOVPrompt {
+	final class Connect extends SatPromptDialog<SVaultComm> implements SVaultPrompt {
 
 		public Connect() {
 			setHeaderText(Main.lang("svault.initializingBluetoothManager"));
-			SOVFinder sovFinder = new SOVFinder() {
+			SVaultFinder svaultFinder = new SVaultFinder() {
 				@Override
 				public void discovered(BluetoothPeripheral peripheral) {
 					Platform.runLater(() -> setHeaderText("Discovered! " + peripheral.getName()));
@@ -40,12 +38,12 @@ public sealed interface SOVPrompt {
 				}
 
 				@Override
-				public void connected(SOVComm sovComm) {
-					Platform.runLater(() -> setResult(sovComm));
+				public void connected(SVaultComm svaultComm) {
+					Platform.runLater(() -> setResult(svaultComm));
 				}
 
 				@Override
-				public void disconnected(SOVComm sovComm, BluetoothCommandStatus status) {
+				public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
 					WalletCtrl walletPage = Main.get().getWalletPage();
 					if (walletPage != null) {
 						Utils.alert(Alert.AlertType.ERROR, "Lost connection to the device running Satergo Offline Vault.");
@@ -54,17 +52,17 @@ public sealed interface SOVPrompt {
 				}
 			};
 			setHeaderText(Main.lang("svault.startingScan"));
-			sovFinder.scan();
+			svaultFinder.scan();
 			setHeaderText(Main.lang("svault.scanning"));
 		}
 	}
 
-	final class ExtPubKey extends SatPromptDialog<ExtendedPublicKey> implements SOVPrompt {
+	final class ExtPubKey extends SatPromptDialog<ExtendedPublicKey> implements SVaultPrompt {
 
-		public ExtPubKey(SOVComm sovComm) {
+		public ExtPubKey(SVaultComm svaultComm) {
 			setHeaderText("Waiting for action on the mobile app");
 			getDialogPane().setContent(new Label("Get public key"));
-			sovComm.extendedPublicKey().handle((extendedPublicKey, throwable) -> {
+			svaultComm.extendedPublicKey().handle((extendedPublicKey, throwable) -> {
 				Platform.runLater(() -> {
 					if (throwable != null) {
 						Utils.alertUnexpectedException(throwable);
@@ -77,15 +75,15 @@ public sealed interface SOVPrompt {
 		}
 	}
 
-	final class Sign extends SatPromptDialog<SignedTransaction> implements SOVPrompt {
+	final class Sign extends SatPromptDialog<SignedTransaction> implements SVaultPrompt {
 
-		public Sign(SOVComm sovComm, UnsignedTransaction unsignedTx, BlockchainContext ctx) {
+		public Sign(SVaultComm svaultComm, UnsignedTransaction unsignedTx, BlockchainContext ctx) {
 			setHeaderText("Waiting for action on the mobile app");
 			getDialogPane().setContent(new Label("Sign transaction"));
 			ReducedTransaction reducedTx = ctx.newProverBuilder().build().reduce(unsignedTx, 0);
-			sovComm.sendSignRequest(reducedTx.toBytes()).handle((unused, throwable) -> {
+			svaultComm.sendSignRequest(reducedTx.toBytes()).handle((unused, throwable) -> {
 				if (throwable != null) Platform.runLater(() -> Utils.alertUnexpectedException(throwable));
-				else sovComm.getSignatures().handle((signatures, signThrowable) -> {
+				else svaultComm.getSignatures().handle((signatures, signThrowable) -> {
 					Platform.runLater(() -> {
 						if (signThrowable != null) {
 							Utils.alertUnexpectedException(signThrowable);
