@@ -96,4 +96,9 @@ public class SVaultKey extends WalletKey {
 	public WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure {
 		return create(parentExtPubKey, sovComm, newPassword);
 	}
+
+	@Override
+	public void close() {
+		sovComm.close(true);
+	}
 }

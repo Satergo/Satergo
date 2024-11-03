@@ -39,7 +39,10 @@ public abstract class SOVFinder implements Closeable {
 	}
 
 	public final void connectToDiscovered() {
-		sovComm = new SOVComm();
+		sovComm = new SOVComm(shutdown -> {
+			if (shutdown) closed = true;
+			manager.cancelConnection(sovComm.peripheral());
+		});
 		sovComm.onServicesDiscovered = (bluetoothPeripheral, bluetoothGattServices) -> {
 			connected(sovComm);
 		};
@@ -57,7 +60,7 @@ public abstract class SOVFinder implements Closeable {
 	 */
 	@Override
 	public void close() {
-		manager.cancelConnection(sovComm.peripheral());
 		closed = true;
+		manager.cancelConnection(sovComm.peripheral());
 	}
 }

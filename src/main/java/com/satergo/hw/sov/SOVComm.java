@@ -13,13 +13,28 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @SuppressWarnings("NullableProblems")
 public class SOVComm {
 
 	static final UUID SERVICE = UUID.fromString("fb5c5415-fa44-4c3c-a9bb-9f913f2de7dc");
+
 	public BiConsumer<BluetoothPeripheral, List<BluetoothGattService>> onServicesDiscovered;
+
+	private final Consumer<Boolean> closeConnection;
+
+	/**
+	 * @param closeConnection boolean: whether to shut down manager
+	 */
+	public SOVComm(Consumer<Boolean> closeConnection) {
+		this.closeConnection = closeConnection;
+	}
+
+	public void close(boolean shutdownManager) {
+		closeConnection.accept(shutdownManager);
+	}
 
 	private static class TaskFuture<T extends Task<V>, V> extends CompletableFuture<V> {
 		private final T task;
