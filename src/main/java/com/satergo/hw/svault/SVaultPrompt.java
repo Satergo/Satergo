@@ -33,7 +33,7 @@ public sealed interface SVaultPrompt {
 			SVaultFinder svaultFinder = new SVaultFinder() {
 				@Override
 				public void discovered(BluetoothPeripheral peripheral) {
-					Platform.runLater(() -> setHeaderText("Discovered! " + peripheral.getName()));
+					Platform.runLater(() -> setHeaderText(Main.lang("svault.discoveredDevice").formatted(peripheral.getName())));
 					connectToDiscovered();
 				}
 
@@ -46,7 +46,7 @@ public sealed interface SVaultPrompt {
 				public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
 					WalletCtrl walletPage = Main.get().getWalletPage();
 					if (walletPage != null) {
-						Utils.alert(Alert.AlertType.ERROR, "Lost connection to the device running Satergo Offline Vault.");
+						Utils.alert(Alert.AlertType.ERROR, Main.lang("svault.lostConnection"));
 						walletPage.logout();
 					}
 				}
@@ -60,8 +60,8 @@ public sealed interface SVaultPrompt {
 	final class ExtPubKey extends SatPromptDialog<ExtendedPublicKey> implements SVaultPrompt {
 
 		public ExtPubKey(SVaultComm svaultComm) {
-			setHeaderText("Waiting for action on the mobile app");
-			getDialogPane().setContent(new Label("Get public key"));
+			setHeaderText(Main.lang("svault.waitingForAction"));
+			getDialogPane().setContent(new Label(Main.lang("svault.getPublicKey")));
 			svaultComm.extendedPublicKey().handle((extendedPublicKey, throwable) -> {
 				Platform.runLater(() -> {
 					if (throwable != null) {
@@ -78,8 +78,8 @@ public sealed interface SVaultPrompt {
 	final class Sign extends SatPromptDialog<SignedTransaction> implements SVaultPrompt {
 
 		public Sign(SVaultComm svaultComm, UnsignedTransaction unsignedTx, BlockchainContext ctx) {
-			setHeaderText("Waiting for action on the mobile app");
-			getDialogPane().setContent(new Label("Sign transaction"));
+			setHeaderText(Main.lang("svault.waitingForAction"));
+			getDialogPane().setContent(new Label(Main.lang("svault.signTransaction")));
 			ReducedTransaction reducedTx = ctx.newProverBuilder().build().reduce(unsignedTx, 0);
 			svaultComm.sendSignRequest(reducedTx.toBytes()).handle((unused, throwable) -> {
 				if (throwable != null) Platform.runLater(() -> Utils.alertUnexpectedException(throwable));

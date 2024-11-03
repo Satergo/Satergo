@@ -5,7 +5,7 @@ import com.welie.blessed.*;
 import java.util.Set;
 import java.util.UUID;
 
-@SuppressWarnings({"NullableProblems", "FieldCanBeLocal"})
+@SuppressWarnings("NullableProblems")
 public abstract class SVaultFinder {
 
 	private boolean closed = false;
@@ -13,22 +13,24 @@ public abstract class SVaultFinder {
 	private SVaultComm svaultComm;
 	private BluetoothPeripheral discovered;
 	private final BluetoothCentralManager manager;
-	private final BluetoothCentralManagerCallback managerCallback = new BluetoothCentralManagerCallback() {
-		@Override
-		public void onDiscoveredPeripheral(BluetoothPeripheral peripheral, ScanResult scanResult) {
-			manager.stopScan();
-			discovered = peripheral;
-			discovered(peripheral);
-		}
-
-		@Override
-		public void onDisconnectedPeripheral(BluetoothPeripheral peripheral, BluetoothCommandStatus status) {
-			if (!closed)
-				disconnected(svaultComm, status);
-		}
-	};
 
 	public SVaultFinder() {
+		BluetoothCentralManagerCallback managerCallback = new BluetoothCentralManagerCallback() {
+			@Override
+			public void onDiscoveredPeripheral(BluetoothPeripheral peripheral, ScanResult scanResult) {
+				manager.stopScan();
+				discovered = peripheral;
+				discovered(peripheral);
+			}
+
+			@Override
+			public void onDisconnectedPeripheral(BluetoothPeripheral peripheral, BluetoothCommandStatus status) {
+				if (closed)
+					manager.shutdown();
+				else
+					disconnected(svaultComm, status);
+			}
+		};
 		manager = new BluetoothCentralManager(managerCallback, Set.of(BluetoothCentralManager.SCANOPTION_NO_NULL_NAMES));
 	}
 
@@ -54,7 +56,7 @@ public abstract class SVaultFinder {
 	public abstract void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status);
 
 	/**
-	 * Only makes any future disconnection events not happen
+	 * Disconnects from the peripheral and shuts down the manager
 	 */
 	public void close() {
 		closed = true;

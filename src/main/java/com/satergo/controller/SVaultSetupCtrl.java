@@ -41,7 +41,7 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			public void discovered(BluetoothPeripheral peripheral) {
 				Platform.runLater(() -> {
 					connect.setDisable(false);
-					status.setText("Discovered device with name " + peripheral.getName());
+					status.setText(Main.lang("svault.discoveredDevice").formatted(peripheral.getName()));
 				});
 			}
 
@@ -50,7 +50,7 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 				SVaultSetupCtrl.this.svaultComm = svaultComm;
 				Platform.runLater(() -> {
 					connect.setDisable(true);
-					status.setText("Connected to device with name " + svaultComm.peripheral().getName());
+					status.setText(Main.lang("svault.connectedToDevice").formatted(svaultComm.peripheral().getName()));
 					walletForm.setVisible(true);
 				});
 			}
@@ -58,13 +58,13 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			@Override
 			public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
 				if (Main.get().getWalletPage() != null) {
-					Utils.alert(Alert.AlertType.ERROR, "Lost connection to the device running Satergo Offline Vault.");
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("svault.lostConnection"));
 					Main.get().getWalletPage().logout();
 				}
 			}
 		};
 		svaultFinder.scan();
-		status.setText("Scanning for devices. Open the app and start the server.");
+		status.setText(Main.lang("svault.scanning"));
 	}
 
 	@Override
