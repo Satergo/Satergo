@@ -75,10 +75,8 @@ public class LedgerKey extends WalletKey {
 				@Override
 				public void deviceDetached(HidDevice hidDevice) {
 					Platform.runLater(() -> {
-						WalletCtrl walletPage = Main.get().getWalletPage();
-						if (walletPage != null) {
+						if (logoutFromWallet()) {
 							Utils.alert(Alert.AlertType.ERROR, Main.lang("ledger.lostConnection"));
-							walletPage.logout();
 						}
 					});
 				}
