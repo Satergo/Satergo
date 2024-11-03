@@ -38,6 +38,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 	@FXML private PasswordField password;
 
 	private boolean emulator;
+	private LedgerKey createdKey;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -61,13 +62,15 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			}
 			@Override
 			public void deviceDetached(HidDevice hidDevice) {
-				Platform.runLater(() -> {
-					WalletCtrl walletPage = Main.get().getWalletPage();
-					if (walletPage != null) {
-						Utils.alert(Alert.AlertType.ERROR, Main.lang("ledger.lostConnection"));
-						walletPage.logout();
-					}
-				});
+				if (createdKey != null && Main.get().getWallet() != null && Main.get().getWallet().key() == createdKey) {
+					Platform.runLater(() -> {
+						WalletCtrl walletPage = Main.get().getWalletPage();
+						if (walletPage != null) {
+							Utils.alert(Alert.AlertType.ERROR, Main.lang("ledger.lostConnection"));
+							walletPage.logout();
+						}
+					});
+				}
 			}
 		};
 		ledgerSelector.startListener();
@@ -105,6 +108,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			Wallet wallet = Wallet.create(path, key, walletName.getText(), pass);
 			Main.get().setWallet(wallet);
 			Main.get().displayWalletPage();
+			createdKey = key;
 		});
 	}
 
