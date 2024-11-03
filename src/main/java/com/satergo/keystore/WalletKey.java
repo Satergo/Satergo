@@ -115,6 +115,13 @@ public abstract class WalletKey {
 	/** Useful for WalletKeys that connect to things */
 	public void close() {}
 
+	/** Users of this WalletKey can set this field to react to when the key requests that the wallet be closed (for example, due to a lost connection) */
+	public Runnable logoutFromWallet;
+	/** Implementations can call this when they for instance lose the connection to a device that handles the key operations */
+	protected final void logoutFromWallet() {
+		if (logoutFromWallet != null) logoutFromWallet.run();
+	}
+
 	/**
 	 * The key is encrypted and embedded into the wallet file
 	 * The default behavior of this class is:
