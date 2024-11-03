@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -116,10 +117,14 @@ public abstract class WalletKey {
 	public void close() {}
 
 	/** Users of this WalletKey can set this field to react to when the key requests that the wallet be closed (for example, due to a lost connection) */
-	public Runnable logoutFromWallet;
-	/** Implementations can call this when they for instance lose the connection to a device that handles the key operations */
-	protected final void logoutFromWallet() {
-		if (logoutFromWallet != null) logoutFromWallet.run();
+	public Function<Void, Boolean> logoutFromWallet;
+	/**
+	 * Implementations can call this when they for instance lose the connection to a device that handles the key operations
+	 * @return true if it logged out
+	 */
+	protected final boolean logoutFromWallet() {
+		if (logoutFromWallet != null) return logoutFromWallet.apply(null);
+		return false;
 	}
 
 	/**
