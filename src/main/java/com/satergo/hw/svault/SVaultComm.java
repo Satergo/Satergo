@@ -213,7 +213,7 @@ public class SVaultComm {
 			throw new IllegalStateException();
 		// The limit is 512 bytes, so we might need to do it in chunks.
 		ByteBuffer buffer = ByteBuffer.allocate(txData.length + inputAddresses.size() * 4 + (changeAddress != null ? 4 : 0))
-				.put(txData);
+				.putShort((short) inputAddresses.size());
 		inputAddresses.forEach(buffer::putInt);
 		if (changeAddress != null) {
 			buffer.put((byte) 1);
@@ -221,6 +221,7 @@ public class SVaultComm {
 		} else {
 			buffer.put((byte) 0);
 		}
+		buffer.put(txData);
 		byte[] data = buffer.array();
 		System.out.println("Writing " + data.length + " tx bytes");
 		if (data.length <= 510) {
