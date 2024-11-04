@@ -212,7 +212,7 @@ public class SVaultComm {
 		if (ptf(Task.SIGN_REQUEST).isPresent())
 			throw new IllegalStateException();
 		// The limit is 512 bytes, so we might need to do it in chunks.
-		ByteBuffer buffer = ByteBuffer.allocate(txData.length + inputAddresses.size() * 4 + (changeAddress != null ? 4 : 0))
+		ByteBuffer buffer = ByteBuffer.allocate(2 + inputAddresses.size() * 4 + 1 + (changeAddress != null ? 4 : 0) + txData.length)
 				.putShort((short) inputAddresses.size());
 		inputAddresses.forEach(buffer::putInt);
 		if (changeAddress != null) {
