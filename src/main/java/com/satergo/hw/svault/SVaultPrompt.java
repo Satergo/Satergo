@@ -20,6 +20,7 @@ import scala.collection.JavaConverters;
 import sigmastate.interpreter.ProverResult;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -74,11 +75,11 @@ public sealed interface SVaultPrompt {
 
 	final class Sign extends SatPromptDialog<SignedTransaction> implements SVaultPrompt {
 
-		public Sign(SVaultComm svaultComm, UnsignedTransaction unsignedTx, BlockchainContext ctx) {
+		public Sign(SVaultComm svaultComm, UnsignedTransaction unsignedTx, Collection<Integer> inputAddresses, Integer changeAddress, BlockchainContext ctx) {
 			setHeaderText(Main.lang("svault.waitingForAction"));
 			getDialogPane().setContent(new Label(Main.lang("svault.signTransaction")));
 			ReducedTransaction reducedTx = ctx.newProverBuilder().build().reduce(unsignedTx, 0);
-			svaultComm.sendSignRequest(reducedTx.toBytes()).handle((unused, throwable) -> {
+			svaultComm.sendSignRequest(reducedTx.toBytes(), inputAddresses, changeAddress).handle((unused, throwable) -> {
 				if (throwable != null) Platform.runLater(() -> Utils.alertUnexpectedException(throwable));
 				else svaultComm.getSignatures().handle((signatures, signThrowable) -> {
 					Platform.runLater(() -> {

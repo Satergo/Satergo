@@ -80,7 +80,7 @@ public class SVaultKey extends WalletKey {
 
 	@Override
 	public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
-		SVaultPrompt.Sign prompt = new SVaultPrompt.Sign(svaultComm, unsignedTx, ctx);
+		SVaultPrompt.Sign prompt = new SVaultPrompt.Sign(svaultComm, unsignedTx, addressIndexes, null, ctx);
 		Utils.initDialog(prompt, Main.get().stage());
 		return prompt.showForResult().orElse(null);
 	}

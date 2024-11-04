@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 @SuppressWarnings("NullableProblems")
 public class SVaultComm {
 
+	public static final int PROTOCOL_VERSION = 0;
+
 	static final UUID SERVICE = UUID.fromString("fb5c5415-fa44-4c3c-a9bb-9f913f2de7dc");
 
 	public BiConsumer<BluetoothPeripheral, List<BluetoothGattService>> onServicesDiscovered;
@@ -56,7 +58,7 @@ public class SVaultComm {
 		}
 	}
 
-	public record AppInfo(int versionCode, String version) {}
+	public record AppInfo(int protocolVersion, int versionCode, String version) {}
 
 	private BluetoothPeripheral peripheral;
 
@@ -103,7 +105,7 @@ public class SVaultComm {
 					if (task == Task.APP_INFO) {
 						var ptf = ptf(Task.APP_INFO).orElseThrow();
 						pendingReads.remove(ptf);
-						ptf.complete(new AppInfo(in.readInt(), in.readUTF()));
+						ptf.complete(new AppInfo(in.readInt(), in.readInt(), in.readUTF()));
 					} else if (task == Task.EXT_PUB_KEY) {
 						var ptf = ptf(Task.EXT_PUB_KEY).orElseThrow();
 						pendingReads.remove(ptf);
@@ -206,10 +208,20 @@ public class SVaultComm {
 
 	// Sending data
 
-	public CompletableFuture<Void> sendSignRequest(byte[] data) {
+	public CompletableFuture<Void> sendSignRequest(byte[] txData, Collection<Integer> inputAddresses, Integer changeAddress) {
 		if (ptf(Task.SIGN_REQUEST).isPresent())
 			throw new IllegalStateException();
 		// The limit is 512 bytes, so we might need to do it in chunks.
+		ByteBuffer buffer = ByteBuffer.allocate(txData.length + inputAddresses.size() * 4 + (changeAddress != null ? 4 : 0))
+				.put(txData);
+		inputAddresses.forEach(buffer::putInt);
+		if (changeAddress != null) {
+			buffer.put((byte) 1);
+			buffer.putInt(changeAddress);
+		} else {
+			buffer.put((byte) 0);
+		}
+		byte[] data = buffer.array();
 		System.out.println("Writing " + data.length + " tx bytes");
 		if (data.length <= 510) {
 			byte[] fullData = ByteBuffer.allocate(2 + data.length)
