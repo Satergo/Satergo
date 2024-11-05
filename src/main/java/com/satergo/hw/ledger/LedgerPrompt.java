@@ -5,6 +5,7 @@ import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
 import com.satergo.jledger.transport.hid4java.InvalidChannelException;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -99,6 +100,7 @@ public sealed interface LedgerPrompt {
 	final class Attest extends WithRetry<List<AttestedBox>> implements LedgerPrompt {
 		private final ErgoLedgerAppkit ergoLedgerAppkit;
 		private final List<InputBox> inputBoxes;
+		private int progress = 0;
 
 		public Attest(ErgoLedgerAppkit ergoLedgerAppkit, List<InputBox> inputBoxes) {
 			this.ergoLedgerAppkit = ergoLedgerAppkit;
@@ -109,24 +111,33 @@ public sealed interface LedgerPrompt {
 
 		@Override
 		protected void resetState() {
-			setHeaderText("Please approve the request on your Ledger device");
+			progress = 0;
+			setHeaderText("Please approve the request on your Ledger device (" + progress + "/" + inputBoxes.size() + ")");
 			getDialogPane().getButtonTypes().clear();
 		}
 
 		@Override
 		protected void request() {
-			new SimpleTask<>(() -> {
-				ArrayList<AttestedBox> attestedBoxes = new ArrayList<>();
-				for (int i = 0; i < inputBoxes.size(); i++) {
-					InputBox inputBox = inputBoxes.get(i);
-					attestedBoxes.add(new AttestedBox(
-							ergoLedgerAppkit.attestBox(inputBox),
-							ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension())));
+			Task<List<AttestedBox>> task = new Task<>() {
+				@Override
+				protected List<AttestedBox> call() {
+					ArrayList<AttestedBox> attestedBoxes = new ArrayList<>();
+					for (int i = 0; i < inputBoxes.size(); i++) {
+						InputBox inputBox = inputBoxes.get(i);
+						attestedBoxes.add(new AttestedBox(
+								ergoLedgerAppkit.attestBox(inputBox),
+								ErgoLedgerAppkit.serializeContextExtension(((InputBoxImpl) inputBox).getExtension())));
+						updateProgress(i + 1, inputBoxes.size());
+					}
+					return attestedBoxes;
 				}
-				return attestedBoxes;
-			}).onSuccess(this::setResult)
-					.onFail(this::handleException)
-					.newThread();
+			};
+			task.setOnSucceeded(event -> setResult(task.getValue()));
+			task.setOnFailed(event -> handleException(task.getException()));
+			task.progressProperty().addListener((observable, oldValue, newValue) -> {
+				setHeaderText("Please approve the request on your Ledger device (" + Math.round((double) newValue * inputBoxes.size()) + "/" + inputBoxes.size() + ")");
+			});
+			new Thread(task).start();
 		}
 	}
 
