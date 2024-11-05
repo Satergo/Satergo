@@ -53,7 +53,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			public void deviceFound(HidDevice device) {
 				Platform.runLater(() -> {
 					if (LedgerDevice.PRODUCT_IDS.containsKey(device.getProductId())) {
-						status.setText(Main.lang("ledger.found_model_device").formatted(getModelName(device.getProductId())));
+						status.setText(Main.lang("ledger.found_s_device").formatted(getModelName(device.getProductId())));
 					} else {
 						status.setText(Main.lang("ledger.foundUnknownModelDevice"));
 					}
