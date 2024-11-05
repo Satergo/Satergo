@@ -77,8 +77,7 @@ dependencies {
 
 	// ledger
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
-	implementation 'org.hid4java:hid4java:0.7.0'
-//	implementation 'net.codecrete.usb:java-does-usb:0.6.1'
+	implementation 'org.hid4java:hid4java:0.8.0'
 }
 
 jar {
