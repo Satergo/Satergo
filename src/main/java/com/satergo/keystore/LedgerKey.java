@@ -2,13 +2,12 @@ package com.satergo.keystore;
 
 import com.satergo.Main;
 import com.satergo.Utils;
-import com.satergo.controller.WalletCtrl;
 import com.satergo.extra.AESEncryption;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.hw.ledger.AttestedBox;
 import com.satergo.hw.ledger.ErgoLedgerAppkit;
 import com.satergo.hw.ledger.LedgerPrompt;
-import com.satergo.hw.ledger.LedgerSelector;
+import com.satergo.hw.ledger.LedgerFinder;
 import com.satergo.jledger.protocol.ergo.ErgoNetworkType;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.transport.hid4java.HidLedgerDevice;
@@ -64,7 +63,7 @@ public class LedgerKey extends WalletKey {
 		LedgerPrompt.Connect connectionPrompt = new LedgerPrompt.Connect(productId);
 		Utils.initDialog(connectionPrompt, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		connectionPrompt.setOnShown(event -> {
-			LedgerSelector ledgerSelector = new LedgerSelector() {
+			LedgerFinder ledgerFinder = new LedgerFinder() {
 				@Override
 				public void deviceFound(HidDevice hidDevice) {
 					Platform.runLater(() -> {
@@ -81,7 +80,7 @@ public class LedgerKey extends WalletKey {
 					});
 				}
 			};
-			ledgerSelector.startListener();
+			ledgerFinder.startListener();
 		});
 		ergoLedgerAppkit = connectionPrompt.showForResult().orElse(null);
 		if (ergoLedgerAppkit == null)

@@ -72,7 +72,7 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 	}
 
 	@FXML
-	public void createForHardwareWallet(ActionEvent e) {
+	public void createWalletForHardware(ActionEvent e) {
 		Main.get().displaySetupPage(Load.<HardwareWalletSetupCtrl>fxmlController("/setup-page/hardware-wallet.fxml"));
 	}
 

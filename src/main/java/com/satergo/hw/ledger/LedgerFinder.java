@@ -6,16 +6,16 @@ import org.hid4java.event.HidServicesEvent;
 
 import java.util.List;
 
-public abstract class LedgerSelector {
+public abstract class LedgerFinder {
 
 	private final HidServices hidServices;
 	private HidServicesListener servicesListener;
 	private HidDevice device;
 
 	/**
-	 * Constructs a new LedgerSelector and loops through all already-connected devices
+	 * Constructs a new LedgerFinder and loops through all already-connected devices
 	 */
-	public LedgerSelector() {
+	public LedgerFinder() {
 		HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
 		hidServicesSpecification.setAutoStart(false);
 		hidServices = HidManager.getHidServices(hidServicesSpecification);

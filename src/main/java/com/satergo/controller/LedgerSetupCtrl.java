@@ -3,8 +3,8 @@ package com.satergo.controller;
 import com.satergo.*;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.hw.ledger.ErgoLedgerAppkit;
+import com.satergo.hw.ledger.LedgerFinder;
 import com.satergo.hw.ledger.LedgerPrompt;
-import com.satergo.hw.ledger.LedgerSelector;
 import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
 import com.satergo.jledger.transport.hid4java.HidLedgerDevice;
@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 
 public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
-	private LedgerSelector ledgerSelector;
+	private LedgerFinder ledgerFinder;
 	@FXML
 	private Parent root;
 	@FXML private Label status;
@@ -48,7 +48,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			found.setVisible(true);
 			return;
 		}
-		ledgerSelector = new LedgerSelector() {
+		ledgerFinder = new LedgerFinder() {
 			@Override
 			public void deviceFound(HidDevice device) {
 				Platform.runLater(() -> {
@@ -73,18 +73,18 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 				}
 			}
 		};
-		ledgerSelector.startListener();
-		if (ledgerSelector.getDevice() == null) {
+		ledgerFinder.startListener();
+		if (ledgerFinder.getDevice() == null) {
 			status.setText(resources.getString("ledger.noDeviceFound"));
 		}
 	}
 
 	@FXML
 	public void createWallet(ActionEvent e) {
-		if (!emulator) ledgerSelector.stopScanning();
+		if (!emulator) ledgerFinder.stopScanning();
 		LedgerDevice ledgerDevice = emulator
 				? new SpeculosLedgerDevice(SystemProperties.ledgerEmulator().get(), SystemProperties.ledgerEmulatorPort().get(), 0x1011)
-				: new HidLedgerDevice(ledgerSelector.getDevice());
+				: new HidLedgerDevice(ledgerFinder.getDevice());
 		try {
 			ledgerDevice.open();
 		} catch (Exception ex) {
@@ -114,10 +114,10 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 	@FXML
 	public void rescan(ActionEvent e) {
-		ledgerSelector.setDevice(null);
+		ledgerFinder.setDevice(null);
 		found.setVisible(false);
 		// If the previously found device is still connected, it will be found again, but I think if the user decides to rescan they will have disconnected it.
-		ledgerSelector.rescanConnected();
+		ledgerFinder.rescanConnected();
 	}
 
 	@Override
@@ -127,6 +127,6 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 	@Override
 	public void cleanup() {
-		if (!emulator) ledgerSelector.stopScanning();
+		if (!emulator) ledgerFinder.stopScanning();
 	}
 }
