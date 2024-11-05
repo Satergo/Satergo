@@ -7,7 +7,7 @@
 	<Label styleClass="welcome-text" text="%welcome"/>
 	<VBox spacing="12">
 		<SetupOption title="%createNewWallet" onAction="#createWallet"/>
-		<SetupOption title="%createForAHardwareWallet" onAction="#createForHardwareWallet"/>
+		<SetupOption title="%createWalletForHardware" onAction="#createWalletForHardware"/>
 		<SetupOption title="%openWalletFile" onAction="#openWalletFile"/>
 		<SetupOption title="%restoreWalletUsingSeed" onAction="#restoreFromSeed"/>
 	</VBox>

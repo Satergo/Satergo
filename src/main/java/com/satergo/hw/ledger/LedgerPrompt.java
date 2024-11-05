@@ -23,7 +23,7 @@ public sealed interface LedgerPrompt {
 
 	final class Connect extends SatPromptDialog<ErgoLedgerAppkit> implements LedgerPrompt {
 		public Connect(int productId) {
-			setHeaderText(Main.lang("ledger.pleaseConnectA_deviceName_device").formatted(LedgerSelector.getModelName(productId)));
+			setHeaderText(Main.lang("ledger.pleaseConnectA_deviceName_device").formatted(LedgerFinder.getModelName(productId)));
 		}
 	}
 
