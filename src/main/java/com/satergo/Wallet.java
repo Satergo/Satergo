@@ -122,19 +122,6 @@ public final class Wallet {
 		saveToFile();
 	}
 
-	public static Wallet create(Path path, WalletKey walletKey, String name, char[] password) {
-		byte[] detailsIv = AESEncryption.generateNonce12();
-		SecretKey detailsSecretKey;
-		try {
-			detailsSecretKey = AESEncryption.generateSecretKey(password, detailsIv);
-		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-			throw new RuntimeException(e);
-		}
-		Wallet wallet = new Wallet(path, walletKey, name, Map.of(0, "Master"), detailsIv, detailsSecretKey);
-		wallet.saveToFile();
-		return wallet;
-	}
-
 	/**
 	 * creates a new wallet with local key and master address and saves it
 	 */
