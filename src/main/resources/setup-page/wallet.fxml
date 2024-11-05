@@ -10,7 +10,6 @@
 		<SetupOption title="%createWalletForHardware" onAction="#createWalletForHardware"/>
 		<SetupOption title="%openWalletFile" onAction="#openWalletFile"/>
 		<SetupOption title="%restoreWalletUsingSeed" onAction="#restoreFromSeed"/>
-		<SetupOption title="Create wallet for s.o.vault" onAction="#createForSOV"/>
 	</VBox>
 	<Region VBox.vgrow="ALWAYS"/>
 	<Label fx:id="nodeConfigurationInfo"/>
