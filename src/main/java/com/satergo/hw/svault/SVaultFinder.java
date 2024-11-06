@@ -3,10 +3,14 @@ package com.satergo.hw.svault;
 import com.satergo.Utils;
 import com.satergo.extra.dialog.SatTextInputDialog;
 import com.welie.blessed.*;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
 
 @SuppressWarnings("NullableProblems")
 public abstract class SVaultFinder {
@@ -36,14 +40,23 @@ public abstract class SVaultFinder {
 
 			@Override
 			public String onPinRequest(BluetoothPeripheral peripheral) {
-				SatTextInputDialog dialog = new SatTextInputDialog();
-				dialog.setHeaderText("Enter PIN code");
-				String pin = dialog.showForResult().orElse(null);
-				if (pin == null) {
-					Utils.alert(Alert.AlertType.ERROR, "Pin code required, cancelling connection.");
-					return "";
+				CompletableFuture<String> pinFuture = new CompletableFuture<>();
+				Platform.runLater(() -> {
+					SatTextInputDialog dialog = new SatTextInputDialog();
+					dialog.setHeaderText("Enter PIN code");
+					String pin = dialog.showForResult().orElse(null);
+					if (pin == null) {
+						Utils.alert(Alert.AlertType.ERROR, "Pin code required, cancelling connection.");
+						pinFuture.complete("");
+					} else {
+						pinFuture.complete(pin);
+					}
+				});
+				try {
+					return pinFuture.get();
+				} catch (InterruptedException | ExecutionException e) {
+					throw new RuntimeException(e);
 				}
-				return pin;
 			}
 		};
 		manager = new BluetoothCentralManager(managerCallback, Set.of(BluetoothCentralManager.SCANOPTION_NO_NULL_NAMES));
