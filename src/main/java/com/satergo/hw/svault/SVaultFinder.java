@@ -1,6 +1,9 @@
 package com.satergo.hw.svault;
 
+import com.satergo.Utils;
+import com.satergo.extra.dialog.SatTextInputDialog;
 import com.welie.blessed.*;
+import javafx.scene.control.Alert;
 
 import java.util.Set;
 import java.util.UUID;
@@ -30,6 +33,18 @@ public abstract class SVaultFinder {
 				else
 					disconnected(svaultComm, status);
 			}
+
+			@Override
+			public String onPinRequest(BluetoothPeripheral peripheral) {
+				SatTextInputDialog dialog = new SatTextInputDialog();
+				dialog.setHeaderText("Enter PIN code");
+				String pin = dialog.showForResult().orElse(null);
+				if (pin == null) {
+					Utils.alert(Alert.AlertType.ERROR, "Pin code required, cancelling connection.");
+					return "";
+				}
+				return pin;
+			}
 		};
 		manager = new BluetoothCentralManager(managerCallback, Set.of(BluetoothCentralManager.SCANOPTION_NO_NULL_NAMES));
 	}
@@ -44,14 +59,14 @@ public abstract class SVaultFinder {
 			manager.cancelConnection(svaultComm.peripheral());
 		});
 		svaultComm.onServicesDiscovered = (bluetoothPeripheral, bluetoothGattServices) -> {
-			connected(svaultComm);
+			ready(svaultComm);
 		};
 		manager.connectPeripheral(discovered, svaultComm.peripheralCallback);
 	}
 
 	public abstract void discovered(BluetoothPeripheral peripheral);
 
-	public abstract void connected(SVaultComm svaultComm);
+	public abstract void ready(SVaultComm svaultComm);
 
 	public abstract void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status);
 

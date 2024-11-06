@@ -40,7 +40,7 @@ public sealed interface SVaultPrompt {
 				}
 
 				@Override
-				public void connected(SVaultComm svaultComm) {
+				public void ready(SVaultComm svaultComm) {
 					Platform.runLater(() -> setResult(svaultComm));
 				}
 

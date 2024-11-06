@@ -47,7 +47,7 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			}
 
 			@Override
-			public void connected(SVaultComm svaultComm) {
+			public void ready(SVaultComm svaultComm) {
 				SVaultSetupCtrl.this.svaultComm = svaultComm;
 				Platform.runLater(() -> {
 					connect.setDisable(true);
