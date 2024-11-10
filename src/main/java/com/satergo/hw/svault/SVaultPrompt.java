@@ -45,8 +45,13 @@ public sealed interface SVaultPrompt {
 				}
 
 				@Override
+				public void connectionFailed(BluetoothPeripheral peripheral, BluetoothCommandStatus status) {
+					Platform.runLater(() -> setHeaderText(Main.lang("svault.failedToConnectToDevice_s").formatted(status.toString())));
+				}
+
+				@Override
 				public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
-					if (disconnectionHandler != null) disconnectionHandler.accept(svaultComm, status);
+					if (disconnectionHandler != null) Platform.runLater(() -> disconnectionHandler.accept(svaultComm, status));
 				}
 			};
 			setHeaderText(Main.lang("svault.startingScan"));

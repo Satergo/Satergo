@@ -1,5 +1,6 @@
 package com.satergo.hw.svault;
 
+import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.extra.dialog.SatTextInputDialog;
 import com.welie.blessed.*;
@@ -10,9 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Semaphore;
 
-@SuppressWarnings("NullableProblems")
 public abstract class SVaultFinder {
 
 	private boolean closed = false;
@@ -21,13 +20,19 @@ public abstract class SVaultFinder {
 	private BluetoothPeripheral discovered;
 	private final BluetoothCentralManager manager;
 
+	@SuppressWarnings("NullableProblems")
 	public SVaultFinder() {
-		BluetoothCentralManagerCallback managerCallback = new BluetoothCentralManagerCallback() {
+		BluetoothCentralManagerCallback managerCallback = new  BluetoothCentralManagerCallback() {
 			@Override
 			public void onDiscoveredPeripheral(BluetoothPeripheral peripheral, ScanResult scanResult) {
 				manager.stopScan();
 				discovered = peripheral;
 				discovered(peripheral);
+			}
+
+			@Override
+			public void onConnectionFailed(BluetoothPeripheral peripheral, BluetoothCommandStatus status) {
+				connectionFailed(peripheral, status);
 			}
 
 			@Override
@@ -43,10 +48,11 @@ public abstract class SVaultFinder {
 				CompletableFuture<String> pinFuture = new CompletableFuture<>();
 				Platform.runLater(() -> {
 					SatTextInputDialog dialog = new SatTextInputDialog();
-					dialog.setHeaderText("Enter PIN code");
+					Utils.initDialog(dialog, Main.get().stage());
+					dialog.setHeaderText(Main.lang("svault.enterPINCode"));
 					String pin = dialog.showForResult().orElse(null);
 					if (pin == null) {
-						Utils.alert(Alert.AlertType.ERROR, "Pin code required, cancelling connection.");
+						Utils.alert(Alert.AlertType.ERROR, "The PIN code required, cancelling connection.");
 						pinFuture.complete("");
 					} else {
 						pinFuture.complete(pin);
@@ -80,6 +86,8 @@ public abstract class SVaultFinder {
 	public abstract void discovered(BluetoothPeripheral peripheral);
 
 	public abstract void ready(SVaultComm svaultComm);
+
+	public abstract void connectionFailed(BluetoothPeripheral peripheral, BluetoothCommandStatus status);
 
 	public abstract void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status);
 

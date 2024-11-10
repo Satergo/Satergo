@@ -57,6 +57,14 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			}
 
 			@Override
+			public void connectionFailed(BluetoothPeripheral peripheral, BluetoothCommandStatus status) {
+				Platform.runLater(() -> {
+					connect.setDisable(false);
+					SVaultSetupCtrl.this.status.setText(Main.lang("svault.failedToConnectToDevice_s").formatted(status.toString()));
+				});
+			}
+
+			@Override
 			public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
 				if (createdKey != null && Main.get().getWallet() != null && Main.get().getWallet().key() == createdKey) {
 					Platform.runLater(() -> {
@@ -80,6 +88,7 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 
 	@FXML
 	public void connect(ActionEvent e) {
+		connect.setDisable(true);
 		svaultFinder.connectToDiscovered();
 	}
 

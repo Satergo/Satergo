@@ -45,7 +45,7 @@ public class SVaultKey extends WalletKey {
 		Utils.initDialog(connectionPrompt, Main.get().stage());
 		svaultComm = connectionPrompt.showForResult().orElse(null);
 		if (svaultComm == null)
-			throw new IllegalStateException(Main.lang("svault.failedToFindOrConnect"));
+			throw new WalletOpenException(Main.lang("svault.failedToFindOrConnect"));
 		SVaultPrompt.ExtPubKey keyPrompt = new SVaultPrompt.ExtPubKey(svaultComm);
 		Utils.initDialog(keyPrompt, Main.get().stage());
 		parentExtPubKey = keyPrompt.showForResult().orElse(null);
