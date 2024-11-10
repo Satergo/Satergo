@@ -2,12 +2,10 @@ package com.satergo.hw.svault;
 
 import com.satergo.Main;
 import com.satergo.Utils;
-import com.satergo.controller.WalletCtrl;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.welie.blessed.BluetoothCommandStatus;
 import com.welie.blessed.BluetoothPeripheral;
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import org.ergoplatform.ErgoLikeTransaction;
 import org.ergoplatform.appkit.*;
@@ -30,7 +28,9 @@ public sealed interface SVaultPrompt {
 
 	final class Connect extends SatPromptDialog<SVaultComm> implements SVaultPrompt {
 
-		public Connect(BiConsumer<SVaultComm, BluetoothCommandStatus> disconnectionHandler) {
+		public BiConsumer<SVaultComm, BluetoothCommandStatus> onDisconnected;
+
+		public Connect() {
 			setHeaderText(Main.lang("svault.initializingBluetoothManager"));
 			SVaultFinder svaultFinder = new SVaultFinder() {
 				@Override
@@ -51,7 +51,7 @@ public sealed interface SVaultPrompt {
 
 				@Override
 				public void disconnected(SVaultComm svaultComm, BluetoothCommandStatus status) {
-					if (disconnectionHandler != null) Platform.runLater(() -> disconnectionHandler.accept(svaultComm, status));
+					if (onDisconnected != null) Platform.runLater(() -> onDisconnected.accept(svaultComm, status));
 				}
 			};
 			setHeaderText(Main.lang("svault.startingScan"));

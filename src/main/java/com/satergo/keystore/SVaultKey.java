@@ -36,12 +36,13 @@ public class SVaultKey extends WalletKey {
 		storedKeyBytes = new byte[KEY_LENGTH];
 		data.get(storedKeyBytes);
 
-		SVaultPrompt.Connect connectionPrompt = new SVaultPrompt.Connect((sVaultComm, status) -> {
+		SVaultPrompt.Connect connectionPrompt = new SVaultPrompt.Connect();
+		connectionPrompt.onDisconnected = (sVaultComm, status) -> {
 			// Disconnection handler
 			if (logoutFromWallet()) {
 				Utils.alert(Alert.AlertType.ERROR, Main.lang("svault.lostConnection"));
 			}
-		});
+		};
 		Utils.initDialog(connectionPrompt, Main.get().stage());
 		svaultComm = connectionPrompt.showForResult().orElse(null);
 		if (svaultComm == null)
@@ -49,10 +50,16 @@ public class SVaultKey extends WalletKey {
 		SVaultPrompt.ExtPubKey keyPrompt = new SVaultPrompt.ExtPubKey(svaultComm);
 		Utils.initDialog(keyPrompt, Main.get().stage());
 		parentExtPubKey = keyPrompt.showForResult().orElse(null);
-		if (parentExtPubKey == null)
+		if (parentExtPubKey == null) {
+			connectionPrompt.onDisconnected = null;
+			svaultComm.close(true);
 			throw new WalletOpenException(Main.lang("svault.youDeniedTheRequest"));
-		if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
+		}
+		if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes())) {
+			connectionPrompt.onDisconnected = null;
+			svaultComm.close(true);
 			throw new WalletOpenException(Main.lang("svault.walletDoesNotBelong"));
+		}
 	}
 
 	private void initStoredKeyBytes(byte[] storedKeyBytes) {
