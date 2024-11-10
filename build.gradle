@@ -69,7 +69,7 @@ dependencies {
 
 	implementation 'org.ergoplatform:ergo-appkit_2.12:5.0.4'
 	implementation 'com.typesafe:config:1.4.3'
-//	implementation 'org.slf4j:slf4j-simple:2.0.13'
+	implementation 'org.slf4j:slf4j-simple:2.0.13'
 	implementation 'com.grack:nanojson:1.9' // used for numerous HTTP APIs and ProgramData saving
 	implementation 'com.google.code.gson:gson:2.10.1'
 	implementation 'info.debatty:java-string-similarity:2.0.0' // used for seed phrase words
@@ -84,8 +84,8 @@ dependencies {
 //	implementation 'net.codecrete.usb:java-does-usb:0.6.1'
 
 	// android bluetooth signer
-	implementation 'ch.qos.logback:logback-core:1.4.14'
-	implementation 'ch.qos.logback:logback-classic:1.4.12'
+//	implementation 'ch.qos.logback:logback-core:1.4.14'
+//	implementation 'ch.qos.logback:logback-classic:1.4.12'
 	implementation 'com.github.hypfvieh:dbus-java:3.3.2'
 	implementation 'com.github.weliem:blessed:0.62'
 }

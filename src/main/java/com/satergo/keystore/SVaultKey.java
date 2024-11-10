@@ -28,11 +28,11 @@ public class SVaultKey extends WalletKey {
 	private ExtendedPublicKey parentExtPubKey;
 
 	SVaultKey() {
-		super(Type.SAT_OFFLINE_VAULT);
+		super(Type.SVAULT);
 	}
 
 	@Override
-	public void initCaches(ByteBuffer data) {
+	public void initCaches(ByteBuffer data) throws WalletOpenException {
 		storedKeyBytes = new byte[KEY_LENGTH];
 		data.get(storedKeyBytes);
 
@@ -45,14 +45,14 @@ public class SVaultKey extends WalletKey {
 		Utils.initDialog(connectionPrompt, Main.get().stage());
 		svaultComm = connectionPrompt.showForResult().orElse(null);
 		if (svaultComm == null)
-			throw new IllegalStateException("Failed");
+			throw new IllegalStateException(Main.lang("svault.failedToFindOrConnect"));
 		SVaultPrompt.ExtPubKey keyPrompt = new SVaultPrompt.ExtPubKey(svaultComm);
 		Utils.initDialog(keyPrompt, Main.get().stage());
 		parentExtPubKey = keyPrompt.showForResult().orElse(null);
 		if (parentExtPubKey == null)
-			throw new IllegalStateException("Failed");
+			throw new WalletOpenException(Main.lang("svault.youDeniedTheRequest"));
 		if (!Arrays.equals(storedKeyBytes, parentExtPubKey.keyBytes()))
-			throw new IllegalStateException("This wallet does not belong to this device");
+			throw new WalletOpenException(Main.lang("svault.walletDoesNotBelong"));
 	}
 
 	private void initStoredKeyBytes(byte[] storedKeyBytes) {
