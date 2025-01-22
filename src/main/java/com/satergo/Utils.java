@@ -111,15 +111,19 @@ public class Utils {
 		return alert(type, label);
 	}
 
-	public static void alertException(String title, String headerText, Throwable throwable) {
+	public static void alertUnexpectedException(Throwable throwable) {
 		try {
 			Alert alert = new Alert(Alert.AlertType.ERROR);
 			if (Main.get().stage() != null && Main.get().stage().isShowing()) {
 				alert.initOwner(Main.get().stage());
 			}
 			Main.get().applySameTheme(alert.getDialogPane().getScene());
-			alert.setTitle(title);
-			alert.setHeaderText(headerText);
+			try {
+				alert.setTitle(Main.lang("unexpectedError"));
+				alert.setHeaderText(Main.lang("anUnexpectedErrorOccurred"));
+				alert.setContentText(Main.lang("unexpectedExceptionNote"));
+			} catch (Exception ignored) {
+			}
 			StringWriter stringWriter = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(stringWriter);
 			throwable.printStackTrace(printWriter);
@@ -136,10 +140,6 @@ public class Utils {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	public static void alertUnexpectedException(Throwable throwable) {
-		alertException(Main.lang("unexpectedError"), Main.lang("anUnexpectedErrorOccurred"), throwable);
 	}
 
 	public static void textDialogWithCopy(String headerText, String contentText) {
@@ -467,7 +467,7 @@ public class Utils {
 		return new StringConverter<>() {
 			@Override
 			public String toString(Integer index) {
-				if (index == null) return null;
+				if (index == null || !wallet.myAddresses.containsKey(index)) return null;
 				String label = wallet.myAddresses.get(index);
 				if (label.isEmpty()) return "#" + FormatNumber.integer(index);
 				return label;
