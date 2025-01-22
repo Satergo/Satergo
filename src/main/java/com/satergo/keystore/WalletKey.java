@@ -3,6 +3,8 @@ package com.satergo.keystore;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
+import com.satergo.extra.EncryptedData;
+import com.satergo.extra.Encryption;
 import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.P2PKAddress;
@@ -17,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Duration;
 import java.util.*;
@@ -57,11 +60,11 @@ public abstract class WalletKey {
 	 * Deserializes and opens the wallet. For some wallet types this could involve external processes.
 	 * @throws WalletOpenException If an external process was not successful and caused it to be unable to open the wallet
 	 */
-	public static WalletKey deserialize(byte[] encrypted, ByteBuffer decrypted) throws WalletOpenException {
+	public static WalletKey deserialize(Encryption encryption, EncryptedData encrypted, ByteBuffer decrypted) throws WalletOpenException {
 		Type<?> type = types.get(decrypted.getShort() & 0xFFFF);
 		if (type == null) throw new IllegalArgumentException("Unknown wallet type with ID " + decrypted.getShort(0));
 		WalletKey key = type.construct();
-		key.encrypted = encrypted;
+		key.initEncryptedData(encryption, encrypted);
 		key.initCaches(decrypted);
 		return key;
 	}
@@ -200,24 +203,28 @@ public abstract class WalletKey {
 			parentExtPubKey = ((ExtendedSecretKey) rootSecret.derive(DerivationPath.fromEncoded("m/44'/429'/0'/0").get())).publicKey();
 		}
 
-		public static Local create(boolean nonstandard, Mnemonic mnemonic, char[] password) {
+		public static Local create(boolean nonstandard, Mnemonic mnemonic, char[] password, Encryption encryption) {
 			try {
 				checkFormat(mnemonic);
 				Local key = new Local();
 				key.nonstandard = nonstandard;
-				byte[] iv = AESEncryption.generateNonce12();
 				// StandardCharsets.UTF_8.encode(CharBuffer.wrap(mnemonic.getPhrase().getData())) is not used because
 				// for some reason it adds multiple null characters at the end
 				byte[] mnPhraseBytes = mnemonic.getPhrase().toStringUnsecure().getBytes(StandardCharsets.UTF_8);
 				byte[] mnPasswordBytes = mnemonic.getPassword().toStringUnsecure().getBytes(StandardCharsets.UTF_8);
-				ByteBuffer buffer = ByteBuffer.allocate(2 + 1 + 2 + mnPhraseBytes.length + 2 + mnPasswordBytes.length)
+				SecureRandom secureRandom = new SecureRandom();
+				int padding = secureRandom.nextInt(0, 20);
+				ByteBuffer buffer = ByteBuffer.allocate(2 + 1 + 2 + mnPhraseBytes.length + 2 + mnPasswordBytes.length + padding)
 						.putShort((short) ID)
 						.put((byte) (nonstandard ? 1 : 0))
 						.putShort((short) mnPhraseBytes.length)
 						.put(mnPhraseBytes)
 						.putShort((short) mnPasswordBytes.length)
 						.put(mnPasswordBytes);
-				key.initEncryptedData(AESEncryption.encryptData(iv, AESEncryption.generateSecretKey(password, iv), buffer.array()));
+				byte[] salt = Encryption.secureRandom(16);
+				byte[] iv = Encryption.secureRandom(12);
+				byte[] encrBytes = encryption.encryptData(iv, encryption.generateSecretKey(password, salt), buffer.array());
+				key.initEncryptedData(encryption, new EncryptedData(salt, iv, encrBytes));
 				key.initParentExtPubKey(mnemonic);
 				return key;
 			} catch (GeneralSecurityException e) {
@@ -231,7 +238,7 @@ public abstract class WalletKey {
 				String password = passwordSupplier.get();
 				if (password == null) throw new Failure();
 				try {
-					secretKey = AESEncryption.generateSecretKey(password.toCharArray(), copyIv());
+					secretKey = encryption.generateSecretKey(password.toCharArray(), encrypted().salt);
 				} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
 					throw new RuntimeException(e);
 				}
@@ -239,7 +246,7 @@ public abstract class WalletKey {
 				secretKey = cachedKey;
 			}
 			try {
-				byte[] decrypted = AESEncryption.decryptData(secretKey, ByteBuffer.wrap(encrypted()));
+				byte[] decrypted = encryption.decryptData(encrypted().iv, secretKey, encrypted().data);
 				ByteBuffer buffer = ByteBuffer.wrap(decrypted).position(3);
 				if (caching != Caching.OFF) {
 					this.cachedKey = secretKey;
@@ -300,7 +307,12 @@ public abstract class WalletKey {
 
 		@Override
 		public WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure {
-			return create(nonstandard, getMnemonic(() -> new String(currentPassword)), newPassword);
+			return create(nonstandard, getMnemonic(() -> new String(currentPassword)), newPassword, encryption);
+		}
+
+		@Override
+		public WalletKey changedEncryption(char[] currentPassword, Encryption encryption) throws Failure {
+			return create(nonstandard, getMnemonic(() -> new String(currentPassword)), currentPassword, encryption);
 		}
 
 		private void restartCacheTimeout() {

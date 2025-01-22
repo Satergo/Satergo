@@ -144,7 +144,7 @@ public final class Wallet {
 	 * creates a new wallet with local key and master address and saves it
 	 */
 	public static Wallet create(Path path, Mnemonic mnemonic, String name, char[] password, boolean nonstandardDerivation) {
-		return create(path, WalletKey.Local.create(nonstandardDerivation, mnemonic, password), name, password);
+		return create(path, WalletKey.Local.create(nonstandardDerivation, mnemonic, password, F2_ENCRYPTION), name, password);
 	}
 
 	public static Wallet create(Path path, Mnemonic mnemonic, String name, char[] password) {

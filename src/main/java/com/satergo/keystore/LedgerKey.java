@@ -2,7 +2,8 @@ package com.satergo.keystore;
 
 import com.satergo.Main;
 import com.satergo.Utils;
-import com.satergo.extra.AESEncryption;
+import com.satergo.extra.EncryptedData;
+import com.satergo.extra.Encryption;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.hw.ledger.AttestedBox;
 import com.satergo.hw.ledger.ErgoLedgerAppkit;
@@ -107,7 +108,7 @@ public class LedgerKey extends WalletKey {
 		this.storedPublicKeyBytes = storedKeyBytes;
 	}
 
-	public static LedgerKey create(ExtendedPublicKey parentExtPubKey, ErgoLedgerAppkit ergoLedgerAppkit, char[] password) {
+	public static LedgerKey create(ExtendedPublicKey parentExtPubKey, ErgoLedgerAppkit ergoLedgerAppkit, char[] password, Encryption encryption) {
 		if (parentExtPubKey.keyBytes().length != PUBLIC_KEY_LENGTH)
 			throw new IllegalArgumentException("public key must be " + PUBLIC_KEY_LENGTH + " bytes");
 		if (parentExtPubKey.chainCode().length != 32) throw new IllegalArgumentException("chain code must be 32 bytes");
@@ -115,12 +116,14 @@ public class LedgerKey extends WalletKey {
 		key.parentExtPubKey = parentExtPubKey;
 		key.ergoLedgerAppkit = ergoLedgerAppkit;
 		try {
-			byte[] iv = AESEncryption.generateNonce12();
 			ByteBuffer buffer = ByteBuffer.allocate(2 + 2 + PUBLIC_KEY_LENGTH)
 					.putShort((short) ID)
 					.putShort((short) ergoLedgerAppkit.device.getProductId())
 					.put(parentExtPubKey.keyBytes());
-			key.initEncryptedData(AESEncryption.encryptData(iv, AESEncryption.generateSecretKey(password, iv), buffer.array()));
+			byte[] salt = Encryption.secureRandom(16);
+			byte[] iv = Encryption.secureRandom(12);
+			byte[] encrBytes = encryption.encryptData(iv, encryption.generateSecretKey(password, salt), buffer.array());
+			key.initEncryptedData(encryption, new EncryptedData(salt, iv, encrBytes));
 			key.initStoredKeyBytes(parentExtPubKey.keyBytes());
 			return key;
 		} catch (GeneralSecurityException e) {
@@ -185,6 +188,11 @@ public class LedgerKey extends WalletKey {
 
 	@Override
 	public WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure {
-		return create(parentExtPubKey, ergoLedgerAppkit, newPassword);
+		return create(parentExtPubKey, ergoLedgerAppkit, newPassword, encryption);
+	}
+
+	@Override
+	public WalletKey changedEncryption(char[] currentPassword, Encryption encryption) throws Failure {
+		return create(parentExtPubKey, ergoLedgerAppkit, currentPassword, encryption);
 	}
 }
