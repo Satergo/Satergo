@@ -249,6 +249,19 @@ public class Main extends Application {
 	}
 
 	public void setWallet(Wallet wallet) {
+		// Update the key of the currently open wallet to no longer be able to request logouts
+		if (this.wallet != null) {
+			this.wallet.key().logoutFromWallet = unused -> false;
+		}
+		if (wallet == null) {
+			if (this.wallet != null)
+				this.wallet.key().close();
+		} else {
+			wallet.key().logoutFromWallet = unused -> {
+				walletPage.logout();
+				return true;
+			};
+		}
 		this.wallet = wallet;
 		programData.lastWallet.set(wallet == null ? null : wallet.path);
 	}
