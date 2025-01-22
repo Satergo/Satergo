@@ -2,7 +2,7 @@ package com.satergo.tool;
 
 import com.satergo.Main;
 import com.satergo.Utils;
-import com.satergo.WalletKey;
+import com.satergo.keystore.WalletKey;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.MoveStyle;

@@ -16,6 +16,7 @@ import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.extra.dialog.SatTextInputDialog;
 import com.satergo.extra.dialog.SatVoidDialog;
+import com.satergo.keystore.WalletKey;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
