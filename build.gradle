@@ -30,6 +30,7 @@ repositories {
 		url 'https://oss.sonatype.org/content/repositories/snapshots/'
 		content { includeGroup 'org.scorexfoundation' }
 	}
+	mavenLocal()
 }
 
 boolean buildInstaller = project.hasProperty("buildInstaller")
@@ -77,7 +78,6 @@ dependencies {
 
 	// ledger
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
-	implementation 'org.hid4java:hid4java:0.8.0'
 }
 
 jar {

@@ -36,9 +36,17 @@ The cipher used for the encrypted wallet key data is AES/GCM/NoPadding with GCM 
 
 Encrypted wallet private key data: `(short) wallet key type id` followed by the serialized data.
 
-| Wallet key type ID | Value | Details                                                                                                                                            |
-|--------------------|-------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| 0                  | LOCAL | The seed is stored inside the file. The format of it is the same as the one for formatVersion 1, but there is a random number of zeros at the end. |
+| Wallet key type ID | Value  | Details                                                                                                                                            |
+|--------------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0                  | LOCAL  | The seed is stored inside the file. The format of it is the same as the one for formatVersion 1, but there is a random number of zeros at the end. |
+| 54                 | LEDGER | Ledger                                                                                                                                             |
+
+`LEDGER` structure:
+
+| Data type | Value          |
+|-----------|----------------|
+| int       | the product id |
+| byte\[33] | the public key |
 
 Encrypted wallet details data:
 

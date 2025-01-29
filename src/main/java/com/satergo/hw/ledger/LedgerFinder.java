@@ -1,25 +1,23 @@
 package com.satergo.hw.ledger;
 
+import com.satergo.hidapi4j.HidApi;
+import com.satergo.hidapi4j.HidDevice;
+import com.satergo.hidapi4j.HidScanner;
 import com.satergo.jledger.LedgerDevice;
-import org.hid4java.*;
-import org.hid4java.event.HidServicesEvent;
-
-import java.util.List;
 
 public abstract class LedgerFinder {
 
-	private final HidServices hidServices;
-	private HidServicesListener servicesListener;
+	private final HidScanner hidScanner;
+	private HidScanner.Listener listener;
 	private HidDevice device;
 
 	/**
 	 * Constructs a new LedgerFinder and loops through all already-connected devices
 	 */
 	public LedgerFinder() {
-		HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
-		hidServicesSpecification.setAutoStart(false);
-		hidServices = HidManager.getHidServices(hidServicesSpecification);
-		hidServices.start();
+		HidApi.loadLibrary();
+		hidScanner = new HidScanner();
+		hidScanner.start();
 		rescanConnected();
 	}
 
@@ -27,38 +25,34 @@ public abstract class LedgerFinder {
 		return LedgerDevice.PRODUCT_IDS.get(productId);
 	}
 
-	public final List<HidDevice> getAttachedHidDevices() {
-		return hidServices.getAttachedHidDevices();
-	}
-
 	public void rescanConnected() {
-		for (HidDevice attachedHidDevice : getAttachedHidDevices()) {
+		for (HidDevice attachedHidDevice : HidApi.getAllDevices()) {
 			if (handleDevice(attachedHidDevice))
 				break;
 		}
 	}
 
 	public final void startListener() {
-		servicesListener = new HidServicesListener() {
-			@Override public void hidDeviceAttached(HidServicesEvent event) {
-				if (device == null)
-					handleDevice(event.getHidDevice());
-			}
-			@Override public void hidDeviceDetached(HidServicesEvent event) {
-				deviceDetached(event.getHidDevice());
+		listener = new HidScanner.Listener() {
+			@Override
+			public void hidDeviceAttached(HidDevice device) {
+				if (LedgerFinder.this.device == null)
+					handleDevice(device);
 			}
 
-			public void hidDataReceived(HidServicesEvent event) {}
-			@Override public void hidFailure(HidServicesEvent event) {}
+			@Override
+			public void hidDeviceDetached(HidDevice device) {
+				deviceDetached(device);
+			}
 		};
-		hidServices.addHidServicesListener(servicesListener);
+		hidScanner.addListener(listener);
 	}
 
 	/**
 	 * Stops scanning, which also means device detaches will not be noticed.
 	 */
 	public final void stopScanning() {
-		hidServices.stop();
+		hidScanner.stop();
 	}
 
 	public final void setDevice(HidDevice device) {
@@ -74,7 +68,7 @@ public abstract class LedgerFinder {
 	 * @return This is a Ledger device, stop calling this method
 	 */
 	protected boolean handleDevice(HidDevice hidDevice) {
-		if (hidDevice.getVendorId() == LedgerDevice.VENDOR_ID) {
+		if (hidDevice.info().vendorId() == LedgerDevice.VENDOR_ID) {
 			setDevice(hidDevice);
 			deviceFound(hidDevice);
 			return true;

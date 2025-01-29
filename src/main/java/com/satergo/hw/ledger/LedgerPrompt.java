@@ -4,7 +4,7 @@ import com.satergo.Main;
 import com.satergo.extra.SimpleTask;
 import com.satergo.extra.dialog.SatPromptDialog;
 import com.satergo.jledger.protocol.ergo.ErgoLedgerException;
-import com.satergo.jledger.transport.hid4java.InvalidChannelException;
+import com.satergo.jledger.transport.hidapi4j.InvalidChannelException;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ButtonBar;
@@ -100,7 +100,6 @@ public sealed interface LedgerPrompt {
 	final class Attest extends WithRetry<List<AttestedBox>> implements LedgerPrompt {
 		private final ErgoLedgerAppkit ergoLedgerAppkit;
 		private final List<InputBox> inputBoxes;
-		private int progress = 0;
 
 		public Attest(ErgoLedgerAppkit ergoLedgerAppkit, List<InputBox> inputBoxes) {
 			this.ergoLedgerAppkit = ergoLedgerAppkit;
@@ -111,8 +110,7 @@ public sealed interface LedgerPrompt {
 
 		@Override
 		protected void resetState() {
-			progress = 0;
-			setHeaderText("Please approve the request on your Ledger device (" + progress + "/" + inputBoxes.size() + ")");
+			setHeaderText("Please approve the request on your Ledger device (0/" + inputBoxes.size() + ")");
 			getDialogPane().getButtonTypes().clear();
 		}
 

@@ -1,13 +1,17 @@
 package com.satergo.controller;
 
-import com.satergo.*;
+import com.satergo.Main;
+import com.satergo.SystemProperties;
+import com.satergo.Utils;
+import com.satergo.Wallet;
 import com.satergo.extra.dialog.MoveStyle;
+import com.satergo.hidapi4j.HidDevice;
 import com.satergo.hw.ledger.ErgoLedgerAppkit;
 import com.satergo.hw.ledger.LedgerFinder;
 import com.satergo.hw.ledger.LedgerPrompt;
 import com.satergo.jledger.LedgerDevice;
 import com.satergo.jledger.protocol.ergo.ErgoProtocol;
-import com.satergo.jledger.transport.hid4java.HidLedgerDevice;
+import com.satergo.jledger.transport.hidapi4j.HidLedgerDevice;
 import com.satergo.jledger.transport.speculos.SpeculosLedgerDevice;
 import com.satergo.keystore.LedgerKey;
 import javafx.application.Platform;
@@ -20,7 +24,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import org.hid4java.HidDevice;
 
 import java.net.URL;
 import java.nio.file.Path;
@@ -52,8 +55,8 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 			@Override
 			public void deviceFound(HidDevice device) {
 				Platform.runLater(() -> {
-					if (LedgerDevice.PRODUCT_IDS.containsKey(device.getProductId())) {
-						status.setText(Main.lang("ledger.found_s_device").formatted(getModelName(device.getProductId())));
+					if (LedgerDevice.PRODUCT_IDS.containsKey(device.info().productId())) {
+						status.setText(Main.lang("ledger.found_s_device").formatted(getModelName(device.info().productId())));
 					} else {
 						status.setText(Main.lang("ledger.foundUnknownModelDevice"));
 					}
