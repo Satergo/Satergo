@@ -103,7 +103,7 @@ public class SVaultSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 				Path path = Utils.fileChooserSave(Main.get().stage(), Main.lang("locationToSaveTo"), Main.programData().lastWalletDirectory.get(), walletName.getText() + "." + Wallet.FILE_EXTENSION, Wallet.extensionFilter());
 				if (path == null) return;
 				char[] pass = password.getText().toCharArray();
-				SVaultKey key = SVaultKey.create(parentExtPubKey, svaultComm, pass);
+				SVaultKey key = SVaultKey.create(parentExtPubKey, svaultComm, pass, Wallet.F2_ENCRYPTION);
 				Wallet wallet = Wallet.create(path, key, walletName.getText(), pass);
 				Main.get().setWallet(wallet);
 				Main.get().displayWalletPage();

@@ -2,9 +2,10 @@ package com.satergo.keystore;
 
 import com.satergo.Main;
 import com.satergo.Utils;
+import com.satergo.extra.EncryptedData;
+import com.satergo.extra.Encryption;
 import com.satergo.hw.svault.SVaultComm;
 import com.satergo.hw.svault.SVaultPrompt;
-import com.satergo.extra.AESEncryption;
 import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.P2PKAddress;
@@ -66,18 +67,20 @@ public class SVaultKey extends WalletKey {
 		this.storedKeyBytes = storedKeyBytes;
 	}
 
-	public static SVaultKey create(ExtendedPublicKey parentExtPubKey, SVaultComm svaultComm, char[] password) {
+	public static SVaultKey create(ExtendedPublicKey parentExtPubKey, SVaultComm svaultComm, char[] password, Encryption encryption) {
 		if (parentExtPubKey.keyBytes().length != KEY_LENGTH) throw new IllegalArgumentException("public key must be " + KEY_LENGTH + " bytes");
 		if (parentExtPubKey.chainCode().length != 32) throw new IllegalArgumentException("chain code must be 32 bytes");
 		SVaultKey key = new SVaultKey();
 		key.parentExtPubKey = parentExtPubKey;
 		key.svaultComm = svaultComm;
 		try {
-			byte[] iv = AESEncryption.generateNonce12();
 			ByteBuffer buffer = ByteBuffer.allocate(2 + KEY_LENGTH)
 					.putShort((short) ID)
 					.put(parentExtPubKey.keyBytes());
-			key.initEncryptedData(AESEncryption.encryptData(iv, AESEncryption.generateSecretKey(password, iv), buffer.array()));
+			byte[] salt = Encryption.secureRandom(16);
+			byte[] iv = Encryption.secureRandom(12);
+			byte[] encrBytes = encryption.encryptData(iv, encryption.generateSecretKey(password, salt), buffer.array());
+			key.initEncryptedData(encryption, new EncryptedData(salt, iv, encrBytes));
 			key.initStoredKeyBytes(parentExtPubKey.keyBytes());
 			return key;
 		} catch (GeneralSecurityException e) {
@@ -104,7 +107,12 @@ public class SVaultKey extends WalletKey {
 
 	@Override
 	public WalletKey changedPassword(char[] currentPassword, char[] newPassword) {
-		return create(parentExtPubKey, svaultComm, newPassword);
+		return create(parentExtPubKey, svaultComm, newPassword, encryption);
+	}
+
+	@Override
+	public WalletKey changedEncryption(char[] currentPassword, Encryption encryption) throws Failure {
+		return create(parentExtPubKey, svaultComm, currentPassword, encryption);
 	}
 
 	@Override
