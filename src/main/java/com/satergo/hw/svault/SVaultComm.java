@@ -28,7 +28,7 @@ public class SVaultComm {
 	private final Consumer<Boolean> closeConnection;
 
 	/**
-	 * @param closeConnection boolean: whether to shut down manager
+	 * @param closeConnection boolean: whether to shut down the manager
 	 */
 	public SVaultComm(Consumer<Boolean> closeConnection) {
 		this.closeConnection = closeConnection;
@@ -38,6 +38,10 @@ public class SVaultComm {
 		closeConnection.accept(shutdownManager);
 	}
 
+	/**
+	 * @param <T> The type of task
+	 * @param <V> The task's return type
+	 */
 	private static class TaskFuture<T extends Task<V>, V> extends CompletableFuture<V> {
 		private final T task;
 
@@ -46,7 +50,7 @@ public class SVaultComm {
 		}
 	}
 
-	private static class Task<V> {
+	private static final class Task<V> {
 		public static Task<AppInfo> APP_INFO = new Task<>("7fb8924e-baf8-4227-a0d9-52e34aef6c4a");
 		public static Task<ExtendedPublicKey> EXT_PUB_KEY = new Task<>("3cd9898b-c684-4407-a830-08f71a40303a");
 		public static Task<Void> SIGN_REQUEST = new Task<>("07ccb789-fdcc-4d77-ba0a-7ed711dc3a6d");
@@ -75,15 +79,20 @@ public class SVaultComm {
 	private ChunkedProcess chunkedRead;
 	private ChunkedProcess chunkedWrite;
 
+	/** @return a pending read task or empty */
 	@SuppressWarnings("unchecked")
 	private <T>Optional<TaskFuture<Task<T>, T>> ptf(Task<T> task) {
 		return pendingReads.stream().filter(t -> t.task == task).findAny().map(t -> (TaskFuture<Task<T>, T>) t);
 	}
+
+	public static class SignRejectedException extends Exception {}
 	
 	public final BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback() {
 		@Override
 		public void onServicesDiscovered(BluetoothPeripheral peripheral, List<BluetoothGattService> services) {
 			SVaultComm.this.peripheral = peripheral;
+			// Receive notifications for the SIGNATURES characteristic
+			peripheral.setNotify(SERVICE, Task.SIGNATURES.chUuid, true);
 			if (onServicesDiscovered != null)
 				onServicesDiscovered.accept(peripheral, services);
 		}
@@ -111,7 +120,13 @@ public class SVaultComm {
 						pendingReads.remove(ptf);
 						ptf.complete(ExtendedPublicKeySerializer.parse(SigmaSerializer.startReader(value, 0)));
 					} else if (task == Task.SIGNATURES) {
-						int length = in.readUnsignedShort();
+						int length = in.readShort();
+						if (length == -1) {
+							var ptf = ptf(Task.SIGNATURES).orElseThrow();
+							pendingReads.remove(ptf);
+							ptf.completeExceptionally(new SignRejectedException());
+							return;
+						}
 						if (length <= 510) {
 							var ptf = ptf(Task.SIGNATURES).orElseThrow();
 							pendingReads.remove(ptf);
@@ -200,15 +215,12 @@ public class SVaultComm {
 		return startReadTask(new TaskFuture<>(Task.EXT_PUB_KEY));
 	}
 
-	public CompletableFuture<List<byte[]>> getSignatures() {
-		if (ptf(Task.SIGNATURES).isPresent())
-			throw new IllegalStateException();
-		return startReadTask(new TaskFuture<>(Task.SIGNATURES));
-	}
-
 	// Sending data
 
-	public CompletableFuture<Void> sendSignRequest(byte[] txData, Collection<Integer> inputAddresses, Integer changeAddress) {
+	/**
+	 * @return A CompletableFuture that if successful, contains the bytes for every signature in the response. Otherwise, it has completed exceptionally with a {@link SignRejectedException} if the user rejected the request, or another exception if something went wrong either when writing or reading.
+	 */
+	public CompletableFuture<List<byte[]>> sendSignRequest(byte[] txData, Collection<Integer> inputAddresses, Integer changeAddress) {
 		if (ptf(Task.SIGN_REQUEST).isPresent())
 			throw new IllegalStateException();
 		// The limit is 512 bytes, so we might need to do it in chunks.
@@ -229,8 +241,10 @@ public class SVaultComm {
 					.putShort((short) data.length)
 					.put(data)
 					.array();
+			var taskFuture = new TaskFuture<>(Task.SIGNATURES);
+			pendingReads.add(taskFuture);
 			peripheral.writeCharacteristic(SERVICE, Task.SIGN_REQUEST.chUuid, fullData, WriteType.WITHOUT_RESPONSE);
-			return CompletableFuture.completedFuture(null);
+			return taskFuture;
 		} else {
 			byte[] firstChunk = ByteBuffer.allocate(512)
 					.putShort((short) data.length)
@@ -243,10 +257,12 @@ public class SVaultComm {
 			cw.perChunk = 512;
 			chunkedWrite = cw;
 			peripheral.writeCharacteristic(SERVICE, Task.SIGN_REQUEST.chUuid, firstChunk, WriteType.WITHOUT_RESPONSE);
-			return cw.future;
+			return cw.future.thenCompose(unused -> {
+				// This code is executed when the SIGN_REQUEST has been fully written
+				return new TaskFuture<>(Task.SIGNATURES);
+			});
 		}
 	}
-
 
 
 

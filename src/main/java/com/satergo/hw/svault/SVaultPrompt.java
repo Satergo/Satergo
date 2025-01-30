@@ -84,25 +84,22 @@ public sealed interface SVaultPrompt {
 			setHeaderText(Main.lang("svault.waitingForAction"));
 			getDialogPane().setContent(new Label(Main.lang("svault.signTransaction")));
 			ReducedTransaction reducedTx = ctx.newProverBuilder().build().reduce(unsignedTx, 0);
-			svaultComm.sendSignRequest(reducedTx.toBytes(), inputAddresses, changeAddress).handle((unused, throwable) -> {
-				if (throwable != null) Platform.runLater(() -> Utils.alertUnexpectedException(throwable));
-				else svaultComm.getSignatures().handle((signatures, signThrowable) -> {
-					Platform.runLater(() -> {
-						if (signThrowable != null) {
-							Utils.alertUnexpectedException(signThrowable);
-							return;
-						}
-						ArrayList<ProverResult> proofs = new ArrayList<>();
-						List<InputBox> inputs = unsignedTx.getInputs();
-						if (signatures.size() != inputs.size())
-							throw new IllegalStateException();
-						for (int i = 0; i < inputs.size(); i++) {
-							proofs.add(new ProverResult(signatures.get(i), ((InputBoxImpl) inputs.get(i)).getExtension()));
-						}
-						ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(proofs).toIndexedSeq());
-						setResult(new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0));
-					});
-					return null;
+			svaultComm.sendSignRequest(reducedTx.toBytes(), inputAddresses, changeAddress).handle((signatures, throwable) -> {
+				// TODO: check if throwable instanceof SignRejectedException
+				Platform.runLater(() -> {
+					if (throwable != null) {
+						Utils.alertUnexpectedException(throwable);
+						return;
+					}
+					ArrayList<ProverResult> proofs = new ArrayList<>();
+					List<InputBox> inputs = unsignedTx.getInputs();
+					if (signatures.size() != inputs.size())
+						throw new IllegalStateException();
+					for (int i = 0; i < inputs.size(); i++) {
+						proofs.add(new ProverResult(signatures.get(i), ((InputBoxImpl) inputs.get(i)).getExtension()));
+					}
+					ErgoLikeTransaction signed = ((UnsignedTransactionImpl) unsignedTx).getTx().toSigned(JavaConverters.asScalaBuffer(proofs).toIndexedSeq());
+					setResult(new SignedTransactionImpl((BlockchainContextBase) ctx, signed, 0));
 				});
 				return null;
 			});
