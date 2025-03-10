@@ -2,10 +2,12 @@ package com.satergo.controller;
 
 import com.satergo.*;
 import com.satergo.extra.IncorrectPasswordException;
+import com.satergo.keystore.WalletKey;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 
@@ -58,6 +60,8 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 				Main.get().displayWalletPage();
 			} catch (IncorrectPasswordException ex) {
 				Utils.alertIncorrectPassword();
+			} catch (WalletKey.WalletOpenException ex) {
+				Utils.alert(Alert.AlertType.ERROR, ex.getMessage());
 			}
 		}
 	}
@@ -65,6 +69,11 @@ public class WalletSetupCtrl implements Initializable, SetupPage.WithExtra, Setu
 	@FXML
 	public void restoreFromSeed(ActionEvent e) {
 		Main.get().displaySetupPage(Load.<RestoreFromSeedCtrl>fxmlController("/setup-page/restore-wallet-from-seed.fxml"));
+	}
+
+	@FXML
+	public void createWalletForHardware(ActionEvent e) {
+		Main.get().displaySetupPage(Load.<HardwareWalletSetupCtrl>fxmlController("/setup-page/hardware-wallet.fxml"));
 	}
 
 	@Override

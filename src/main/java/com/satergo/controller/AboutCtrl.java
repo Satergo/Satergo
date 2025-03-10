@@ -3,11 +3,11 @@ package com.satergo.controller;
 import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.Wallet;
-import com.satergo.keystore.WalletKey;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.LinkedHyperlink;
 import com.satergo.extra.dialog.MoveStyle;
 import com.satergo.extra.dialog.SatPromptDialog;
+import com.satergo.keystore.WalletKey;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -44,7 +44,7 @@ public class AboutCtrl implements Initializable, WalletTab {
 	@FXML
 	public void donate(ActionEvent e) {
 		if (Main.programData().nodeNetworkType.get() != NetworkType.MAINNET) {
-			Utils.alert(Alert.AlertType.ERROR, Main.lang("cannotDonateOnTestnet"));
+			Utils.alert(Alert.AlertType.ERROR, "You can't donate on testnet");
 			return;
 		}
 
@@ -95,7 +95,7 @@ public class AboutCtrl implements Initializable, WalletTab {
 						wallet.addressStream().toList(),
 						List.of(boxBuilder.build()), List.of(), Parameters.MinFee, Main.get().getWallet().publicAddress(0));
 				try {
-					SignedTransaction signedTx = wallet.key().sign(ctx, unsignedTx, wallet.myAddresses.keySet());
+					SignedTransaction signedTx = wallet.key().sign(ctx, unsignedTx, wallet.myAddresses.keySet(), 0);
 					String txId = wallet.transact(signedTx);
 					Utils.textDialogWithCopy(Main.lang("transactionId"), txId);
 				} catch (WalletKey.Failure ex) {

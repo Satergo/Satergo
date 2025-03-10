@@ -44,6 +44,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 	// Send section
 	private List<Integer> candidates;
 	@FXML private TabPane outputTabPane;
+	private Integer changeIndex;
 	private Address change;
 	@FXML private Label paymentRequestIndicator;
 	@FXML private Button send;
@@ -61,7 +62,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 
 	@FXML
 	public void showSendOptions(ActionEvent e) {
-		SatPromptDialog<Pair<ArrayList<Integer>, Address>> dialog = new SatPromptDialog<>();
+		SatPromptDialog<Pair<ArrayList<Integer>, Pair<Integer, Address>>> dialog = new SatPromptDialog<>();
 		Utils.initDialog(dialog, Main.get().stage(), MoveStyle.FOLLOW_OWNER);
 		dialog.setTitle(Main.lang("settings"));
 		dialog.setHeaderText(null);
@@ -75,13 +76,15 @@ public class HomeCtrl implements WalletTab, Initializable {
 			if (t == ButtonType.OK) {
 				return new Pair<>(ctrl.candidates.getChildren().stream()
 						.map(n -> (ToggleButton) n).filter(ToggleButton::isSelected)
-						.map(ToggleButton::getUserData).map(ud -> (int) ud).collect(Collectors.toCollection(ArrayList::new)), ctrl.changeAddress.getValue().value());
+						.map(ToggleButton::getUserData).map(ud -> (int) ud).collect(Collectors.toCollection(ArrayList::new)),
+						new Pair<>(ctrl.changeAddress.getValue().index(), ctrl.changeAddress.getValue().value()));
 			}
 			return null;
 		});
 		dialog.showForResult().ifPresent(v -> {
 			candidates = v.getKey();
-			change = v.getValue();
+			changeIndex = v.getValue().getKey();
+			change = v.getValue().getValue();
 		});
 	}
 
@@ -113,6 +116,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 		headTitle.setTooltip(nameTooltip);
 
 		candidates = new ArrayList<>(Main.get().getWallet().myAddresses.keySet());
+		changeIndex = candidates.getFirst();
 		change = Main.get().getWallet().publicAddress(candidates.getFirst());
 		Main.get().getWallet().myAddresses.addListener((MapChangeListener<Integer, String>) change -> {
 			if (change.wasRemoved()) candidates.remove(change.getKey());
@@ -181,7 +185,7 @@ public class HomeCtrl implements WalletTab, Initializable {
 			new SimpleTask<>(() -> ErgoInterface.createUnsignedTransaction(ctx, txBuilder, inputAddresses, outBoxes, List.copyOf(tokens.values()), fee, change))
 					.onSuccess(unsignedTx -> {
 						try {
-							SignedTransaction signedTx = Main.get().getWallet().key().sign(ctx, unsignedTx, candidates);
+							SignedTransaction signedTx = Main.get().getWallet().key().sign(ctx, unsignedTx, candidates, changeIndex);
 							new SimpleTask<>(() -> Main.get().getWallet().transact(signedTx))
 									.onSuccess(transactionId -> {
 										send.setDisable(false);

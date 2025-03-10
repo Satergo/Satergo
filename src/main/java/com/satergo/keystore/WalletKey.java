@@ -5,7 +5,6 @@ import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.extra.EncryptedData;
 import com.satergo.extra.Encryption;
-import com.satergo.extra.OldAESEncryption;
 import javafx.scene.control.Alert;
 import org.ergoplatform.ErgoAddressEncoder;
 import org.ergoplatform.P2PKAddress;
@@ -35,7 +34,18 @@ import java.util.function.Supplier;
  */
 public abstract class WalletKey {
 
-	public static class Failure extends Exception {}
+	public static class Failure extends Exception {
+		public Failure() {}
+		public Failure(String message) {
+			super(message);
+		}
+	}
+	/** Thrown for errors occurred while opening the wallet, meaning the wallet could be read without issue but something prevented it from being opened. */
+	public static class WalletOpenException extends Exception {
+		public WalletOpenException(String message) {
+			super(message);
+		}
+	}
 
 	private static final HashMap<Integer, Type<?>> types = new HashMap<>();
 
@@ -46,7 +56,11 @@ public abstract class WalletKey {
 		}
 	}
 
-	public static WalletKey deserialize(Encryption encryption, EncryptedData encrypted, ByteBuffer decrypted) {
+	/**
+	 * Deserializes and opens the wallet. For some wallet types this could involve external processes.
+	 * @throws WalletOpenException If an external process was not successful and caused it to be unable to open the wallet
+	 */
+	public static WalletKey deserialize(Encryption encryption, EncryptedData encrypted, ByteBuffer decrypted) throws WalletOpenException {
 		Type<?> type = types.get(decrypted.getShort() & 0xFFFF);
 		if (type == null) throw new IllegalArgumentException("Unknown wallet type with ID " + decrypted.getShort(0));
 		WalletKey key = type.construct();
@@ -56,14 +70,20 @@ public abstract class WalletKey {
 	}
 
 	public static class Type<T extends WalletKey> {
-		public static final Type<Local> LOCAL = registerType("LOCAL", 0, Local::new);
+		public static final Type<Local> LOCAL = registerType("LOCAL", 0, Set.of(Property.SUPPORTS_REDUCED_TX), Local::new);
 //		public static final Type<ViewOnly> VIEW_ONLY = registerType("VIEW_ONLY", 1, ViewOnly::new);
-//		public static final Type<Ledger> LEDGER = registerType("LEDGER", 10, Ledger::new);
+		public static final Type<LedgerKey> LEDGER = registerType("LEDGER", 54, Set.of(), LedgerKey::new);
 
 		private final String name;
 		private final Supplier<T> constructor;
+		public final Set<Property> properties;
 
-		private Type(String name, Supplier<T> constructor) {
+		public enum Property {
+			SUPPORTS_REDUCED_TX
+		}
+
+		private Type(String name, Set<Property> properties, Supplier<T> constructor) {
+			this.properties = properties;
 			if (!name.toUpperCase(Locale.ROOT).equals(name))
 				throw new IllegalArgumentException("Name must be all uppercase.");
 			this.name = name;
@@ -80,8 +100,8 @@ public abstract class WalletKey {
 		@Override public String toString() { return name; }
 	}
 
-	public static <T extends WalletKey>Type<T> registerType(String name, int id, Supplier<T> constructor) {
-		Type<T> type = new Type<>(name, constructor);
+	public static <T extends WalletKey>Type<T> registerType(String name, int id, Set<Type.Property> properties, Supplier<T> constructor) {
+		Type<T> type = new Type<>(name, properties, constructor);
 		if (types.containsKey(id)) throw new IllegalArgumentException("Type ID " + id + " is already used by " + types.get(id));
 		if (types.values().stream().map(Type::name).anyMatch(n -> n.equals(name)))
 			throw new IllegalArgumentException("Type name " + name + " is already used");
@@ -93,7 +113,7 @@ public abstract class WalletKey {
 	private EncryptedData encrypted;
 	protected final Type<?> type;
 
-	WalletKey(Type<?> type) {
+	protected WalletKey(Type<?> type) {
 		this.type = type;
 	}
 
@@ -107,11 +127,14 @@ public abstract class WalletKey {
 	/**
 	 * @implNote The data begins at index 4. Index 0-4 is the wallet type ID stored as int.
 	 * 	It must only be used for preparing things like caches (for example, extended public key).
-	 * 	The ByteBuffer is already positioned at the beginning of the data.
+	 * 	The ByteBuffer is already positioned at the data beginning.
 	 */
-	public void initCaches(ByteBuffer data) {}
+	public void initCaches(ByteBuffer data) throws WalletOpenException {}
 
-	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure;
+	/**
+	 * @param changeAddress The index of the change address. Does not affect the transaction, it is only used as a hint for certain wallet key types that might make use of it.
+	 */
+	public abstract SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes, Integer changeAddress) throws Failure;
 	public abstract SignedTransaction signReduced(BlockchainContext ctx, ReducedTransaction reducedTx, int baseCost, Collection<Integer> addressIndexes) throws Failure;
 	public abstract Address derivePublicAddress(NetworkType networkType, int index);
 	public abstract WalletKey changedPassword(char[] currentPassword, char[] newPassword) throws Failure; // it would be cool to call this "recrypt" :)
@@ -268,7 +291,7 @@ public abstract class WalletKey {
 		}
 
 		@Override
-		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes) throws Failure {
+		public SignedTransaction sign(BlockchainContext ctx, UnsignedTransaction unsignedTx, Collection<Integer> addressIndexes, Integer changeAddress) throws Failure {
 			return ErgoInterface.newWithMnemonicProver(ctx, nonstandard, getMnemonic(), addressIndexes).sign(unsignedTx);
 		}
 
@@ -299,4 +322,5 @@ public abstract class WalletKey {
 			scheduler.schedule(() -> cachedKey = null, cacheDuration.toMillis(), TimeUnit.MILLISECONDS);
 		}
 	}
+
 }

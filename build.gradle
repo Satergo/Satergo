@@ -30,6 +30,15 @@ repositories {
 		url 'https://oss.sonatype.org/content/repositories/snapshots/'
 		content { includeGroup 'org.scorexfoundation' }
 	}
+	maven {
+		url 'https://maven.satergo.com/snapshots'
+		mavenContent {
+			snapshotsOnly()
+		}
+		content {
+			includeGroup 'com.satergo.jledger'
+		}
+	}
 }
 
 boolean buildInstaller = project.hasProperty("buildInstaller")
@@ -74,6 +83,13 @@ dependencies {
 	// We add the JavaFX dependencies to a custom configuration to later specify that the dependencies in this configuration shall be excluded from the shaded jar
 	javaFxModules.forEach({ md -> javaFxDeps "org.openjfx:javafx-$md:$javaFxVersion:$platform" })
 	implementation configurations.javaFxDeps.dependencies
+
+	// ledger
+	implementation 'com.satergo.jledger:core:0.0.1-SNAPSHOT'
+	implementation 'com.satergo.jledger:protocol-ergo:0.0.1-SNAPSHOT'
+	implementation 'org.hid4java:hid4java:0.8.0'
+	implementation 'com.satergo.jledger:transport-hid4java:0.0.1-SNAPSHOT'
+	implementation 'com.satergo.jledger:transport-speculos:0.0.1-SNAPSHOT'
 }
 
 jar {

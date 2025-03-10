@@ -7,6 +7,7 @@ import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.extra.IncorrectPasswordException;
 import com.satergo.extra.market.MarketData;
 import com.satergo.extra.SimpleTask;
+import com.satergo.keystore.WalletKey;
 import com.satergo.node.EmbeddedNode;
 import javafx.application.Application;
 import javafx.application.ColorScheme;
@@ -150,6 +151,9 @@ public class Main extends Application {
 					displayWalletPage(load);
 				} catch (IncorrectPasswordException e) {
 					Utils.alertIncorrectPassword();
+					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
+				} catch (WalletKey.WalletOpenException e) {
+					Utils.alert(Alert.AlertType.ERROR, e.getMessage());
 					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 				}
 			}

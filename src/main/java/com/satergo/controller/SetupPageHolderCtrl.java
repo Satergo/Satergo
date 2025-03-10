@@ -60,6 +60,9 @@ public class SetupPageHolderCtrl implements Initializable {
 	@FXML
 	public void left(ActionEvent e) {
 		if (page instanceof SetupPage.CustomLeft c) c.left();
-		else Main.get().previousPage();
+		else {
+			page.cleanup();
+			Main.get().previousPage();
+		}
 	}
 }

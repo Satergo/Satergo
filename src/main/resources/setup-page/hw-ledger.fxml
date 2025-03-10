@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.satergo.controller.LedgerSetupCtrl" fx:id="root">
+
+	<Label fx:id="status" text="%loading..."/>
+
+	<VBox fx:id="found" visible="false" managed="${found.visible}" spacing="4" alignment="BASELINE_CENTER">
+		<HBox><Button onAction="#rescan" text="%ledger.rescan"/></HBox>
+
+		<VBox spacing="12.5" alignment="TOP_CENTER">
+			<VBox>
+				<Label text="%walletName" styleClass="fieldLabel"/>
+				<TextField fx:id="walletName" promptText="%enterWalletName" prefWidth="300"/>
+			</VBox>
+
+			<VBox>
+				<Label text="%password" styleClass="fieldLabel"/>
+				<PasswordField fx:id="password" promptText="%ledger.passwordForEncryptingTheWalletFile" prefWidth="300"/>
+			</VBox>
+
+			<Button styleClass="large" onAction="#createWallet" text="%createWallet">
+				<VBox.margin><Insets top="10"/></VBox.margin>
+			</Button>
+		</VBox>
+	</VBox>
+</VBox>

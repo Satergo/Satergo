@@ -72,7 +72,7 @@ public class TransferEverythingTool implements Tool {
 						try {
 							if (cancelled.get()) return;
 							loading.close();
-							SignedTransaction tx = Main.get().getWallet().key().sign(ctx, unsignedTx, Main.get().getWallet().myAddresses.keySet());
+							SignedTransaction tx = Main.get().getWallet().key().sign(ctx, unsignedTx, Main.get().getWallet().myAddresses.keySet(), null);
 							new SimpleTask<>(() -> Main.get().getWallet().transact(tx))
 									.onSuccess(txId -> {
 										if (txId != null) Utils.textDialogWithCopy(Main.lang("transactionId"), txId);
