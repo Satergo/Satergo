@@ -72,6 +72,7 @@ public abstract class WalletKey {
 	public static class Type<T extends WalletKey> {
 		public static final Type<Local> LOCAL = registerType("LOCAL", 0, Set.of(Property.SUPPORTS_REDUCED_TX), Local::new);
 //		public static final Type<ViewOnly> VIEW_ONLY = registerType("VIEW_ONLY", 1, ViewOnly::new);
+		public static final Type<SVaultKey> SVAULT = registerType("SVAULT", 50, Set.of(Property.SUPPORTS_REDUCED_TX), SVaultKey::new);
 		public static final Type<LedgerKey> LEDGER = registerType("LEDGER", 54, Set.of(), LedgerKey::new);
 
 		private final String name;
@@ -322,5 +323,4 @@ public abstract class WalletKey {
 			scheduler.schedule(() -> cachedKey = null, cacheDuration.toMillis(), TimeUnit.MILLISECONDS);
 		}
 	}
-
 }

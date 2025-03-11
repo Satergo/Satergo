@@ -39,6 +39,15 @@ repositories {
 			includeGroup 'com.satergo.jledger'
 		}
 	}
+	maven {
+		url 'https://maven.satergo.com/releases'
+		mavenContent {
+			releasesOnly()
+		}
+		content {
+			includeGroup 'com.github.weliem'
+		}
+	}
 }
 
 boolean buildInstaller = project.hasProperty("buildInstaller")
@@ -90,6 +99,12 @@ dependencies {
 	implementation 'org.hid4java:hid4java:0.8.0'
 	implementation 'com.satergo.jledger:transport-hid4java:0.0.1-SNAPSHOT'
 	implementation 'com.satergo.jledger:transport-speculos:0.0.1-SNAPSHOT'
+
+	// satergo offline vault
+//	implementation 'ch.qos.logback:logback-core:1.4.14'
+//	implementation 'ch.qos.logback:logback-classic:1.4.12'
+	implementation "com.github.hypfvieh:dbus-java-transport-native-unixsocket:4.3.2"
+	implementation 'com.github.weliem:blessed:0.64'
 }
 
 jar {
