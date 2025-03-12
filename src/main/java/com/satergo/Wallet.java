@@ -21,8 +21,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -315,7 +313,7 @@ public final class Wallet {
 
 				return new Wallet(path, key, name, myAddresses, detailsSalt, detailsEncryptionKey, Collections.emptyList());
 			}
-		} else throw new UnsupportedOperationException("Unsupported format version " + formatVersion + " (this release only supports " + NEWEST_SUPPORTED_FORMAT + " and older), the file is version " + formatVersion);
+		} else throw new UnsupportedFormatVersionException("Unsupported format version " + formatVersion + " (this release only supports " + NEWEST_SUPPORTED_FORMAT + " and older), the file is version " + formatVersion, formatVersion);
 	}
 
 	public static Wallet decrypt(byte[] bytes, Path path, char[] password) throws IncorrectPasswordException, WalletKey.WalletOpenException, IOException {

@@ -5,6 +5,7 @@ import com.satergo.controller.*;
 import com.satergo.ergo.ErgoURI;
 import com.satergo.ergopay.ErgoPayURI;
 import com.satergo.extra.IncorrectPasswordException;
+import com.satergo.extra.UnsupportedFormatVersionException;
 import com.satergo.extra.market.MarketData;
 import com.satergo.extra.SimpleTask;
 import com.satergo.keystore.WalletKey;
@@ -154,6 +155,9 @@ public class Main extends Application {
 					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 				} catch (WalletKey.WalletOpenException e) {
 					Utils.alert(Alert.AlertType.ERROR, e.getMessage());
+					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
+				} catch (UnsupportedFormatVersionException e) {
+					Utils.alert(Alert.AlertType.ERROR, Main.lang("unsupportedWalletFormatVersion").formatted(e.formatVersion));
 					displayTopSetupPage(Load.<WalletSetupCtrl>fxmlController("/setup-page/wallet.fxml"));
 				}
 			}
