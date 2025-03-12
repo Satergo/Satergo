@@ -2,10 +2,14 @@
 <?import com.satergo.extra.SetupOption?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.VBox?>
+<?import com.satergo.extra.LinkedHyperlink?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" stylesheets="@./welcome.css" fx:controller="com.satergo.controller.HardwareWalletSetupCtrl" fx:id="root">
 	<padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
 
 	<SetupOption title="Ledger" onAction="#ledger"/>
-	<SetupOption title="Satergo Offline Vault" onAction="#svault"/>
+	<VBox alignment="TOP_CENTER">
+		<SetupOption fx:id="svault" title="Satergo Offline Vault" onAction="#svault"/>
+		<LinkedHyperlink uri="https://github.com/Satergo/Satergo-Offline-Vault-android/releases" text="%svault.androidAppGitHub"/>
+	</VBox>
 
 </VBox>

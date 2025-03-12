@@ -1,5 +1,6 @@
 package com.satergo.hw.svault;
 
+import com.satergo.Utils;
 import com.welie.blessed.*;
 import com.welie.blessed.BluetoothGattCharacteristic.WriteType;
 import org.ergoplatform.sdk.wallet.secrets.ExtendedPublicKey;
@@ -153,7 +154,6 @@ public class SVaultComm {
 
 		@Override
 		public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic ch, BluetoothCommandStatus status) {
-			System.out.println("Written " + ch);
 			if (chunkedWrite != null && ch.getUuid().equals(chunkedWrite.characteristic)) {
 				if (status != BluetoothCommandStatus.COMMAND_SUCCESS) {
 					chunkedWrite.future.completeExceptionally(new IllegalStateException("Illegal status " + status));
@@ -169,7 +169,7 @@ public class SVaultComm {
 				}
 			} else {
 				if (status != BluetoothCommandStatus.COMMAND_SUCCESS) {
-					System.out.println("FAILED TO WRITE!");
+					Utils.alertUnexpectedException(new IllegalStateException("Failed to write"));
 					throw new IllegalStateException("Failed to write");
 				}
 			}
@@ -223,7 +223,6 @@ public class SVaultComm {
 		}
 		buffer.put(txData);
 		byte[] data = buffer.array();
-		System.out.println("Writing " + data.length + " tx bytes");
 		if (data.length <= 510) {
 			byte[] fullData = ByteBuffer.allocate(2 + data.length)
 					.putShort((short) data.length)

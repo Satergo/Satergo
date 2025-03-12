@@ -15,6 +15,8 @@ import javafx.scene.layout.VBox;
 
 public class SetupOption extends VBox {
 
+	private Label descriptionLabel;
+
 	public SetupOption(@NamedArg("title") String title, @NamedArg("description") String description) {
 		setFocusTraversable(true);
 
@@ -22,11 +24,7 @@ public class SetupOption extends VBox {
 		Label titleLabel = new Label(title.toUpperCase());
 		titleLabel.getStyleClass().add("title");
 		getChildren().add(titleLabel);
-		if (description != null) {
-			Label descriptionLabel = new Label(description);
-			descriptionLabel.getStyleClass().add("description");
-			getChildren().add(descriptionLabel);
-		}
+		setDescription(description);
 
 		setOnMouseClicked(e -> {
 			if (e.getButton() == MouseButton.PRIMARY)
@@ -70,6 +68,22 @@ public class SetupOption extends VBox {
 		switch (action) {
 			case FIRE -> fire();
 			default -> super.executeAccessibleAction(action);
+		}
+	}
+
+	public void setDescription(String description) {
+		if (description == null) {
+			if (descriptionLabel != null) {
+				getChildren().remove(descriptionLabel);
+				descriptionLabel = null;
+			}
+		} else {
+			if (descriptionLabel == null) {
+				descriptionLabel = new Label();
+				descriptionLabel.getStyleClass().add("description");
+				getChildren().add(descriptionLabel);
+			}
+			descriptionLabel.setText(description);
 		}
 	}
 }
