@@ -32,8 +32,8 @@ import java.util.*;
 
 public class Main extends Application {
 
-	public static final String VERSION = "1.8.0";
-	public static final int VERSION_CODE = 10;
+	public static final String VERSION = "1.9.0";
+	public static final int VERSION_CODE = 11;
 
 	public static EmbeddedNode node;
 	// from command line

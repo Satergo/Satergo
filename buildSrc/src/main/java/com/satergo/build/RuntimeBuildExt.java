@@ -24,7 +24,6 @@ public class RuntimeBuildExt {
 	}
 
 
-	public String platformName;
 	public URI jdkRuntimeURI;
 	public String jdkRuntimeRoot = "";
 	/**
