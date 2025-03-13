@@ -52,7 +52,7 @@ public abstract class SVaultFinder {
 					dialog.setHeaderText(Main.lang("svault.enterPINCode"));
 					String pin = dialog.showForResult().orElse(null);
 					if (pin == null) {
-						Utils.alert(Alert.AlertType.ERROR, "The PIN code required, cancelling connection.");
+						Utils.alert(Alert.AlertType.ERROR, Main.lang("svault.pinCodeRequired"));
 						pinFuture.complete("");
 					} else {
 						pinFuture.complete(pin);

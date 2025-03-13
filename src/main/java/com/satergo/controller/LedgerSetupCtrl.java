@@ -44,7 +44,7 @@ public class LedgerSetupCtrl implements SetupPage.WithoutExtra, Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		emulator = SystemProperties.ledgerEmulator().isPresent() && SystemProperties.ledgerEmulatorPort().isPresent();
 		if (emulator) {
-			status.setText("Using emulator");
+			status.setText(Main.lang("ledger.usingEmulator"));
 			found.setVisible(true);
 			return;
 		}

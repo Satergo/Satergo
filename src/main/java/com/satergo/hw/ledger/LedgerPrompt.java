@@ -84,7 +84,7 @@ public sealed interface LedgerPrompt {
 
 		@Override
 		protected void resetState() {
-			setHeaderText("Please approve the request on your Ledger device");
+			setHeaderText(Main.lang("ledger.pleaseAcceptRequest"));
 			getDialogPane().getButtonTypes().clear();
 		}
 
@@ -112,7 +112,7 @@ public sealed interface LedgerPrompt {
 		@Override
 		protected void resetState() {
 			progress = 0;
-			setHeaderText("Please approve the request on your Ledger device (" + progress + "/" + inputBoxes.size() + ")");
+			setHeaderText(Main.lang("ledger.pleaseAcceptRequest") + " (" + progress + "/" + inputBoxes.size() + ")");
 			getDialogPane().getButtonTypes().clear();
 		}
 
@@ -135,7 +135,7 @@ public sealed interface LedgerPrompt {
 			task.setOnSucceeded(event -> setResult(task.getValue()));
 			task.setOnFailed(event -> handleException(task.getException()));
 			task.progressProperty().addListener((observable, oldValue, newValue) -> {
-				setHeaderText("Please approve the request on your Ledger device (" + Math.round((double) newValue * inputBoxes.size()) + "/" + inputBoxes.size() + ")");
+				setHeaderText(Main.lang("ledger.pleaseAcceptRequest") + " (" + Math.round((double) newValue * inputBoxes.size()) + "/" + inputBoxes.size() + ")");
 			});
 			new Thread(task).start();
 		}
@@ -152,7 +152,7 @@ public sealed interface LedgerPrompt {
 
 		@Override
 		protected void resetState() {
-			setHeaderText("Please approve the signing request on your Ledger device");
+			setHeaderText(Main.lang("ledger.pleaseApproveSigning"));
 			getDialogPane().getButtonTypes().clear();
 		}
 

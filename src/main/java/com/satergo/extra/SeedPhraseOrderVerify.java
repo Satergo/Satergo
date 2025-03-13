@@ -1,5 +1,6 @@
 package com.satergo.extra;
 
+import com.satergo.Main;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.TextField;
@@ -24,7 +25,7 @@ public class SeedPhraseOrderVerify extends TilePane {
 			setPrefColumns(1);
 			TextField accessibleInput = new TextField();
 			accessibleInput.setPrefWidth(Region.USE_COMPUTED_SIZE);
-			accessibleInput.setPromptText("Please enter the seed phrase words in order");
+			accessibleInput.setPromptText(Main.lang("enterSeedPhraseWordsInOrder"));
 			accessibleInput.textProperty().addListener((observable, oldValue, newValue) -> {
 				userOrder.clear();
 				Collections.addAll(userOrder, newValue.strip().split("\\s+"));

@@ -227,11 +227,6 @@ public class WalletCtrl implements Initializable {
 			handleErgoPayURI(lastErgoPayURI);
 		});
 		doNotShow.setOnAction(event -> ergoPayNotice.setVisible(false));
-		try {
-			Files.writeString(Path.of("/home/user/Desktop/file.txttest.txt"), SystemProperties.packageType() + "");
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 		if (SystemProperties.packageType() == SystemProperties.PackageType.PORTABLE) walletRoot.sceneProperty().addListener((obs, old, scene) -> {
 			if (scene != null) {
 				scene.getWindow().focusedProperty().addListener(windowFocusListener = (observable, oldValue, focused) -> {
