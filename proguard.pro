@@ -31,6 +31,7 @@
 -keep class com.pixelduke.control.skin.** { *; }
 -keep class impl.com.pixelduke.control.** { *; }
 -keep class com.google.zxing.** { *; }
+-keep class org.freedesktop.dbus.transport.jre.** { *; }
 
 -dontwarn java.lang.invoke.VarHandle
 -dontwarn org.controlsfx.**

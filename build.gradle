@@ -16,8 +16,8 @@ java {
 }
 
 group 'com.satergo'
-version '1.9.1'
-def versionCode = 12
+version '1.9.2'
+def versionCode = 13
 
 application {
 	mainClass = "com.satergo.Launcher"
@@ -68,7 +68,7 @@ if (platformProvided && project.findProperty("platform") != "auto") {
 	if (arch != "amd64") platform += "-" + arch
 }
 
-def javaFxVersion = '23'
+def javaFxVersion = '24.0.1'
 def javaFxModules = [ 'base', 'controls', 'fxml', 'graphics' ]
 
 configurations {

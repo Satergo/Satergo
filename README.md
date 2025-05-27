@@ -9,7 +9,7 @@ Why use Satergo?
 - **Cross-platform**: Supports all major desktop platforms
 - **Fully featured**: Has many features but is still easy to use
 - **Reliable**: You can be sure about what runs on your computer
-- **Light**: Usable in slow or portable operating system environments
+- **Light**: Usable in slow or portable OS environments
 
 ## Supported platforms
 More can easily be added.

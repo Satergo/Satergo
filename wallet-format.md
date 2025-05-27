@@ -6,10 +6,10 @@ The byte order is big endian for all versions. The data types are described usin
 
 Versions:
 
-| formatVersion         | Introduced              |
-|-----------------------|-------------------------|
-| [2](#formatversion-2) | v1.9.0 (in development) |
-| [1](#formatversion-1) | v0.0.3 (2022-06-22)     |
+| formatVersion         | Introduced          |
+|-----------------------|---------------------|
+| [2](#formatversion-2) | v1.9.0 (2025-03-12) |
+| [1](#formatversion-1) | v0.0.3 (2022-06-22) |
 
 ## formatVersion 2
 This formatVersion makes changes to the encryption and the key derivation function. The version of Argon2 used is hardcoded because using a new Argon2 version without changing the formatVersion would mean older wallet readers would not notice the incompatibility, and adding a specific check just for the KDF version is not something I want to do.
