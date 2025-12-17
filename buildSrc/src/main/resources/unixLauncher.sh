@@ -17,7 +17,7 @@ cd "`dirname \"$PRG\"`/.." || exit
 APP_HOME="`pwd -P`"
 
 # Add default JVM options here. You can also use JAVA_OPTS and SATERGO_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS='{DEFAULT_JVM_OPTS}'
+JVM_OPTS='{JVM_OPTS}'
 
 CLASSPATH="$APP_HOME/lib/*"
 
@@ -29,6 +29,6 @@ save () {
 APP_ARGS=$(save "$@")
 
 # Collect all arguments for the java command, following the shell quoting and substitution rules.
-eval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $SATERGO_OPTS -classpath "\"$CLASSPATH\"" {MAIN_CLASS} "$APP_ARGS"
+eval set -- $JVM_OPTS $JAVA_OPTS $SATERGO_OPTS -classpath "\"$CLASSPATH\"" {MAIN_CLASS} "$APP_ARGS"
 
 exec "$APP_HOME/bin/java" "$@"

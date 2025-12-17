@@ -15,8 +15,8 @@ java {
 	}
 }
 
-group 'com.satergo'
-version '1.9.2'
+group = 'com.satergo'
+version = '1.9.2'
 def versionCode = 13
 
 application {
@@ -27,11 +27,11 @@ application {
 repositories {
 	mavenCentral()
 	maven {
-		url 'https://oss.sonatype.org/content/repositories/snapshots/'
+		url = 'https://oss.sonatype.org/content/repositories/snapshots/'
 		content { includeGroup 'org.scorexfoundation' }
 	}
 	maven {
-		url 'https://maven.satergo.com/snapshots'
+		url = 'https://maven.satergo.com/snapshots'
 		mavenContent {
 			snapshotsOnly()
 		}
@@ -40,7 +40,7 @@ repositories {
 		}
 	}
 	maven {
-		url 'https://maven.satergo.com/releases'
+		url = 'https://maven.satergo.com/releases'
 		mavenContent {
 			releasesOnly()
 		}
@@ -144,13 +144,14 @@ satergoRuntime {
 	includeJarInRuntime = !buildInstaller
 
 	launcherScript {
-		type = platform == "win" ? "bat" : "sh"
+		type = platform == "win" ? "BAT" : "SH"
 		name = "Satergo"
 		mainClass = application.mainClass.get()
-		defaultJvmOpts = ['-Dsatergo.appHome={APP_HOME}',
-						  '-Dsatergo.launcher={APP_HOME}/bin/Satergo',
-						  '-Dsatergo.packagePlatform=' + platform,
-						  '-Dsatergo.packageType=' + (buildInstaller ? "INSTALLATION" : "PORTABLE")]
+		jvmOpts = ['-XX:+DisableAttachMechanism',
+				   '-Dsatergo.appHome={APP_HOME}',
+				   '-Dsatergo.launcher={APP_HOME}/bin/Satergo',
+				   '-Dsatergo.packagePlatform=' + platform,
+				   '-Dsatergo.packageType=' + (buildInstaller ? "INSTALLATION" : "PORTABLE")]
 		windowsConsole = false
 	}
 	if (buildInstaller)

@@ -18,7 +18,7 @@ public class RuntimeBuildExt {
 		public Type type;
 		public String name;
 		public String mainClass;
-		public List<String> defaultJvmOpts;
+		public List<String> jvmOpts;
 
 		public boolean windowsConsole = true;
 	}

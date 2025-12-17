@@ -27,7 +27,7 @@
 
 	<BorderPane fx:id="infoSection" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="section" GridPane.hgrow="ALWAYS" maxWidth="Infinity">
 		<center>
-			<GridPane hgap="${infoSection.width * 0.2}" vgap="20" maxWidth="-Infinity" maxHeight="-Infinity" fx:id="info" managed="${info.visible}" style="-fx-font-size: 20px;">
+			<GridPane hgap="${infoSection.width * 0.1}" vgap="20" maxWidth="-Infinity" maxHeight="-Infinity" fx:id="info" managed="${info.visible}" style="-fx-font-size: 20px;">
 				<Label text="%balanceC" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
 				<Label fx:id="balance" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 

@@ -120,8 +120,8 @@ public class UpdateHandler {
 					try {
 						Path scriptPath = tempDir.resolve("satergoUpdateScript" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE) + ".bat");
 						// Installs the MSI, if the installation was successful it deletes the installer and starts the application.
-						// If the installation failed, it deletes the installer. It is done this to avoid the deletion
-						// affecting the errorlevel.
+						// If the installation failed, it deletes the installer. There is code duplication to
+						// prevent the deletion from affecting the errorlevel.
 						// Finally, it deletes the script itself.
 						Files.writeString(scriptPath, """
 								@echo off

@@ -9,7 +9,7 @@ if "%DIRNAME%" == "" set DIRNAME=.
 set APP_HOME=%DIRNAME%..
 
 rem Add default JVM options here. You can also use JAVA_OPTS and SATERGO_OPTS to pass JVM options to this script.
-set DEFAULT_JVM_OPTS={DEFAULT_JVM_OPTS}
+set JVM_OPTS={JVM_OPTS}
 
 set JAVA_EXE=%APP_HOME%/bin/{WIN_JAVA_BINARY_NAME}.exe
 set JAVA_EXE="%JAVA_EXE:"=%"
@@ -33,6 +33,6 @@ set CMD_LINE_ARGS=%*
 
 :execute
 set CLASSPATH="%APP_HOME:"=%/lib/*"
-%JAVA_EXE% %DEFAULT_JVM_OPTS% %JAVA_OPTS% %SATERGO_OPTS% -classpath %CLASSPATH% {MAIN_CLASS} %CMD_LINE_ARGS%
+%JAVA_EXE% %JVM_OPTS% %JAVA_OPTS% %SATERGO_OPTS% -classpath %CLASSPATH% {MAIN_CLASS} %CMD_LINE_ARGS%
 if "%OS%"=="Windows_NT" endlocal
 exit

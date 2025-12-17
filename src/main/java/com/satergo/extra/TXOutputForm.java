@@ -1,5 +1,6 @@
 package com.satergo.extra;
 
+import com.satergo.FormatNumber;
 import com.satergo.Load;
 import com.satergo.Main;
 import com.satergo.Utils;
@@ -14,6 +15,7 @@ import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -31,6 +33,7 @@ public class TXOutputForm extends VBox implements Initializable {
 	@FXML private Hyperlink addToken;
 	@FXML private VBox tokenList;
 	@FXML private TextField address, amount, fee;
+	@FXML private Label defaultMinimum;
 	private ContextMenu addTokenContextMenu;
 
 	public TXOutputForm() {
@@ -49,6 +52,11 @@ public class TXOutputForm extends VBox implements Initializable {
 		amount.textProperty().addListener(obs -> changeListeners.forEach(Runnable::run));
 		fee.textProperty().addListener(obs -> changeListeners.forEach(Runnable::run));
 		tokenList.getChildren().addListener((InvalidationListener) obs -> changeListeners.forEach(Runnable::run));
+		defaultMinimum.setTooltip(new Tooltip(FormatNumber.ergExact(ErgoInterface.toFullErg(Parameters.MinFee)) + " ERG"));
+		defaultMinimum.setOnMouseClicked(e -> {
+			if (e.getButton() == MouseButton.PRIMARY)
+				fee.setText(FormatNumber.ergExact(ErgoInterface.toFullErg(Parameters.MinFee)));
+		});
 	}
 
 	@FXML

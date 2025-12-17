@@ -96,22 +96,21 @@ public class RuntimeBuildTask extends DefaultTask {
 
 		// Create launcher script
 		if (extension.launcherScript != null) {
-			String fileName;
 			String templatePath = switch (extension.launcherScript.type) {
 				case SH -> "/unixLauncher.sh";
 				case BAT -> "/windowsLauncher.bat";
 			};
-			String optsSerialized = extension.launcherScript.defaultJvmOpts == null ? "" : extension.launcherScript.type == RuntimeBuildExt.LauncherScript.Type.BAT
-					? extension.launcherScript.defaultJvmOpts.stream()
+			String optsSerialized = extension.launcherScript.jvmOpts == null ? "" : extension.launcherScript.type == RuntimeBuildExt.LauncherScript.Type.BAT
+					? extension.launcherScript.jvmOpts.stream()
 						.map(opt -> "\"" + opt
 								.replace("{APP_HOME}", "%APP_HOME%")
 								.replace("\"", "\"\"") + "\"").collect(Collectors.joining(" "))
-					: extension.launcherScript.defaultJvmOpts.stream()
+					: extension.launcherScript.jvmOpts.stream()
 						.map(opt -> "\"" + opt
 								.replace("{APP_HOME}", "$APP_HOME") + "\"").collect(Collectors.joining(" "));
 			String launcherScript = new String(new DataInputStream(Objects.requireNonNull(getClass().getResourceAsStream(templatePath))).readAllBytes(), StandardCharsets.UTF_8)
 					.replace("{MAIN_CLASS}", extension.launcherScript.mainClass)
-					.replace("{DEFAULT_JVM_OPTS}", optsSerialized)
+					.replace("{JVM_OPTS}", optsSerialized)
 					.replace("{WIN_JAVA_BINARY_NAME}", extension.launcherScript.windowsConsole ? "java" : "javaw");
 			String launcherName = extension.launcherScript.name + (extension.launcherScript.type == RuntimeBuildExt.LauncherScript.Type.BAT ? ".bat" : "");
 			Path launcherPath = runtimeOutput.resolve("bin").resolve(launcherName);

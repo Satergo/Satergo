@@ -373,15 +373,15 @@ public class Utils {
 		return path;
 	}
 
-	public static void accessibleLabel(Label... labels) {
-		for (Label label : labels) {
-			label.focusTraversableProperty().bind(Platform.accessibilityActiveProperty());
-		}
-	}
-
 	public static Label accessibleLabel(Label label) {
 		label.focusTraversableProperty().bind(Platform.accessibilityActiveProperty());
 		return label;
+	}
+
+	public static void accessibleLabels(Label... labels) {
+		for (Label label : labels) {
+			accessibleLabel(label);
+		}
 	}
 
 	public static void alertTxBuildException(Throwable t, long amountNanoErg, Collection<ErgoToken> tokens, Function<ErgoId, String> getTokenName) {

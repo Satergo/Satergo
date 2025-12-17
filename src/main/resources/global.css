@@ -100,16 +100,7 @@
 .button:hover, .button:pressed {
 	-fx-background-color: -c-button-hover;
 	-fx-text-fill: -sat-button-hover-text-fill;
-	-fx-border-width: 0;
-	-fx-padding: 4px 10px 4px 10px;
-}
-
-.button.small:hover, .button.small:pressed {
-	-fx-padding: 2.5px 6.5px 2.5px 6.5px;
-}
-
-.button.large:hover, .button.large:pressed {
-	-fx-padding: 8.5px 14.5px 8.5px 14.5px;
+	-fx-border-color: -c-button-hover;
 }
 
 .button:pressed {
@@ -121,6 +112,7 @@
 }
 
 .button.borderless:focus-visible {
+	/* Decrease the size and add a border. Even though it is a borderless button, a border is needed for keyboard navigation. */
 	-fx-padding: 3.4px 9.4px 3.4px 9.4px;
 	-fx-border-width: 1px;
 }
@@ -130,7 +122,6 @@
 }
 
 .button.transparent:hover, .button.transparent:pressed {
-	-fx-border-width: 0.49px;
 	-fx-border-color: white;
 }
 
