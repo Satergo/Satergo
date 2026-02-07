@@ -24,17 +24,22 @@ public class RuntimeBuildExt {
 	}
 
 
+	/** Use either this or {@link #jmodArchiveURI} */
 	public URI jdkRuntimeURI;
 	public String jdkRuntimeRoot = "";
-	/**
+
+	/** Use either this or {@link #jdkRuntimeURI} */
+	public URI jmodArchiveURI;
+	public String jmodArchiveJmodLocation = "";
+	/*
 	 * Whether to cache the generated runtime for next use.
 	 * Cache is per the filename from {@link #jdkRuntimeURI} and is never automatically deleted.
 	 */
-	public boolean cacheRuntimes = true;
+	// public boolean cacheRuntimes = true;
 	/**
-	 * Deletes the {@code legal} directory and the {@code release} file in the output runtime
+	 * Deletes the {@code legal} directory and the {@code release} file from the output jlink runtime
 	 */
-	public boolean cleanupRuntimeContent = false;
+	public boolean cleanupJlinkImageContent = false;
 	/**
 	 * Whether to include the program jar in the lib directory of the runtime
 	 */

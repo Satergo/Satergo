@@ -137,9 +137,14 @@ class FileUtils {
 		extractArchiveTo(new TarArchiveInputStream(new GZIPInputStream(inputStream)), outputDirectory, nameRewrite);
 	}
 
-	static void downloadJdk(String archiveName, URI uri, String root, Path out) throws IOException, InterruptedException {
+	/** Downloads the archive, expects it to contain one top-level directory which is considered the root unless {@code root} specifies
+	 * something, in which case the root is top-level-directory/{@code root} */
+	static void downloadAndExtract(String archiveName, URI uri, String root, Path out) throws IOException, InterruptedException {
 		HttpResponse<InputStream> request = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build()
 				.send(HttpRequest.newBuilder().uri(uri).build(), HttpResponse.BodyHandlers.ofInputStream());
+		if (request.statusCode() != 200) {
+			throw new IllegalStateException("HTTP " + request.statusCode());
+		}
 		ArchiveType archiveType;
 		if (archiveName.endsWith(".zip")) archiveType = ArchiveType.ZIP;
 		else if (archiveName.endsWith(".tar.gz")) archiveType = ArchiveType.TAR_GZ;
@@ -158,6 +163,15 @@ class FileUtils {
 		switch (archiveType) {
 			case ZIP -> FileUtils.extractZipTo(request.body(), out, pathRewriter);
 			case TAR_GZ -> FileUtils.extractTarGzTo(request.body(), out, pathRewriter);
+		}
+	}
+
+	static void deleteIfEmptyDirectory(Path path) throws IOException {
+		if (!Files.isDirectory(path)) return;
+		try (Stream<Path> stream = Files.list(path)) {
+			if (stream.findAny().isEmpty()) {
+				Files.delete(path);
+			}
 		}
 	}
 }

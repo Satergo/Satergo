@@ -14,11 +14,14 @@ import java.util.stream.Collectors;
 
 public class RuntimeBuildTask extends DefaultTask {
 
-	static final String JDK_CACHE_DIR_NAME = "jdks";
+	private static final String JDK_CACHE_DIR_NAME = "jdks", JMOD_CACHE_DIR_NAME = "jmods";
 
 	@TaskAction
 	public void execute() throws TaskExecutionException, IOException, InterruptedException {
 		RuntimeBuildExt extension = getProject().getExtensions().getByType(RuntimeBuildExt.class);
+		if (extension.jdkRuntimeURI != null && extension.jmodArchiveURI != null) {
+			throw new IllegalArgumentException("jdkRuntimeURI and jmodArchiveURI are mutually exclusive");
+		}
 
 		// This task supports working with both full and shrunk jars
 		boolean dependsOnShrinkJar = getLifecycleDependencies().getDependencies(this)
@@ -30,10 +33,10 @@ public class RuntimeBuildTask extends DefaultTask {
 		getExtensions().add("mainJar", mainJar);
 
 		// Invoke jdeps to find used modules
-		StringWriter jdepsOut = new StringWriter();
-		int jdepsResult = ToolProvider.findFirst("jdeps").orElseThrow().run(new PrintWriter(jdepsOut), new PrintWriter(System.err),
+		StringWriter jdepsOut = new StringWriter(), jdepsErr = new StringWriter();
+		int jdepsResult = ToolProvider.findFirst("jdeps").orElseThrow().run(new PrintWriter(jdepsOut), new PrintWriter(jdepsErr),
 				"--print-module-deps", "--ignore-missing-deps", mainJar.getAbsolutePath());
-		if (jdepsResult != 0) throw new TaskExecutionException(this, new RuntimeException());
+		if (jdepsResult != 0) throw new TaskExecutionException(this, new RuntimeException(jdepsErr.toString()));
 		LinkedHashSet<String> modules = new LinkedHashSet<>(Arrays.asList(jdepsOut.toString().strip().split(",")));
 		// Add extra (likely dynamically used) modules from configuration
 		if (extension.extraModules != null)
@@ -46,15 +49,34 @@ public class RuntimeBuildTask extends DefaultTask {
 			});
 		}
 
-		// Use from cache or download JDK for runtime
-		String[] jdkArchiveLinkParts = extension.jdkRuntimeURI.getPath().split("/");
-		String jdkArchiveName = jdkArchiveLinkParts[jdkArchiveLinkParts.length - 1];
-		Path cacheDir = getProject().getLayout().getBuildDirectory().get().dir(JDK_CACHE_DIR_NAME).getAsFile().toPath();
-		if (!Files.exists(cacheDir))
-			Files.createDirectory(cacheDir);
-		Path jdk = cacheDir.resolve(jdkArchiveName);
-		if (!Files.exists(jdk)) {
-			FileUtils.downloadJdk(jdkArchiveName, extension.jdkRuntimeURI, extension.jdkRuntimeRoot, jdk);
+		Path jmodsPath;
+		if (extension.jdkRuntimeURI != null) {
+			// Use from cache or download JDK for runtime
+			String jdkArchiveName = lastElement(extension.jdkRuntimeURI.getPath().split("/"));
+			Path cacheDir = getProject().getLayout().getBuildDirectory().get().dir(JDK_CACHE_DIR_NAME).getAsFile().toPath();
+			if (!Files.exists(cacheDir))
+				Files.createDirectory(cacheDir);
+			Path jdk = cacheDir.resolve(jdkArchiveName);
+			// Jlink will use the current system's resources if an empty directory is provided
+			FileUtils.deleteIfEmptyDirectory(jdk);
+			if (!Files.exists(jdk)) {
+				FileUtils.downloadAndExtract(jdkArchiveName, extension.jdkRuntimeURI, extension.jdkRuntimeRoot, jdk);
+			}
+			jmodsPath = jdk.resolve("jmods").toAbsolutePath();
+		} else if (extension.jmodArchiveURI != null) {
+			String jmodArchiveName = lastElement(extension.jmodArchiveURI.getPath().split("/"));
+			Path cacheDir = getProject().getLayout().getBuildDirectory().get().dir(JMOD_CACHE_DIR_NAME).getAsFile().toPath();
+			if (!Files.exists(cacheDir))
+				Files.createDirectory(cacheDir);
+			Path jmods = cacheDir.resolve(jmodArchiveName);
+			// Jlink will use the current system's resources if an empty directory is provided
+			FileUtils.deleteIfEmptyDirectory(jmods);
+			if (!Files.exists(jmods)) {
+				FileUtils.downloadAndExtract(jmodArchiveName, extension.jmodArchiveURI, extension.jmodArchiveJmodLocation, jmods);
+			}
+			jmodsPath = jmods;
+		} else {
+			throw new IllegalArgumentException();
 		}
 
 		// Invoke jlink to create a runtime
@@ -62,10 +84,9 @@ public class RuntimeBuildTask extends DefaultTask {
 		if (Files.exists(runtimeOutput))
 			FileUtils.deleteDirectory(runtimeOutput);
 		ArrayList<String> args = new ArrayList<>();
-
 		args.add("--module-path");
 		List<String> modulePaths = new ArrayList<>();
-		modulePaths.add(jdk.resolve("jmods").toAbsolutePath().toString());
+		modulePaths.add(jmodsPath.toString());
 		for (File extraModuleJar : extension.extraModuleJars) {
 			modulePaths.add(extraModuleJar.getParentFile().getAbsolutePath());
 		}
@@ -84,7 +105,7 @@ public class RuntimeBuildTask extends DefaultTask {
 		if (jlinkResult != 0) throw new TaskExecutionException(this, new RuntimeException());
 
 		// Cleanup the runtime
-		if (extension.cleanupRuntimeContent) {
+		if (extension.cleanupJlinkImageContent) {
 			Files.delete(runtimeOutput.resolve("release"));
 			FileUtils.deleteDirectory(runtimeOutput.resolve("legal"));
 		}
@@ -130,4 +151,7 @@ public class RuntimeBuildTask extends DefaultTask {
 		}
 	}
 
+	private static <T>T lastElement(T[] array) {
+		return array[array.length - 1];
+	}
 }

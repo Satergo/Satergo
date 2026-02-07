@@ -3,15 +3,15 @@ import com.satergo.build.SatergoBuildPlugin
 plugins {
 	id 'java'
 	id 'application'
-	id 'com.gradleup.shadow' version '8.3.0'
+	id 'com.gradleup.shadow' version '9.3.1'
 }
 
 apply plugin: SatergoBuildPlugin
 
 java {
-	sourceCompatibility = JavaLanguageVersion.of(22)
+	sourceCompatibility = JavaLanguageVersion.of(25)
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(22)
+		languageVersion = JavaLanguageVersion.of(25)
 	}
 }
 
@@ -22,12 +22,13 @@ def versionCode = 13
 application {
 	mainClass = "com.satergo.Launcher"
 	applicationName = project.name
+	applicationDefaultJvmArgs = [ "--enable-native-access=ALL-UNNAMED" ]
 }
 
 repositories {
 	mavenCentral()
 	maven {
-		url = 'https://oss.sonatype.org/content/repositories/snapshots/'
+		url = 'https://oss.sonatype.org/service/local/repositories/snapshots/content/'
 		content { includeGroup 'org.scorexfoundation' }
 	}
 	maven {
@@ -68,7 +69,7 @@ if (platformProvided && project.findProperty("platform") != "auto") {
 	if (arch != "amd64") platform += "-" + arch
 }
 
-def javaFxVersion = '24.0.1'
+def javaFxVersion = '26-ea+23'
 def javaFxModules = [ 'base', 'controls', 'fxml', 'graphics' ]
 
 configurations {
@@ -80,7 +81,7 @@ dependencies {
 		exclude group: 'org.openjfx'
 		exclude group: 'org.controlsfx'
 	}
-	implementation 'org.fxmisc.flowless:flowless:0.7.3'
+	implementation 'org.fxmisc.flowless:flowless:0.7.4'
 
 	implementation 'org.ergoplatform:ergo-appkit_2.12:5.0.4'
 	implementation 'com.typesafe:config:1.4.3'
@@ -126,17 +127,17 @@ shadowJar {
 			exclude(dependency(it))
 		}
 	}
+	addMultiReleaseAttribute = false
 }
 
 satergoRuntime {
 
-	extraModules = ["jdk.crypto.ec", "java.naming", "jdk.charsets", "jdk.zipfs"]
+	extraModules = ["java.naming", "jdk.charsets", "jdk.zipfs"]
 	javaFxModules.forEach { extraModules.add("javafx." + it) }
 	excludeModules = []
 	extraModuleJars = configurations.javaFxDeps.files
 	extraJlinkOptions = ["--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"]
-	cleanupRuntimeContent = true
-	cacheRuntimes = true
+	cleanupJlinkImageContent = true
 
 	proguardConfig = file("proguard.pro").toPath()
 	proguardOutputName = "Satergo-${project.version}-shrunken.jar"
@@ -151,7 +152,8 @@ satergoRuntime {
 				   '-Dsatergo.appHome={APP_HOME}',
 				   '-Dsatergo.launcher={APP_HOME}/bin/Satergo',
 				   '-Dsatergo.packagePlatform=' + platform,
-				   '-Dsatergo.packageType=' + (buildInstaller ? "INSTALLATION" : "PORTABLE")]
+				   '-Dsatergo.packageType=' + (buildInstaller ? "INSTALLATION" : "PORTABLE"),
+				   '--enable-native-access=ALL-UNNAMED']
 		windowsConsole = false
 	}
 	if (buildInstaller)
@@ -161,29 +163,27 @@ satergoRuntime {
 	switch (platform) {
 		case "linux": {
 			platformName = "linux-amd64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_x64_linux_hotspot_22.0.2_9.tar.gz")
+			jmodArchiveURI = URI.create("https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.2%2B10/OpenJDK25U-jmods_x64_linux_hotspot_25.0.2_10.tar.gz")
 			break
 		}
 		case "linux-aarch64": {
 			platformName = "linux-aarch64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_aarch64_linux_hotspot_22.0.2_9.tar.gz")
+			jmodArchiveURI = URI.create("https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.2%2B10/OpenJDK25U-jmods_aarch64_linux_hotspot_25.0.2_10.tar.gz")
 			break
 		}
 		case "win": {
 			platformName = "windows-amd64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_x64_windows_hotspot_22.0.2_9.zip")
+			jmodArchiveURI = URI.create("https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.2%2B10/OpenJDK25U-jmods_x64_windows_hotspot_25.0.2_10.zip")
 			break
 		}
 		case "mac": {
 			platformName = "mac-amd64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_x64_mac_hotspot_22.0.2_9.tar.gz")
-			jdkRuntimeRoot = "Contents/Home/"
+			jmodArchiveURI = URI.create("https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.2%2B10/OpenJDK25U-jmods_x64_mac_hotspot_25.0.2_10.tar.gz")
 			break
 		}
 		case "mac-aarch64": {
 			platformName = "mac-aarch64"
-			jdkRuntimeURI = URI.create("https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_aarch64_mac_hotspot_22.0.2_9.tar.gz")
-			jdkRuntimeRoot = "Contents/Home/"
+			jmodArchiveURI = URI.create("https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.2%2B10/OpenJDK25U-jmods_aarch64_mac_hotspot_25.0.2_10.tar.gz")
 			break
 		}
 		default: throw new IllegalArgumentException()
