@@ -6,6 +6,8 @@ import com.satergo.Main;
 import com.satergo.Utils;
 import com.satergo.ergo.ErgoInterface;
 import com.satergo.ergo.TokenSummary;
+import com.satergo.extra.dialog.MoveStyle;
+import com.satergo.extra.dialog.SatVoidDialog;
 import javafx.animation.*;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
@@ -18,7 +20,10 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
@@ -38,9 +43,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 public class TransactionCell extends BorderPane implements Initializable {
 
@@ -79,10 +84,10 @@ public class TransactionCell extends BorderPane implements Initializable {
 	}
 
 	private final long ergDiff;
-	public TransactionCell(TransactionInfo tx, Set<Address> myAddresses) {
+	public TransactionCell(TransactionInfo tx, Set<String> myAddresses) {
 		this.tx = tx;
 		// Convert my addresses to string to avoid constantly converting the API strings into Address objects
-		this.myAddresses = myAddresses.stream().map(Address::toString).collect(Collectors.toUnmodifiableSet());
+		this.myAddresses = myAddresses;
 		ergDiff = totalReceived(tx, this.myAddresses) - totalSent(tx, this.myAddresses);
 		Load.thisFxml(this, "/tx-cell.fxml");
 		getStyleClass().add(ergDiff >= 0 ? "green" : "red");
@@ -92,11 +97,11 @@ public class TransactionCell extends BorderPane implements Initializable {
 		});
 		// context menu
 		MenuItem copyTxId = new MenuItem(Main.lang("copyTransactionId"));
-		copyTxId.setOnAction(e -> Utils.copyStringToClipboard(tx.getId()));
+		copyTxId.setOnAction(_ -> Utils.copyStringToClipboard(tx.getId()));
 		MenuItem copyErgAmount = new MenuItem(Main.lang("copyErgAmount"));
-		copyErgAmount.setOnAction(e -> Utils.copyStringToClipboard(FormatNumber.ergExact(ErgoInterface.toFullErg(ergDiff))));
+		copyErgAmount.setOnAction(_ -> Utils.copyStringToClipboard(FormatNumber.ergExact(ErgoInterface.toFullErg(ergDiff))));
 		MenuItem viewOnExplorer = new MenuItem(Main.lang("viewOnExplorer"));
-		viewOnExplorer.setOnAction(e -> Utils.showDocument(Utils.explorerTransactionUrl(tx.getId())));
+		viewOnExplorer.setOnAction(_ -> Utils.showDocument(Utils.explorerTransactionUrl(tx.getId())));
 		ContextMenu context = new ContextMenu(copyTxId, copyErgAmount, viewOnExplorer);
 		top.setOnContextMenuRequested(e -> {
 			if (context.isShowing()) context.hide();
@@ -142,10 +147,33 @@ public class TransactionCell extends BorderPane implements Initializable {
 		bottom.add(outputScroll, 1, 0);
 	}
 
+	private static <T>Node tokenDialogContent(Collection<T> assets, Function<T, String> getName, Function<T, String> getId, Function<T, BigDecimal> getAmount, boolean showPlus) {
+		VBox list = new VBox();
+		for (T asset : assets) {
+			String name = getName.apply(asset), id = getId.apply(asset);
+			BigDecimal amount = getAmount.apply(asset);
+
+			String nameForLabel = name.isBlank() ? Main.lang("unnamed_parentheses") : name;
+			Label label = new Label(nameForLabel + ": " + (showPlus && amount.compareTo(BigDecimal.ZERO) > 0 ? "+" : "") + amount.toPlainString());
+			label.setContextMenu(new ContextMenu(
+					Utils.menuItemWithAction(Main.lang("copyName"), _ -> Utils.copyStringToClipboard(name)),
+					Utils.menuItemWithAction(Main.lang("copyTokenId"), _ -> Utils.copyStringToClipboard(id)),
+					Utils.menuItemWithAction(Main.lang("copyAmount"), _ -> Utils.copyStringToClipboard(amount.toPlainString()))
+			));
+			list.getChildren().add(label);
+		}
+		return list;
+	}
+
 	private TransactionInOut createInOut(TransactionInOut.Type type, String address, long value, List<AssetInstanceInfo> assets) {
-		return new TransactionInOut(type, Address.create(address), FormatNumber.ergExact(ErgoInterface.toFullErg(value)), !assets.isEmpty(), () -> {
-			Utils.alert(Alert.AlertType.INFORMATION, assets.stream().map(a -> a.getName() + ": " + ErgoInterface.fullTokenAmount(a.getAmount(), a.getDecimals()).toPlainString()).collect(Collectors.joining("\n")));
-		}, myAddresses.contains(address));
+		Runnable showTokens = () -> {
+			Node content = tokenDialogContent(assets, AssetInstanceInfo::getName, AssetInstanceInfo::getTokenId, asset -> ErgoInterface.fullTokenAmount(asset.getAmount(), asset.getDecimals()), false);
+			SatVoidDialog tokenDialog = new SatVoidDialog(content);
+			Utils.initDialog(tokenDialog, Main.get().stage(), MoveStyle.MOVABLE);
+			tokenDialog.setTitle(Main.lang("tokens"));
+			tokenDialog.show();
+		};
+		return new TransactionInOut(type, Address.create(address), FormatNumber.ergExact(ErgoInterface.toFullErg(value)), !assets.isEmpty(), showTokens, myAddresses.contains(address));
 	}
 
 	private Timeline timeline;
@@ -212,7 +240,9 @@ public class TransactionCell extends BorderPane implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ZonedDateTime time = Instant.ofEpochMilli(tx.getTimestamp()).atZone(ZoneId.systemDefault());
-		dateTime.setText(time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
+		// var formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM); Locale data is not included at the moment
+		var formatter = new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral(' ').appendPattern("HH:mm").toFormatter();
+		dateTime.setText(time.format(formatter));
 		totalCoins.setText(FORMAT_TOTAL.format(ErgoInterface.toFullErg(ergDiff)) + " ERG");
 		Map<TokenSummary, Long> tokensSent = totalTokens(tx, TransactionInOut.Type.INPUT, myAddresses);
 		Map<TokenSummary, Long> tokensReceived = totalTokens(tx, TransactionInOut.Type.OUTPUT, myAddresses);
@@ -227,21 +257,24 @@ public class TransactionCell extends BorderPane implements Initializable {
 		totalTokens.values().removeIf(amount -> amount == 0L);
 		tokens.setVisible(!totalTokens.isEmpty());
 		tokens.setOnAction(event -> {
-			Utils.alert(Alert.AlertType.INFORMATION, totalTokens.entrySet().stream().map(e -> {
-				BigDecimal amount = ErgoInterface.fullTokenAmount(e.getValue(), e.getKey().decimals());
-				String name = e.getKey().name().isBlank() ? Main.lang("unnamed_parentheses") : e.getKey().name();
-				return name + ": " + (amount.compareTo(BigDecimal.ZERO) > 0 ? "+" : "") + amount.toPlainString();
-			}).collect(Collectors.joining("\n")));
+			Node content = tokenDialogContent(totalTokens.entrySet(),
+					e -> e.getKey().name(),
+					e -> e.getKey().id(),
+					e -> ErgoInterface.fullTokenAmount(e.getValue(), e.getKey().decimals()), true);
+			SatVoidDialog tokenDialog = new SatVoidDialog(content);
+			Utils.initDialog(tokenDialog, Main.get().stage(), MoveStyle.MOVABLE);
+			tokenDialog.setTitle(Main.lang("tokens"));
+			tokenDialog.show();
 		});
 	}
 
 	// utils
 
-	private static long totalReceived(TransactionInfo tx, Set<String> myAddresses) {
+	public static long totalReceived(TransactionInfo tx, Set<String> myAddresses) {
 		return tx.getOutputs().stream().filter(info -> myAddresses.contains(info.getAddress())).mapToLong(OutputInfo::getValue).sum();
 	}
 
-	private static long totalSent(TransactionInfo tx, Set<String> myAddresses) {
+	public static long totalSent(TransactionInfo tx, Set<String> myAddresses) {
 		return tx.getInputs().stream().filter(info -> myAddresses.contains(info.getAddress())).mapToLong(InputInfo::getValue).sum();
 	}
 

@@ -177,9 +177,6 @@ public class Main extends Application {
 	public void stop() {
 		if (node != null && node.isRunning())
 			node.stop();
-		if (walletPage != null) {
-			walletPage.cancelRepeatingTasks();
-		}
 		try {
 			Launcher.getIPC().stopListening();
 			Files.deleteIfExists(Launcher.getIPC().path);

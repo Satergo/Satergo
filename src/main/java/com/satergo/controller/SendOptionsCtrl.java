@@ -21,7 +21,9 @@ public class SendOptionsCtrl implements Initializable {
 	@FXML public ComboBox<AddressData> changeAddress;
 
 	public record AddressData(int index, String name, Address value) {
-		public String toString() { return name; }
+		public String toString() {
+			return name.isBlank() ? "(#" + index + ")" : name;
+		}
 	}
 
 	public SendOptionsCtrl(List<AddressData> addresses, List<Integer> selected, Address change) {

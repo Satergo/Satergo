@@ -15,6 +15,8 @@ import javafx.application.Platform;
 import javafx.beans.binding.IntegerBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -156,10 +158,14 @@ public class Utils {
 		});
 	}
 
+	public static MenuItem menuItemWithAction(String text, EventHandler<ActionEvent> actionEventHandler) {
+		MenuItem menuItem = new MenuItem(text);
+		menuItem.setOnAction(actionEventHandler);
+		return menuItem;
+	}
+
 	public static void addCopyContextMenu(Labeled node) {
-		MenuItem menuItem = new MenuItem(Main.lang("copy"));
-		menuItem.setOnAction(e -> copyStringToClipboard(node.getText()));
-		node.setContextMenu(new ContextMenu(menuItem));
+		node.setContextMenu(new ContextMenu(menuItemWithAction(Main.lang("copy"), _ -> copyStringToClipboard(node.getText()))));
 	}
 
 	private static ErgoClient ergoClient;

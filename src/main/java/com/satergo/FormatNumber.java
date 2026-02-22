@@ -13,7 +13,7 @@ import java.text.NumberFormat;
  */
 public class FormatNumber {
 
-	private static DecimalFormat ergAllDecimals, ergExact;
+	private static ThreadLocal<DecimalFormat> ergAllDecimals, ergExact;
 
 	static {
 		update();
@@ -24,11 +24,11 @@ public class FormatNumber {
 	}
 
 	public static String ergAllDecimals(BigDecimal erg) {
-		return ergAllDecimals.format(erg);
+		return ergAllDecimals.get().format(erg);
 	}
 
 	public static String ergExact(BigDecimal erg) {
-		return ergExact.format(erg);
+		return ergExact.get().format(erg);
 	}
 
 	public static String tokenExact(TokenBalance tokenBalance) {
@@ -46,8 +46,10 @@ public class FormatNumber {
 	/**
 	 * When the default Locale is updated, this needs to be called to reselect the correct symbols for the new Locale
 	 */
-	public static void update() {
-		ergAllDecimals = new DecimalFormat("0.000000000");
-		ergExact = new DecimalFormat("0.#########");
+	public static synchronized void update() {
+		if (ergAllDecimals != null) ergAllDecimals.remove();
+		if (ergExact != null) ergExact.remove();
+		ergAllDecimals = ThreadLocal.withInitial(() -> new DecimalFormat("0.000000000"));
+		ergExact = ThreadLocal.withInitial(() -> new DecimalFormat("0.#########"));
 	}
 }

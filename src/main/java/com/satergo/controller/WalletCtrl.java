@@ -38,20 +38,19 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.ConnectException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.ResourceBundle;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class WalletCtrl implements Initializable {
 
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(0);
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(0, r -> {
+		Thread thread = Executors.defaultThreadFactory().newThread(r);
+		thread.setDaemon(true);
+		return thread;
+	});
 
 	public void cancelRepeatingTasks() {
 		scheduler.shutdownNow();
@@ -113,10 +112,10 @@ public class WalletCtrl implements Initializable {
 		}
 		try {
 			BigDecimal price = Main.programData().priceSource.get().fetchPrice(Main.programData().priceCurrency.get());
-			try {
+			/* try {
 				Main.get().market.updateTokenPrices();
 			} catch (IOException | InterruptedException ignored) {
-			}
+			} */
 			Utils.runLaterOrNow(() -> {
 				revertOfflineMode();
 				priceError.set(false);
