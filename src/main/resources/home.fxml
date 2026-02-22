@@ -21,7 +21,7 @@
 			<Label fx:id="headTitle" BorderPane.alignment="CENTER_LEFT"/>
 		</left>
 		<right>
-			<Button onAction="#logout" text="%logout" BorderPane.alignment="CENTER_RIGHT"/>
+			<Button onAction="#logout" text="%logOut" BorderPane.alignment="CENTER_RIGHT"/>
 		</right>
 	</BorderPane>
 

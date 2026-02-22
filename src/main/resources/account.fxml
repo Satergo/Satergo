@@ -10,7 +10,7 @@
 		<Label text="%wallet"/>
 		<Label text=": "/>
 		<Label fx:id="walletName"/>
-		<Button text="%logout" onAction="#logout">
+		<Button text="%logOut" onAction="#logout">
 			<HBox.margin><Insets left="10"/></HBox.margin>
 		</Button>
 	</HBox>
