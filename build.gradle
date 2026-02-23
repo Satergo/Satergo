@@ -16,8 +16,8 @@ java {
 }
 
 group = 'com.satergo'
-version = '1.9.2'
-def versionCode = 13
+version = '1.9.3'
+def versionCode = 14
 
 application {
 	mainClass = "com.satergo.Launcher"
@@ -137,6 +137,9 @@ satergoRuntime {
 	excludeModules = []
 	extraModuleJars = configurations.javaFxDeps.files
 	extraJlinkOptions = ["--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"]
+	if (project.hasProperty("objcopyPath")) {
+		extraJlinkOptions += ["--strip-native-debug-symbols", "objcopy=" + project.findProperty("objcopyPath")]
+	}
 	cleanupJlinkImageContent = true
 
 	proguardConfig = file("proguard.pro").toPath()
